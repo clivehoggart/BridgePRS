@@ -1,4 +1,4 @@
-~/BridgePRS/bin/ridgePRS_bychr.sh \
+~/BridgePRS/bin/BridgePRS.sh \
     --outdir out \
     --pop1 EUR \
     --pop2 AFR \
