@@ -25,8 +25,10 @@ BEDMatrix, optparse and MASS.
 Assumes Plink v1.9 is in your path
 
 # Getting started
-Example script can be run from the installation directory by typing
+Example script can be run from the installation directory by typing.
 ./Bridge_example.sh
+Script utilises 8 processors for paralel computation, this can be changed
+from the --n_cores argument, see below.
 
 BridgePRS is implemented by clumping GWAS summary statistics from
 populations 1 and 2 in plink using the following clumping arguments
