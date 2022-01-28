@@ -25,7 +25,8 @@ BEDMatrix v2.0.3, optparse and MASS.
 Assumes Plink v1.9 is in your path
 
 # Getting started
-Example script can be run from the installation directory by typing.
+Example script in the installation directory runs the example data by
+typing
 ./Bridge_example.sh
 Script utilises 8 processors for paralel computation, this can be changed
 from the --n_cores argument, see below.
