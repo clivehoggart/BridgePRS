@@ -25,6 +25,10 @@ Required R packages: parallel, glmnet, boot, data.table, doMC,
 BEDMatrix v2.0.3, optparse and MASS.
 Assumes Plink v1.9 is in your path
 
+Make BridgePRS shell script and example shell script executable;
+chmod +x bin/BridgePRS.sh
+chmod +x Bridge_example.sh
+
 # Getting started
 Example script in the installation directory runs the example data by
 typing
