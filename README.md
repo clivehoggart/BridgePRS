@@ -13,7 +13,8 @@ returned. In addition, validation data from population 2, can be
 supplied to make out-of-sample prediction and measures of model fit.
 
 # Installation
-Clone this repository using the following git command:
+Clone this repository from your home directory using the following git
+command:
 
 git clone https://github.com/clivehoggart/BridgePRS.git
 
