@@ -21,7 +21,7 @@ Alternatively, download the source files from the github website
 (https://github.com/clivehoggart/BridgePRS.git)
 
 Required R packages: parallel, glmnet, boot, data.table, doMC,
-#BEDMatrix, optparse and MASS.
+BEDMatrix, optparse and MASS.
 Assumes Plink v1.9 is in your path
 
 # Getting started
