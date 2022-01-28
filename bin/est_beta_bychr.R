@@ -1,0 +1,188 @@
+library(BEDMatrix)
+library(MASS)
+library(parallel)
+library(data.table)
+library("optparse")
+source('~/BridgePRS/bin/functions.R')
+options(stringsAsFactors=FALSE)
+
+option_list = list(
+    make_option(c("-c", "--clump.stem"), type="character",
+                help="Clump stem", metavar="character"),
+    make_option(c("-s", "--sumstats"), type="character",
+                help="Sum stats file", metavar="character"),
+    make_option(c("--sumstats2"), type="character",
+                help="Sum stats file pop2", metavar="character", default=NULL),
+    make_option(c("--thinned.snplist"), type="character",
+                help="List of SNPs to thin to", metavar="character", default=0),
+    make_option(c("--n.max.locus"), type="numeric",
+                help="Large loci are thinned", metavar="numeric", default=0),
+    make_option(c("--ld.ids"), type="character",
+                help="File listing IDs to use for estimating LD", metavar="character"),
+    make_option(c("--param.file"), type="character", default=NULL,
+                help="File of lambda and S parameters", metavar="character"),
+    make_option(c("-b", "--beta.stem"), type="character", default=NULL,
+                help="Out file stem", metavar="character"),
+    make_option(c("--lambda","-l"), type="character", default="1",
+                help="Comma delimited lambda values", metavar="character"),
+    make_option(c("--S"), type="character", default="1",
+                help="Comma delimited S values", metavar="character"),
+    make_option(c("--p.thresh"), type="numeric", default="0.01",
+                help="P-value threshold for selecting clumps", metavar="character"),
+    make_option(c("--precision"), type="logical", default=FALSE,
+                help="Option to calculate precision matrix of each clump", metavar="character"),
+    make_option(c("--n.cores"), type="numeric", default=1,
+                help="Number of processors for mclapply to use", metavar="character"),
+    make_option(c("--bfile"), type="character",
+                help="Plink file with test & train2 genotype data", metavar="character"),
+    make_option(c("--sumstats.snpID"), type="character", default="SNP",
+                help="SNP column name", metavar="character"),
+    make_option(c("--sumstats.betaID"), type="character", default="BETA",
+                help="Beta column name", metavar="character"),
+    make_option(c("--sumstats.allele0ID"), type="character", default="ALLELE0",
+                help="Allele 0 column name", metavar="character"),
+    make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
+                help="Allele 1 column name", metavar="character"),
+    make_option(c("--ld.shrink"), type="numeric",
+                help="Indicator for shrinking LD matrix", metavar="numeric", default=0),
+    make_option(c("--recomb.file"), type="character", default=NULL,
+                help="File of genome-wide recombination rates", metavar="character"),
+    make_option(c("--Ne"), type="numeric",
+                help="Effective population size", metavar="numeric", default=0),
+
+    make_option(c("--by.chr"), type="numeric", default=1,
+                help="Logical indicating if bed files are split by chr",
+                metavar="character"),
+    make_option(c("--by.chr.sumstats"), type="character", default=0,
+                help="Logical indicating if sumstats files are split by chr",
+                metavar="character"))
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser)
+
+print(opt)
+
+logfile <- paste0(opt$beta.stem,".log")
+tmp <- t(data.frame(opt))
+rownames(tmp) <- names(opt)
+write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
+
+opt$beta.stem <- ifelse( is.null(opt$beta.stem), opt$clump.stem, opt$beta.stem )
+
+if( opt$by.chr.sumstats==0 ){
+    sumstats <- fread( opt$sumstats, data.table=FALSE )
+    tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
+    n <- median(sumstats$OBS_CT)
+    snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
+    allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
+    allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
+    beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
+    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+    sumstats$BETA <- as.numeric(sumstats$BETA)
+    sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+}
+
+lambda <- as.numeric(strsplit( opt$lambda, ',' )[[1]])
+S <- as.numeric(strsplit( opt$S, ',' )[[1]])
+precision <- opt$precision
+if( !is.null(opt$param.file) ){
+    params <- read.table( opt$param.file, header=TRUE)
+    lambda <- params$lambda.opt
+    S <- params$S.opt
+}
+
+ld.ids <- as.character(read.table(opt$ld.ids)[,1])
+
+if( opt$by.chr==0 ){
+    ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
+    bim <- fread( paste(opt$bfile,'.bim',sep='' ) )
+    ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
+}
+
+for( chr in 1:22 ){
+    if( opt$by.chr.sumstats!=0 ){
+        sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
+        tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
+        n <- median(sumstats$OBS_CT)
+        snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
+        allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
+        allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
+        beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+        sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
+        colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+        sumstats$BETA <- as.numeric(sumstats$BETA)
+        sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+    }
+    if( opt$by.chr==1 ){
+        ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
+        bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
+        ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
+    }
+    infile <- paste(opt$clump.stem,'_',chr,'.clumped.gz',sep='')
+    clump <- read.table(infile,header=TRUE,stringsAsFactors=FALSE)
+    clump.use <- which( clump$P <= 1 )
+
+    if( opt$ld.shrink==1 ){
+        infile <- paste0(opt$recomb.file,chr,'.txt.gz')
+        recomb <- fread(infile)
+    }
+    if( opt$ld.shrink==0 ){
+        recomb <- NULL
+    }
+
+    if( opt$thinned.snplist!=0 ){
+        thinned.snplist <- fread(opt$thinned.snplist)$V2
+        if( !is.null(opt$sumstats2) ){
+            infile <- paste0( opt$sumstats2, chr, opt$by.chr.sumstats )
+            sumstats2 <- fread(infile)
+            clump <- thin.big.loci( clump, thinned.snplist, opt$n.max.locus, sumstats2 )
+        }else{
+            clump <- thin.big.loci( clump, thinned.snplist, opt$n.max.locus )
+        }
+    }
+
+    tmp <- strsplit( opt$beta.stem, '/' )[[1]]
+    path <- paste(head(tmp,n=-1L),'/',sep='',collapse='')
+    fits <- mclapply( 1:length(clump.use),
+                     function(i){
+                         read.fit.clump( clump.i=clump[clump.use[i],],
+                                        do.ld.shrink=opt$ld.shrink,
+                                        sumstats=sumstats,
+                                        recomb=recomb, Ne=opt$Ne,
+                                        X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
+                                        S=S, l=lambda, precision=precision, by.chr=0,
+                                        tau=tau, n=n, beta.stem=path )},
+                     mc.cores=as.numeric(opt$n.cores) )
+
+#    fits=list()
+#    for( i in 1:length(clump.use) ){
+#        fits[[i]] <- read.fit.clump( clump.i=clump[clump.use[i],],
+#                               do.ld.shrink=opt$ld.shrink,
+#                               sumstats=sumstats,
+#                               recomb=recomb, Ne=opt$Ne,
+#                               X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
+#                               S=S, l=lambda, precision=precision,
+#                               by.chr=0, tau=tau, n=n, beta.stem=path )
+#    }
+#fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, tau=tau, n=n, beta.stem=path )
+    beta.bar <- lapply( fits, getElement, 1 )
+    names(beta.bar) <- clump$SNP[clump.use]
+
+    ptr.qc <- which(sapply(beta.bar,length)!=0)
+    beta.bar <- beta.bar[ptr.qc]
+#    dput( beta.bar, paste(opt$beta.stem,"_beta_bar_chr",chr,".Robj", sep="") )
+
+    outfile <- paste(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz", sep="")
+    fwrite( beta.bar[[1]], outfile )
+    for( i in 2:length(beta.bar) ){
+        fwrite( beta.bar[[i]], outfile, append=TRUE )
+    }
+
+#    kl.out <- t(simplify2array(lapply( fits, getElement, 2 )))
+#    if( !is.na(kl.out[1]) ){
+#        kl.out <- data.frame( clump$SNP[clump.use], kl.out )
+#        colnames(kl.out)[1] <- 'clumnp.id'
+#        outfile <- paste(opt$beta.stem,"_KLdist_chr",chr,".txt.gz", sep="")
+#        fwrite( kl.out, outfile )
+#    }
+}
