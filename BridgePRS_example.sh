@@ -9,7 +9,7 @@
     --pop2_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
     --pop1_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop1_test_data ~/BridgePRS/data/pheno_eur.dat \
-    --pop1_ld_bfile :~/BridgePRS/data/bfiles/bfile3 \
+    --pop1_ld_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop1_ld_ids ~/BridgePRS/data/EUR_IDs.txt \
     --pop2_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop2_test_data  ~/BridgePRS/data/pheno_afr_test.dat \
