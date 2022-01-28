@@ -1,5 +1,5 @@
 ~/BridgePRS/bin/ridgePRS_bychr.sh \
-    --outdir /hpc/users/hoggac01/BridgePRS/out \
+    --outdir out \
     --pop1 EUR \
     --pop2 AFR \
     --pop1_sumstats ~/BridgePRS/data/sumstats/EUR.chr \
