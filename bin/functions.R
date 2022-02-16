@@ -1,3 +1,11 @@
+alt.strand <- function(allele){
+    allele1 <- ifelse( allele=='A', 'T', NA )
+    allele1 <- ifelse( allele=='C', 'G', allele1 )
+    allele1 <- ifelse( allele=='G', 'C', allele1 )
+    allele1 <- ifelse( allele=='T', 'A', allele1 )
+    return(allele1)
+}
+
 getGlmnetFit <- function( fit, X, s="lambda.min", sparse=TRUE ){
     tmp2 <- coef( fit, X, s=s )
     beta <- as.vector(tmp2)
@@ -367,7 +375,8 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
     }
 }
 
-get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim, by.chr, ids.use ){
+get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
+                           by.chr, ids.use, strand.check ){
     if( by.chr==1 ){
         bim <- bim[[beta.bar$chr[1]]]
         X.bed <- X.bed[[beta.bar$chr[1]]]
@@ -377,23 +386,44 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim, by.chr
     ptr <- match( beta.bar$snp, colnames(X) )
     X <- X[,ptr,drop=FALSE]
     ptr.bed <- match( beta.bar$snp, colnames(X.bed) )
-    coded.allele <- bim$V5[ptr.bed]
 
-    swtch <- ifelse( coded.allele==beta.bar$effect.allele, 1, NA )
-    swtch <- ifelse( coded.allele==beta.bar$ref.allele, -1, swtch )
-    for( ii in which(swtch==-1) ){
-        X[,ii] <- 2 - X[,ii]
+    coded.allele <- bim$V5[ptr.bed]
+    other.allele <- bim$V6[ptr.bed]
+
+    swtch <- ifelse( coded.allele==beta.bar$effect.allele &
+                  other.allele==beta.bar$ref.allele, 1, 0 )
+
+    swtch <- ifelse( coded.allele==beta.bar$ref.allele &
+                     other.allele==beta.bar$effect.allele, -1, swtch )
+
+    ptr.miss <- which( swtch==0 )
+    if( strand.check & length(ptr.miss)>0 ){
+        coded.allele1 <- alt.strand( coded.allele )
+        other.allele1 <- alt.strand( other.allele )
+
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==beta.bar$effect.allele[ptr.miss] &
+                                   other.allele1[ptr.miss]==beta.bar$ref.allele[ptr.miss],
+                                  1, 0 )
+
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==beta.bar$ref.allele[ptr.miss] &
+                                   other.allele1[ptr.miss]==beta.bar$effect.allele[ptr.miss],
+                                  -1, swtch[ptr.miss] )
     }
+    ptr.use <- which( swtch!=0 )
+    X <- X[,ptr.use,drop=FALSE]
+    beta.bar <- beta.bar[ptr.use,,drop=FALSE]
+
+    ptr <- which(swtch == -1)
+    if( length(ptr)>0 ){
+        X[,ptr] <- 2 - X[,ptr]
+    }
+
     m <- apply( X, 2, mean, na.rm=TRUE )
     for( ii in 1:ncol(X) ){
         X[,ii] <- ifelse( is.na(X[,ii]), m[ii], X[,ii] )
     }
     pred <- as.matrix(X) %*% as.matrix(beta.bar[,ptr.beta.use])
 
-#    ptr.lead <- match( clump.id, rownames(beta.bar) )
-#    pred.prs <- X[,ptr.lead,drop=FALSE] * beta.bar$beta.hat[ptr.lead]
-
-#    ret <- cbind(pred,pred.prs)
     ret <- pred
     rownames(ret) <- rownames(X)
 
@@ -402,7 +432,7 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim, by.chr
 
 get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
                             ids.use, b.size=100, n.cores=20, by.chr,
-                            kl.metric, kl.thresh, ranking ){
+                            kl.metric, kl.thresh, ranking, strand.check ){
     n.clumps <- length(beta.bar)
     batches <- ceiling(n.clumps/b.size)
     chr <- as.numeric(sapply( sapply(beta.bar,getElement,'chr'), getElement, 1 ))
@@ -436,10 +466,10 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
                                             ptr.beta.use=ptr.beta.use,
                                             clump.id=names(beta.bar)[i],
                                             X.bed=X.bed, bim=bim, by.chr=by.chr,
-                                            ids.use=ids.use )},
+                                            ids.use=ids.use, strand.check=strand.check )},
                          mc.cores=n.cores )
-#        for( i in 1:length(beta.bar) ){
-#            pred <- get.pred.clump( beta.bar=beta.bar[[i]], ptr.beta.use=ptr.beta.use, clump.id=names(beta.bar)[i], X.bed=ptr.bed, bim=bim, by.chr=0, ids.use=ids.use )
+#        for( i in i.clump.use ){
+#            pred <- get.pred.clump( beta.bar=beta.bar[[i]], ptr.beta.use=ptr.beta.use, clump.id=names(beta.bar)[i], X.bed=X.bed, bim=bim, by.chr=by.chr, ids.use=ids.use, strand.check=strand.check )
 #            print(c(i,range(pred)))
 #        }
         if( ranking=='f.stat' | ranking=='thinned.f.stat' ){

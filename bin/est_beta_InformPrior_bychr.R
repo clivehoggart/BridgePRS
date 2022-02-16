@@ -34,6 +34,8 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
+    make_option(c("--strand.check"), type="numeric", default=0,
+                help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--param.file"), type="character", default=NULL,
                 help="File of lambda and S parameters", metavar="character"),
     make_option(c("--ranking"), type="character", default="p-value",
@@ -74,6 +76,18 @@ if( opt$by.chr.sumstats==0 ){
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+    if( opt$strand.check ){
+        ptr.use <- ifelse( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
+                           sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |
+                           sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A" |
+                           sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T" |
+                           sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A" |
+                           sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T" |
+                           sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C" |
+                           sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G",
+                          TRUE, FALSE )
+        sumstats <- sumstats[ptr.use,]
+    }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
 }
@@ -106,6 +120,17 @@ for( chr in 1:22 ){
         }
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+        if( opt$strand.check ){
+            ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
+                              sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |
+                              sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A" |
+                              sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T" |
+                              sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A" |
+                              sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T" |
+                              sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C" |
+                              sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G" )
+            sumstats <- sumstats[ptr.use,]
+        }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
     }

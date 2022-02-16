@@ -37,7 +37,9 @@ option_list = list(
                 help="Method to rank loci", metavar="character"),
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
-                metavar="character")
+                metavar="character"),
+    make_option(c("--strand.check"), type="numeric", default=0,
+                help="Keep only non-ambiguous SNPs", metavar="numeric")
 )
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
@@ -118,7 +120,7 @@ for( chr in 1:22 ){
                                 p.thresh=p.thresh, X.bed=ptr.bed,
                                 bim=bim, ids.use=ids.use, b.size=100,
                                 n.cores=as.numeric(opt$n.cores), by.chr=0,
-                                kl.metric, kl.thresh, opt$ranking )
+                                kl.metric, kl.thresh, opt$ranking, opt$strand.check )
     if( chr==1 ){
         pred.genome <- pred.chr
     }

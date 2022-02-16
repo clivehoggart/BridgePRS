@@ -29,6 +29,7 @@ ids_col=TRUE
 ranking=f.stat
 pop1_valid_data=0
 pop2_valid_data=0
+strand_check=0
 cov_names="000"
 
 usage()
@@ -39,7 +40,7 @@ usage()
   exit 2
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_P: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_P:,strand_check: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -98,6 +99,7 @@ do
     --sumstats_beta) sumstats_beta=$2 ; shift 2 ;;
     --sumstats_allele1) sumstats_allele1=$2 ; shift 2 ;;
     --sumstats_allele0) sumstats_allele0=$2 ; shift 2 ;;
+    --strand_check) strand_check=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     # If invalid options were passed, then getopt should have reported an error,
@@ -153,6 +155,7 @@ echo "N_pop2 : $N_pop2"
 echo "ranking : $ranking"
 echo "ld_shrink : $ld_shrink"
 echo "ids_col : $ids_col"
+echo "strand_check : $strand_check"
 echo ""
 
 mkdir $outdir
@@ -222,6 +225,7 @@ then
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --recomb.file $recomb_pop1_file \
 	    --ld.shrink $ld_shrink \
+	    --strand.check $strand_check \
 	    --Ne $N_pop1
 fi
 
@@ -240,6 +244,7 @@ then
 	    --cov.names $cov_names \
 	    --pheno.name $pheno_name \
 	    --ranking pv \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
@@ -267,6 +272,7 @@ then
 	    --recomb.file $recomb_pop1_file \
 	    --ld.shrink $ld_shrink \
 	    --Ne $N_pop1 \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
@@ -292,6 +298,7 @@ then
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --ranking $ranking \
 	    --ld.shrink $ld_shrink \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
@@ -310,6 +317,7 @@ then
 	    --pheno.name $pheno_name \
 	    --all.preds TRUE \
 	    --ranking $ranking \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
@@ -363,6 +371,7 @@ then
 	    --Ne $N_pop2 \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --ld.shrink $ld_shrink \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
@@ -381,6 +390,7 @@ then
 	    --pheno.name $pheno_name \
 	    --all.preds TRUE \
 	    --ranking "pv" \
+	    --strand.check $strand_check \
 	    --by.chr $by_chr
 fi
 
