@@ -16,8 +16,7 @@ Preprint of BridgePRS is available here:
 https://www.researchsquare.com/article/rs-1272562/v1 
 
 # Installation
-Clone this repository from your home directory using the following git
-command:
+Clone this repository from your home directory using the following git command:
 
 git clone https://github.com/clivehoggart/BridgePRS.git
 
@@ -26,7 +25,7 @@ Alternatively, download the source files from the github website
 
 Required R packages: parallel, glmnet, boot, data.table, doMC,
 BEDMatrix v2.0.3, optparse and MASS.
-Assumes Plink v1.9 is in your path
+Assumes Plink v1.9 is in your path and BridgePRS directory is in your home directory.
 
 Make BridgePRS shell script and example shell script executable;
 chmod +x bin/BridgePRS.sh
