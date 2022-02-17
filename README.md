@@ -62,25 +62,22 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 	--by_chr_sumstats. If set assumes sumstats are split by chromosome and are
 		labelled pop1_sumstatsXby_chr_sumstats, where X indexes the chromosomes
 
-	--pop1_qc_snplist. List of variants to use in clumping of
-		population 2 sumstats (required)
+	--pop1_qc_snplist. List of variants to use in clumping of population 2 sumstats
+		(required)
 
 	--pop2_qc_snplist. As above for population 2 (required).
 
-	--pop1_bfile. Population 1 plink binary file to calculate PRS
-		in test and validation sets (required)
+	--pop1_bfile. Population 1 plink binary file to calculate PRS in test and
+	validation sets (required)
 
-	--pop1_test_data. Population 1 phenotype and covariate test
-		file. Requires a column labelled IID of IDs to use
-		(required)
+	--pop1_test_data. Population 1 phenotype and covariate test file. Requires a
+		column labelled IID of IDs to use (required)
 
 	--pop1_valid_data. As above but for validation data (optional)
 
-	--pop1_ld_bfile. Population 1 plink binary file for LD
-		estimation (required)
+	--pop1_ld_bfile. Population 1 plink binary file for LD estimation (required)
 
-	--pop1_ld_ids. Population 1 IDs of individuals to use for LD
-		estimation (required)
+	--pop1_ld_ids. Population 1 IDs of individuals to use for LD estimation (required)
 
 	--pop2_bfile. As above for population 2 (required)
 
@@ -92,11 +89,10 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 
 	--pop2_ld_ids. As above for population 2 (required)
 
-	--cov_names. Column names of covariates to control for in
-		optimising PRS and calculating R2 (optional)
+	--cov_names. Column names of covariates to control for in optimising PRS and
+		calculating R2 (optional)
 
-	--pheno_name. Column name of phenotype used in test and
-		validation files (required)
+	--pheno_name. Column name of phenotype used in test and validation files (required)
 
 	--sumstats.snpID. Sumstat column label of SNP ID (required)
 
@@ -108,41 +104,37 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 
 	--n_cores. Nummber of processors to use by R scripts
 
-	--do_clump_pop1. Logical to run plink to clump population 1
-		summary statistis (default 1)
-    
-	--do_est_beta_pop1. Logical to run R script to estimate PRS using
-		population 1 summary statistics (default 1)
-
-	--do_predict_pop1. Logical to run R script to make predictions
-		in population 1 in test and if supplied validation data
+	--do_clump_pop1. Logical to run plink to clump population 1 summary statistis
 		(default 1)
     
-	--do_est_beta_pop1_precision. Logical to run R script to
-		output precision matrices of best fitting model in
-		population 1 (default 1)
+	--do_est_beta_pop1. Logical to run R script to estimate PRS using population 1
+		summary statistics (default 1)
+
+	--do_predict_pop1. Logical to run R script to make predictions in population 1
+		in test and if supplied validation data (default 1)
+    
+	--do_est_beta_pop1_precision. Logical to run R script to output precision
+		matrices of best fitting model in population 1 (default 1)
 
 	--do_est_beta_InformPrior. Logical to run R script to estimate
 		PRS in population 2 given prior from population 1 (default 1)
 
-	--do_predict_pop2_stage2. Logical to run R script to make
-		prediction in population 2 in test and if supplied
-		validation data using popultion 1 informed PRS (default 1)
+	--do_predict_pop2_stage2. Logical to run R script to make prediction in
+		population 2 in test and if supplied validation data using popultion 1
+		informed PRS (default 1)
 
-	--do_clump_pop2. Logical to run plink to clump population 2
-		summary statistis (default 1)
+	--do_clump_pop2. Logical to run plink to clump population 2 summary statistis
+		(default 1)
 
-	--do_est_beta_pop2. Logical to run R script to estimate PRS
-		using population 2 summary statistics (default 1)
-
-	--do_predict_pop2. Logical to run R script to to make
-		predictions in population 2 in test and if supplied
-		validation data using PRS informed only by population 2
+	--do_est_beta_pop2. Logical to run R script to estimate PRS using population 2
 		summary statistics (default 1)
 
-	--do_combine. Logical to run R script to combine PRS in
-		population 2. Outputs R2 in test and validation data and SNP
-		weights of best model (default 1)
+	--do_predict_pop2. Logical to run R script to to make predictions in population 2
+		in test and if supplied validation data using PRS informed only by
+		population 2 summary statistics (default 1)
+
+	--do_combine. Logical to run R script to combine PRS in population 2. Outputs R2
+		in test and validation data and SNP weights of best model (default 1)
 
 # Output files
 
