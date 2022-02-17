@@ -23,17 +23,16 @@ git clone https://github.com/clivehoggart/BridgePRS.git
 Alternatively, download the source files from the github website
 (https://github.com/clivehoggart/BridgePRS.git)
 
-Required R packages: parallel, glmnet, boot, data.table, doMC,
-BEDMatrix v2.0.3, optparse and MASS.
+Required R packages: parallel, glmnet, boot, data.table, doMC, BEDMatrix v2.0.3, optparse and MASS. \
 Assumes Plink v1.9 is in your path and BridgePRS directory is in your home directory.
 
-Make BridgePRS shell script and example shell script executable;
-chmod +x bin/BridgePRS.sh
-chmod +x Bridge_example.sh
+Make BridgePRS shell script and example shell script executable; \
+chmod +x bin/BridgePRS.sh \
+chmod +x Bridge_example.sh \
 
 # Getting started
-Example script in the installation directory runs the example data by typing
-./Bridge_example.sh
+Example script in the installation directory runs the example data by typing \
+./Bridge_example.sh \
 Script utilises 8 processors for paralel computation, this can be changed
 from the --n_cores argument, see below.
 
