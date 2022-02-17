@@ -33,8 +33,7 @@ chmod +x bin/BridgePRS.sh
 chmod +x Bridge_example.sh
 
 # Getting started
-Example script in the installation directory runs the example data by
-typing
+Example script in the installation directory runs the example data by typing
 ./Bridge_example.sh
 Script utilises 8 processors for paralel computation, this can be changed
 from the --n_cores argument, see below.
