@@ -101,13 +101,13 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 	--pheno_name. Column name of phenotype used in test and
 	  validation files (required)
 
-    	--sumstats.snpID. Sumstat column label of SNP ID (required)
+	--sumstats.snpID. Sumstat column label of SNP ID (required)
 
-    	--sumstats.betaID. Sumstat column label of SNP effect (required)
+	--sumstats.betaID. Sumstat column label of SNP effect (required)
 
-    	--sumstats.allele1ID. Sumstat column label SNP effect allele (required)
+	--sumstats.allele1ID. Sumstat column label SNP effect allele (required)
 
-   	--sumstats.allele0ID. Sumstat column label of SNP ref allele (required)
+	--sumstats.allele0ID. Sumstat column label of SNP ref allele (required)
 
 	--n_cores. Nummber of processors to use by R scripts
 
