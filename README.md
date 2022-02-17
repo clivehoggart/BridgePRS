@@ -138,31 +138,22 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 
 # Output files
 
-pop_stageX_all_preds_test.dat
-	-- PRS predictions for test individuals for prior parameters
+pop_stageX_all_preds_test.dat -- PRS predictions for test individuals for prior parameters
 
-pop_stageX_all_preds_valid.dat    
-	-- PRS predictions for validation individuals for prior parameters
+pop_stageX_all_preds_valid.dat -- PRS predictions for validation individuals for prior parameters
 
-pop_stageX_best_model_params.dat
-	-- best fitting model parameters in test set
+pop_stageX_best_model_params.dat -- best fitting model parameters in test set
 
-pop_stageX_best_pred_test.dat     
-	-- PRS predictions for test individuals for best prior parameters
+pop_stageX_best_pred_test.dat -- PRS predictions for test individuals for best prior parameters
 
-pop_stageX_best_pred_valid.dat    
-	-- PRS predictions for valid individuals for best prior parameters
+pop_stageX_best_pred_valid.dat -- PRS predictions for valid individuals for best prior parameters
 
 X=1 -- PRS estimated using sumstats of target population
+
 X=2 -- PRS estimated using using sumstats from both populations
 
-AFR_weighted_combined_preds.dat
-	--  PRS predictions in validation samples of best weighted PRS
-	    across all estimated PRS
+AFR_weighted_combined_preds.dat --  PRS predictions in validation samples of best weighted PRS across all estimated PRS
 
-AFR_weighted_combined_snp_weights.dat
-	--  PRS SNP weights of best weighted PRS across all estimated
-	    PRS with columns SNP ID, effect allele, ref allele and effect.
+AFR_weighted_combined_snp_weights.dat --  PRS SNP weights of best weighted PRS across all estimated PRS with columns SNP ID, effect allele, ref allele and effect.
 
-AFR_weighted_combined_var_explained.txt
-	-- Variance explained of best weighted PRS in validation data
+AFR_weighted_combined_var_explained.txt -- Variance explained of best weighted PRS in validation data
