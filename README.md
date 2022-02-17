@@ -59,7 +59,8 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 
 	--pop2_sumstats. Population 2 sumstats file, can be gzipped (required)
 
-	--by_chr_sumstats. If set assumes sumstats are split by chromosome and are labelled pop1_sumstatsXby_chr_sumstats, where X indexes the chromosomes
+	--by_chr_sumstats. If set assumes sumstats are split by chromosome and are
+		labelled pop1_sumstatsXby_chr_sumstats, where X indexes the chromosomes
 
 	--pop1_qc_snplist. List of variants to use in clumping of
 		population 2 sumstats (required)
