@@ -117,7 +117,7 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 	--do_est_beta_pop1. Logical to run R script to estimate PRS using
           population 1 summary statistics (default 1)
 
-    	--do_predict_pop1. Logical to run R script to make predictions
+	--do_predict_pop1. Logical to run R script to make predictions
           in population 1 in test and if supplied validation data
           (default 1)
     
