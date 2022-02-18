@@ -47,7 +47,8 @@ can be run separately, in particular code will run faster if user
 parallelises clumping step by running by chromosomes.
 
 # To run BridgePRS:
-BridgePRS/bin/ridgePRS_bychr.sh \
+BridgePRS/bin/ridgePRS_bychr.sh
+	
 	--outdir. Output directory
 	
 	--pop1. Label for population 1 result files (default pop1)
