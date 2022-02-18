@@ -47,7 +47,7 @@ can be run separately, in particular code will run faster if user
 parallelises clumping step by running by chromosomes.
 
 # To run BridgePRS:
-~/BridgePRS/bin/BridgePRS.sh
+	~/BridgePRS/bin/BridgePRS.sh
 	
 	--outdir. Output directory
 	
