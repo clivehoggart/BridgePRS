@@ -207,7 +207,7 @@ then
     Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
-	    --sumstats2 $pop2_sumstats \
+#	    --sumstats2 $pop2_sumstats \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
@@ -255,7 +255,7 @@ then
     Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
-	    --sumstats2 $pop2_sumstats \
+#	    --sumstats2 $pop2_sumstats \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \

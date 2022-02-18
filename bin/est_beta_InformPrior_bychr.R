@@ -163,7 +163,8 @@ for( chr in 1:22 ){
                                                   ld.ids=ld.ids, by.chr=0,
                                                   tau=tau, n=n,
                                                   lambda.prior0=lambda.prior,
-                                                  S.prior0=S.prior, ranking=opt$ranking )},
+                                                  S.prior0=S.prior, ranking=opt$ranking,
+                                                  strand.check=opt$strand.check )},
                      mc.cores=opt$n.cores )
 #for( i in 1:length(beta.prior) ){
 #    print(i)

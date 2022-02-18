@@ -159,6 +159,12 @@ for( chr in 1:22 ){
         if( !is.null(opt$sumstats2) ){
             infile <- paste0( opt$sumstats2, chr, opt$by.chr.sumstats )
             sumstats2 <- fread(infile)
+            snp.ptr <- which( colnames(sumstats2)==opt$sumstats.snpID )
+            allele1.ptr <- which( colnames(sumstats2)==opt$sumstats.allele1ID )
+            allele0.ptr <- which( colnames(sumstats2)==opt$sumstats.allele0ID )
+            beta.ptr <- which( colnames(sumstats2)==opt$sumstats.betaID )
+            sumstats2 <- sumstats2[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
+            colnames(sumstats2) <- c('SNP','ALLELE1','ALLELE0','BETA')
             clump <- thin.big.loci( clump, thinned.snplist, opt$n.max.locus, sumstats2 )
         }else{
             clump <- thin.big.loci( clump, thinned.snplist, opt$n.max.locus )
@@ -175,7 +181,8 @@ for( chr in 1:22 ){
                                         recomb=recomb, Ne=opt$Ne,
                                         X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
                                         S=S, l=lambda, precision=precision, by.chr=0,
-                                        tau=tau, n=n, beta.stem=path )},
+                                        tau=tau, n=n, beta.stem=path,
+                                        strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
 #    fits=list()

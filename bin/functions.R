@@ -184,16 +184,38 @@ Pseudo.f.test.diag <- function( beta, lambda, n.eff, tau ){
     return( f.tail )
 }
 
-est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele ){
+est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, strand.check ){
     ids <- intersect( ld.ids, dimnames(X.bed)[[1]] )
     X <- X.bed[ ids, snps, drop=FALSE ]
     ptr.bed <- match( snps, colnames(X.bed) )
     X <- X[,match( snps, colnames(X)), drop=FALSE ]
     coded.allele <- bim$V5[ptr.bed]
+    other.allele <- bim$V6[ptr.bed]
 
-    swtch <- which( coded.allele!=effect.allele )
-    for( ii in swtch ){
-        X[,ii] <- 2 - X[,ii]
+    swtch <- ifelse( coded.allele==effect.allele & other.allele==ref.allele, 1, 0 )
+    swtch <- ifelse( coded.allele==ref.allele & other.allele==other.allele, -1, swtch )
+    ptr.miss <- which( swtch==0 )
+    if( strand.check & length(ptr.miss)>0 ){
+        coded.allele1 <- alt.strand( coded.allele )
+        other.allele1 <- alt.strand( other.allele )
+
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==effect.allele[ptr.miss] &
+                                   other.allele1[ptr.miss]==ref.allele[ptr.miss],
+                                  1, 0 )
+
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==ref.allele[ptr.miss] &
+                                   other.allele1[ptr.miss]==effect.allele[ptr.miss],
+                                  -1, swtch[ptr.miss] )
+    }
+
+    ptr <- which(swtch == -1)
+    if( length(ptr)>0 ){
+        X[,ptr] <- 2 - X[,ptr]
+    }
+
+    ptr <- which(swtch == 0)
+    if( length(ptr)>0 ){
+        X[,ptr] <- 0
     }
 
     af <- apply(X,2,mean,na.rm=TRUE)/2
@@ -208,7 +230,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele ){
 read.fit.clump <- function( clump.i, sumstats, ld.ids,
                            do.ld.shrink, recomb, Ne,
                            X.bed, bim, l=10, S=1, precision=FALSE,
-                           by.chr, tau, n, beta.stem ){
+                           by.chr, tau, n, beta.stem, strand.check ){
     clump.snps <-  unlist(strsplit( clump.i$SP2, ',' ))
     tmp <- strsplit( clump.snps, "\\(1" )
     if ( tmp[[1]][1]!="NONE" ) {
@@ -226,7 +248,7 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
     if( length(snps)>0 ){
         sumstats <- sumstats[match( snps, sumstats$SNP ),]
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
-                                   sumstats$ALLELE1 )
+                                   sumstats$ALLELE1, sumstats$ALLELE0, strand.check )
 
         ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 )
         if( length(ptr.use)>0 ){
@@ -289,7 +311,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                      do.ld.shrink, recomb, Ne,
                                      beta.prior, lambda.ext, w.prior,
                                      precision=FALSE, by.chr, tau, n,
-                                     ranking, lambda.prior0, S.prior0 ){
+                                     ranking, lambda.prior0, S.prior0, strand.check ){
     snps <- intersect( beta.prior$snp, sumstats$SNP )
     if( length(snps)>0 ){
         ptr.sumstats <- match( snps, sumstats$SNP )
@@ -301,7 +323,8 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             bim <- bim[[chr]]
         }
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
-                                   beta.prior$effect.allele[ptr.prior] )
+                                   beta.prior$effect.allele[ptr.prior],
+                                   beta.prior$ref.allele[ptr.prior], strand.check )
 
         if( do.ld.shrink==1 ){
             ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
@@ -334,8 +357,28 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
         colnames(beta.bar) <- 1:(length(w.prior))
         kl <- vector(length=length(w.prior))
 
-        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1, 1, NA )
-        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0, -1, swtch )
+        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1 &
+                      beta.prior$ref.allele==sumstats$ALLELE0, 1, 0 )
+        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0 &
+                      beta.prior$ref.allele==sumstats$ALLELE1, -1, swtch )
+
+        ptr.miss <- which( swtch==0 )
+        if( strand.check & length(ptr.miss)>0 ){
+            coded.allele1 <- alt.strand( sumstats$ALLELE1 )
+            other.allele1 <- alt.strand( sumstats$ALLELE0 )
+
+            swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+                                       beta.prior$effect.allele[ptr.miss] &
+                                       other.allele1[ptr.miss]==
+                                       beta.prior$ref.allele[ptr.miss],
+                                      1, 0 )
+
+            swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+                                       beta.prior$ref.allele[ptr.miss] &
+                                       other.allele1[ptr.miss]==
+                                       beta.prior$effect.allele[ptr.miss],
+                                      -1, swtch[ptr.miss] )
+        }
 
         if( precision ){
             lambda <- list( length=length(w.prior) )
@@ -391,7 +434,7 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
     other.allele <- bim$V6[ptr.bed]
 
     swtch <- ifelse( coded.allele==beta.bar$effect.allele &
-                  other.allele==beta.bar$ref.allele, 1, 0 )
+                     other.allele==beta.bar$ref.allele, 1, 0 )
 
     swtch <- ifelse( coded.allele==beta.bar$ref.allele &
                      other.allele==beta.bar$effect.allele, -1, swtch )
@@ -502,10 +545,10 @@ thin.big.loci <- function( clump, thinned.snplist, n.max.locus, sumstats2=NULL )
         if( length(clump.snps)>n.max.locus ){
             clump.snps.thinned <- intersect( clump.snps, thinned.snplist )
             if( !is.null(sumstats2) ){
-                snps.pop2 <- intersect( clump.snps, sumstats2$ID )
-                ptr.pop2 <- match( snps.pop2, sumstats2$ID )
+                snps.pop2 <- intersect( clump.snps, sumstats2$SNP )
+                ptr.pop2 <- match( snps.pop2, sumstats2$SNP )
                 s <- order( sumstats2$P[ptr.pop2], decreasing=FALSE )
-                clump.snps.thinned <-  c( sumstats2$ID[ptr.pop2[s[1]]], clump.snps.thinned )
+                clump.snps.thinned <-  c( sumstats2$SNP[ptr.pop2[s[1]]], clump.snps.thinned )
                 clump.snps.thinned <- unique(clump.snps.thinned)
             }
             clump$SP2[i] <- paste0( clump.snps.thinned, collapse='(1),' )
