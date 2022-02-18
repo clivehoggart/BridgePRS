@@ -28,7 +28,7 @@ Assumes Plink v1.9 is in your path and BridgePRS directory is in your home direc
 
 Make BridgePRS shell script and example shell script executable; \
 chmod +x bin/BridgePRS.sh \
-chmod +x Bridge_example.sh \
+chmod +x Bridge_example.sh
 
 # Getting started
 Example script in the installation directory runs the example data by typing \
@@ -93,13 +93,20 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 
 	--pheno_name. Column name of phenotype used in test and validation files (required)
 
-	--sumstats.snpID. Sumstat column label of SNP ID (required)
+	--sumstats_snpID. Sumstat column label of SNP ID (required)
 
-	--sumstats.betaID. Sumstat column label of SNP effect (required)
+	--sumstats_betaID. Sumstat column label of SNP effect (required)
 
-	--sumstats.allele1ID. Sumstat column label SNP effect allele (required)
+	--sumstats_allele1ID. Sumstat column label SNP effect allele (required)
 
-	--sumstats.allele0ID. Sumstat column label of SNP ref allele (required)
+	--sumstats_allele0ID. Sumstat column label of SNP ref allele (required)
+	
+	--strand_check. Logical to check whether summary statistics and reference data
+		input files are on the same strand. If true/1 only unambiguous SNPs are
+		used in analyses. If false/0 all variants with matching alleles between
+		studies are used. With both options effect and reference alleles are
+		checked and flipped where necessary. If a matching pair of alleles is not
+		found variants are removed.
 
 	--n_cores. Nummber of processors to use by R scripts
 
