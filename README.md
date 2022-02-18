@@ -106,7 +106,7 @@ BridgePRS/bin/ridgePRS_bychr.sh \
 		used in analyses. If false/0 all variants with matching alleles between
 		studies are used. With both options effect and reference alleles are
 		checked and flipped where necessary. If a matching pair of alleles is not
-		found variants are removed.
+		found variants are removed (default 0)
 
 	--n_cores. Nummber of processors to use by R scripts
 
