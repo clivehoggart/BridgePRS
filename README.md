@@ -28,11 +28,11 @@ Assumes Plink v1.9 is in your path and BridgePRS directory is in your home direc
 
 Make BridgePRS shell script and example shell script executable; \
 chmod +x bin/BridgePRS.sh \
-chmod +x Bridge_example.sh
+chmod +x BridgePRS_example.sh
 
 # Getting started
 Example script in the installation directory runs the example data by typing \
-./Bridge_example.sh \
+nohup ./BridgePRS_example.sh > log.txt \
 Script utilises 8 processors for paralel computation, this can be changed
 from the --n_cores argument, see below.
 
