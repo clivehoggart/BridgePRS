@@ -78,7 +78,7 @@ kl.dist <- function( mu0, mu1, lambda0, lambda1, n ){
 
 noncentral.ridge.fit <- function( beta.data, LD, af,
                                  beta.tilde1, lambda0, lambda1,
-                                 w.prior, n, tau, precision=FALSE, ranking ){
+                                 w.prior, n, precision=FALSE, ranking ){
     s2 <- 2*af*(1-af)
     s <- as.vector(sqrt(s2))
     k <- length(beta.data)
@@ -107,7 +107,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 #    ret[[3]] <- kl.02 - kl.12
 
     if( ranking=="f.stat" ){
-        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2, n.eff=n*(1+w.prior), tau )
+        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2, n.eff=n*(1+w.prior) )
     }
 
     if( ranking=="thinned.f.stat" ){
@@ -118,7 +118,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
         e <- eigen(lambda2,symmetric=TRUE)
         b1 <- t(e$vector) %*% beta.tilde2
         ret[[3]] <- -Pseudo.f.test.diag( b1[1:k.eff,,drop=FALSE], e$values[1:k.eff],
-                                        n.eff=n*(1+w.prior), tau )
+                                        n.eff=n*(1+w.prior) )
     }
 
     ret[[1]] <- beta.tilde2
@@ -166,19 +166,19 @@ f.test <- function( beta, LD, af, n, tau ){
     return( f.tail )
 }
 
-Pseudo.f.test <- function( beta, lambda, n.eff, tau ){
+Pseudo.f.test <- function( beta, lambda, n.eff ){
     k <- length(beta)
 
-    stat <- tau * (n.eff-k) * ( t(beta) %*% lambda %*% beta ) / k
+    stat <- (n.eff-k) * ( t(beta) %*% lambda %*% beta ) / k
     f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
 }
 
-Pseudo.f.test.diag <- function( beta, lambda, n.eff, tau ){
+Pseudo.f.test.diag <- function( beta, lambda, n.eff ){
     k <- length(beta)
 
-    stat <- tau * (n.eff-k) * sum(beta * lambda * beta) / k
+    stat <- (n.eff-k) * sum(beta * lambda * beta) / k
     f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
@@ -230,7 +230,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, str
 read.fit.clump <- function( clump.i, sumstats, ld.ids,
                            do.ld.shrink, recomb, Ne,
                            X.bed, bim, l=10, S=1, precision=FALSE,
-                           by.chr, tau, n, beta.stem, strand.check ){
+                           by.chr, n, beta.stem, strand.check ){
     clump.snps <-  unlist(strsplit( clump.i$SP2, ',' ))
     tmp <- strsplit( clump.snps, "\\(1" )
     if ( tmp[[1]][1]!="NONE" ) {
@@ -310,7 +310,7 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
 read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                      do.ld.shrink, recomb, Ne,
                                      beta.prior, lambda.ext, w.prior,
-                                     precision=FALSE, by.chr, tau, n,
+                                     precision=FALSE, by.chr, n,
                                      ranking, lambda.prior0, S.prior0, strand.check ){
     snps <- intersect( beta.prior$snp, sumstats$SNP )
     if( length(snps)>0 ){
@@ -390,7 +390,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                         lambda0=lambda.prior0,
                                         lambda1=lambda.prior,
                                         w.prior=w.prior[i],
-                                        n, tau, precision=precision, ranking )
+                                        n, precision=precision, ranking )
             beta.bar[,i] <- tmp[[1]]
             colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
             kl[i] <- tmp[[3]]
