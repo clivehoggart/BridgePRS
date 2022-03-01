@@ -1,4 +1,3 @@
-????
 # BridgePRS
 Estimation of trans-ancestry PRS 
 BridgePRS is an R and bash based package that integrates GWAS summary
