@@ -11,6 +11,7 @@
     --pop1_ld_ids ~/BridgePRS/data/EUR_IDs.txt \
     --pop2_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop2_test_data  ~/BridgePRS/data/pheno_afr_test.dat \
+    --pop2_valid_data  ~/BridgePRS/data/pheno_afr_valid.dat \
     --pop2_ld_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop2_ld_ids ~/BridgePRS/data/AFR_IDs.txt \
     --sumstats_snpID ID \
@@ -22,6 +23,7 @@
     --sumstats_se SE \
     --sumstats_frq A1_FREQ \
     --pheno_name y \
+    --cov_names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10 \
     --n_cores 30 \
     --do_clump_pop1 1 \
     --do_est_beta_pop1 1 \
