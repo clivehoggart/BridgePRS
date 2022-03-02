@@ -1,4 +1,5 @@
 ~/BridgePRS/bin/BridgePRS.sh \
+    --strand_check 1 \
     --outdir out \
     --pop1_sumstats ~/BridgePRS/data/sumstats/EUR.chr \
     --pop2_sumstats ~/BridgePRS/data/sumstats/AFR.chr \
