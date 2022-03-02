@@ -1,30 +1,28 @@
 ~/BridgePRS/bin/BridgePRS.sh \
     --outdir out \
-    --strand_check 1 \
-    --pop1 EUR \
-    --pop2 AFR \
     --pop1_sumstats ~/BridgePRS/data/sumstats/EUR.chr \
     --pop2_sumstats ~/BridgePRS/data/sumstats/AFR.chr \
     --by_chr_sumstats .Phenotype.glm.linear.gz \
     --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
     --pop2_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
     --pop1_bfile ~/BridgePRS/data/bfiles/bfile3 \
-    --pop1_test_data ~/BridgePRS/data/pheno_eur.dat \
-    --pop1_ld_bfile ~/BridgePRS/data/bfiles/bfile3 \
+    --pop1_test_data  ~/BridgePRS/data/pheno_eur.dat \
+    --pop1_ld_bfile  ~/BridgePRS/data/bfiles/bfile3 \
     --pop1_ld_ids ~/BridgePRS/data/EUR_IDs.txt \
     --pop2_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop2_test_data  ~/BridgePRS/data/pheno_afr_test.dat \
     --pop2_ld_bfile ~/BridgePRS/data/bfiles/bfile3 \
     --pop2_ld_ids ~/BridgePRS/data/AFR_IDs.txt \
-    --pop2_valid_data  ~/BridgePRS/data/pheno_afr_valid.dat \
-    --cov_names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10 \
-    --pheno_name y \
     --sumstats_snpID ID \
-    --sumstats_P P \
+    --sumstats_p P \
     --sumstats_beta BETA \
     --sumstats_allele1 A1 \
     --sumstats_allele0 AX \
-    --n_cores 8 \
+    --sumstats_n OBS_CT \
+    --sumstats_se SE \
+    --sumstats_frq A1_FREQ \
+    --pheno_name y \
+    --n_cores 30 \
     --do_clump_pop1 1 \
     --do_est_beta_pop1 1 \
     --do_predict_pop1 1 \
@@ -34,5 +32,5 @@
     --do_clump_pop2 1 \
     --do_est_beta_pop2 1 \
     --do_predict_pop2 1 \
-    --do_combine 1
+    --do_combine 1 
 
