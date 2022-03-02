@@ -175,7 +175,7 @@ for( chr in 1:22 ){
                                                   w.prior=w.prior, sumstats=sumstats,
                                                   X.bed=ptr.bed, bim=bim,
                                                   ld.ids=ld.ids, by.chr=0,
-                                                  sumstats.n=sumstats.n,
+                                                  sumstats.n=median(sumstats.n),
                                                   lambda.prior0=lambda.prior,
                                                   S.prior0=S.prior, ranking=opt$ranking,
                                                   strand.check=opt$strand.check )},
