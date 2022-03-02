@@ -96,11 +96,17 @@ parallelises clumping step by running by chromosomes.
 
 	--sumstats_snpID. Sumstat column label of SNP ID (required)
 
-	--sumstats_betaID. Sumstat column label of SNP effect (required)
+	--sumstats_beta. Sumstat column label of SNP effect (required)
 
-	--sumstats_allele1ID. Sumstat column label SNP effect allele (required)
+	--sumstats_allele1. Sumstat column label SNP effect allele (required)
 
-	--sumstats_allele0ID. Sumstat column label of SNP ref allele (required)
+	--sumstats_allele0. Sumstat column label of SNP ref allele (required)
+	
+	--sumstats_n. Sumstat column label for sample size (required)
+	
+	--sumstats_se. Sumstat column label of SNP effect standard error (required)
+	
+	--sumstats_frq. Sumstat column label of SNP allele frequency (required)
 	
 	--strand_check. Logical to check whether summary statistics and reference data
 		input files are on the same strand. If true/1 only unambiguous SNPs are
