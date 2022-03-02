@@ -43,6 +43,12 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
+    make_option(c("--sumstats.nID"), type="character", default="OBS",
+                help="N. obs column name", metavar="character"),
+    make_option(c("--sumstats.seID"), type="character", default="SE",
+                help="SE column name", metavar="character"),
+    make_option(c("--sumstats.frqID"), type="character", default="FRQ",
+                help="Freq column name", metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--ld.shrink"), type="numeric",
@@ -72,12 +78,16 @@ opt$beta.stem <- ifelse( is.null(opt$beta.stem), opt$clump.stem, opt$beta.stem )
 
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
-    tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
-    n <- median(sumstats$OBS_CT)
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+
+    sumstats.n <- sumstats[,opt$sumstats.nID]
+    sumstats.se <- sumstats[,opt$sumstats.seID]
+    sumstats.frq <- sumstats[,opt$sumstats.frqID]
+    sigma2 <- median( 2*sumstats.n * sumstats.se *
+                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
     if( opt$strand.check ){
@@ -93,7 +103,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    sumstats$BETA <- sumstats$BETA * sqrt(tau)
+    sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
 }
 
 lambda <- as.numeric(strsplit( opt$lambda, ',' )[[1]])
@@ -116,8 +126,13 @@ if( opt$by.chr==0 ){
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
-        tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
-        n <- median(sumstats$OBS_CT)
+        if( chr==1 ){
+            sumstats.n <- sumstats[,opt$sumstats.nID]
+            sumstats.se <- sumstats[,opt$sumstats.seID]
+            sumstats.frq <- sumstats[,opt$sumstats.frqID]
+            sigma2 <- median( 2*sumstats.n * sumstats.se *
+                              sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+        }
         snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
         allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
         allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
@@ -137,7 +152,7 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-        sumstats$BETA <- sumstats$BETA * sqrt(tau)
+        sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
     }
     if( opt$by.chr==1 ){
         ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
@@ -183,7 +198,7 @@ for( chr in 1:22 ){
                                         recomb=recomb, Ne=opt$Ne,
                                         X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
                                         S=S, l=lambda, precision=precision, by.chr=0,
-                                        tau=tau, n=n, beta.stem=path,
+                                        beta.stem=path,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
@@ -195,9 +210,9 @@ for( chr in 1:22 ){
 #                               recomb=recomb, Ne=opt$Ne,
 #                               X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
 #                               S=S, l=lambda, precision=precision,
-#                               by.chr=0, tau=tau, n=n, beta.stem=path )
+#                               by.chr=0, beta.stem=path )
 #    }
-#fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, tau=tau, n=n, beta.stem=path )
+#fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, beta.stem=path )
     beta.bar <- lapply( fits, getElement, 1 )
     names(beta.bar) <- clump$SNP[clump.use]
 

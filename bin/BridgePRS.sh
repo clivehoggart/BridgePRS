@@ -40,7 +40,7 @@ usage()
   exit 2
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_P:,strand_check: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -94,11 +94,14 @@ do
     --ranking) ranking=$2 ; shift 2 ;;
     --ld_shrink) ld_shrink=$2 ; shift 2 ;;
     --ids_col) ids_col=$2 ; shift 2 ;;
-    --sumstats_P) sumstats_P=$2 ; shift 2 ;;
+    --sumstats_p) sumstats_p=$2 ; shift 2 ;;
     --sumstats_snpID) sumstats_snpID=$2 ; shift 2 ;;
     --sumstats_beta) sumstats_beta=$2 ; shift 2 ;;
     --sumstats_allele1) sumstats_allele1=$2 ; shift 2 ;;
     --sumstats_allele0) sumstats_allele0=$2 ; shift 2 ;;
+    --sumstats_n) sumstats_n=$2 ; shift 2 ;;
+    --sumstats_se) sumstats_se=$2 ; shift 2 ;;
+    --sumstats_frq) sumstats_frq=$2 ; shift 2 ;;
     --strand_check) strand_check=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
@@ -191,7 +194,7 @@ then
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop1_sumstats1 \
-	      --clump-field $sumstats_P --clump-snp-field $sumstats_snpID \
+	      --clump-field $sumstats_p --clump-snp-field $sumstats_snpID \
 	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
@@ -219,6 +222,9 @@ then
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.nID $sumstats_n \
+	    --sumstats.seID $sumstats_se \
+	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr \
 	    --by.chr.sumstats $by_chr_sumstats \
@@ -261,10 +267,13 @@ then
 	    --beta.stem $outdir/models/stage1 \
 	    --param.file $outdir/$pop1\_stage1_best_model_params.dat \
 	    --precision TRUE \
-	    --sumstats.snpID ID \
-	    --sumstats.betaID BETA \
-	    --sumstats.allele1ID A1 \
-	    --sumstats.allele0ID AX \
+	    --sumstats.snpID $sumstats_snpID \
+	    --sumstats.betaID $sumstats_beta \
+	    --sumstats.allele1ID $sumstats_allele1 \
+	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.nID $sumstats_n \
+	    --sumstats.seID $sumstats_se \
+	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --recomb.file $recomb_pop1_file \
@@ -285,10 +294,13 @@ then
 	    --beta.stem $outdir/models/$pop2\_stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --w.prior 1,2,5,10,15,20,50,100,200,500 \
-	    --sumstats.snpID ID \
-	    --sumstats.betaID BETA \
-	    --sumstats.allele1ID A1 \
-	    --sumstats.allele0ID AX \
+	    --sumstats.snpID $sumstats_snpID \
+	    --sumstats.betaID $sumstats_beta \
+	    --sumstats.allele1ID $sumstats_allele1 \
+	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.nID $sumstats_n \
+	    --sumstats.seID $sumstats_se \
+	    --sumstats.frqID $sumstats_frq \
 	    --precision 0 \
 	    --n.cores $n_cores \
 	    --recomb.file $recomb_pop2_file \
@@ -336,7 +348,7 @@ then
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop2_sumstats1 \
-	      --clump-field $sumstats_P --clump-snp-field $sumstats_snpID \
+	      --clump-field $sumstats_p --clump-snp-field $sumstats_snpID \
 	      --clump-p1 1e-2 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
@@ -361,6 +373,9 @@ then
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.nID $sumstats_n \
+	    --sumstats.seID $sumstats_se \
+	    --sumstats.frqID $sumstats_frq \
 	    --precision FALSE \
 	    --lambda 0.05,0.1,0.2,0.5,1,2,5 \
 	    --S 0,0.25,0.5,0.75,1 \

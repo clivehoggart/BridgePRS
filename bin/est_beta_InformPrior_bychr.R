@@ -34,6 +34,12 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
+    make_option(c("--sumstats.nID"), type="character", default="OBS",
+                help="N. obs column name", metavar="character"),
+    make_option(c("--sumstats.seID"), type="character", default="SE",
+                help="SE column name", metavar="character"),
+    make_option(c("--sumstats.frqID"), type="character", default="FRQ",
+                help="Freq column name", metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--param.file"), type="character", default=NULL,
@@ -68,8 +74,11 @@ w.prior <- as.numeric(strsplit( opt$w.prior, ',' )[[1]])
 
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
-    tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
-    n <- median(sumstats$OBS_CT)
+    sumstats.n <- sumstats[,opt$sumstats.nID]
+    sumstats.se <- sumstats[,opt$sumstats.seID]
+    sumstats.frq <- sumstats[,opt$sumstats.frqID]
+    sigma2 <- median( 2*sumstats.n * sumstats.se *
+                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
@@ -90,7 +99,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    sumstats$BETA <- sumstats$BETA * sqrt(tau)
+    sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
 
@@ -112,8 +121,11 @@ for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
         if( chr==1 ){
-            tau <- 1 / median( 2*sumstats$OBS_CT * sumstats$SE^2 * sumstats$A1_FREQ * (1-sumstats$A1_FREQ), na.rm=TRUE )
-            n <- median(sumstats$OBS_CT)
+            sumstats.n <- sumstats[,opt$sumstats.nID]
+            sumstats.se <- sumstats[,opt$sumstats.seID]
+            sumstats.frq <- sumstats[,opt$sumstats.frqID]
+            sigma2 <- median( 2*sumstats.n * sumstats.se *
+                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
             snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
             allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
             allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
@@ -134,7 +146,7 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-        sumstats$BETA <- sumstats$BETA * sqrt(tau)
+        sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
     }
     if( opt$by.chr==1 ){
         ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
@@ -163,14 +175,14 @@ for( chr in 1:22 ){
                                                   w.prior=w.prior, sumstats=sumstats,
                                                   X.bed=ptr.bed, bim=bim,
                                                   ld.ids=ld.ids, by.chr=0,
-                                                  tau=tau, n=n,
+                                                  sumstats.n=sumstats.n,
                                                   lambda.prior0=lambda.prior,
                                                   S.prior0=S.prior, ranking=opt$ranking,
                                                   strand.check=opt$strand.check )},
                      mc.cores=opt$n.cores )
 #for( i in 1:length(beta.prior) ){
 #    print(i)
-#    tmp <- read.NonCentralFit.clump( beta.prior=beta.prior[[i]], do.ld.shrink=opt$ld.shrink, recomb=recomb, Ne=opt$Ne, lambda.ext=lambda.ext, w.prior=w.prior, sumstats=sumstats, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, by.chr=0, tau=tau, n=n, lambda.prior0=lambda.prior, S.prior0=S.prior, ranking=opt$ranking )
+#    tmp <- read.NonCentralFit.clump( beta.prior=beta.prior[[i]], do.ld.shrink=opt$ld.shrink, recomb=recomb, Ne=opt$Ne, lambda.ext=lambda.ext, w.prior=w.prior, sumstats=sumstats, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, by.chr=0, sumstats.n=sumstats.n, lambda.prior0=lambda.prior, S.prior0=S.prior, ranking=opt$ranking )
 #}
 
     names(fits) <- clump.ids

@@ -128,7 +128,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
     return( ret )
 }
 
-ridge.fit <- function( beta.data, LD, af, l, S=1, n, precision=FALSE ){
+ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
     s2 <- 2*af*(1-af)
     l <- l*s2^S
     s <- as.vector(sqrt(s2))
@@ -230,7 +230,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, str
 read.fit.clump <- function( clump.i, sumstats, ld.ids,
                            do.ld.shrink, recomb, Ne,
                            X.bed, bim, l=10, S=1, precision=FALSE,
-                           by.chr, n, beta.stem, strand.check ){
+                           by.chr, beta.stem, strand.check ){
     clump.snps <-  unlist(strsplit( clump.i$SP2, ',' ))
     tmp <- strsplit( clump.snps, "\\(1" )
     if ( tmp[[1]][1]!="NONE" ) {
@@ -276,7 +276,7 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
                     ii <- ii + 1
                     tmp <- ridge.fit( beta=sumstats$BETA,
                                      LD=ref.stats$ld, af=ref.stats$af,
-                                     l=l[j], S=S[i], n=n, precision=precision )
+                                     l=l[j], S=S[i], precision=precision )
                     beta.bar[,ii] <- tmp[[1]]
                     colnames(beta.bar)[ii] <- paste('beta.bar',l[j],S[i],sep="_")
 #                if( !is.na(tmp[[3]]) ){
@@ -310,7 +310,7 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
 read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                      do.ld.shrink, recomb, Ne,
                                      beta.prior, lambda.ext, w.prior,
-                                     precision=FALSE, by.chr, n,
+                                     precision=FALSE, by.chr, sumstats.n,
                                      ranking, lambda.prior0, S.prior0, strand.check ){
     snps <- intersect( beta.prior$snp, sumstats$SNP )
     if( length(snps)>0 ){
@@ -390,7 +390,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                         lambda0=lambda.prior0,
                                         lambda1=lambda.prior,
                                         w.prior=w.prior[i],
-                                        n, precision=precision, ranking )
+                                        n=sumstats.n, precision=precision, ranking )
             beta.bar[,i] <- tmp[[1]]
             colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
             kl[i] <- tmp[[3]]
