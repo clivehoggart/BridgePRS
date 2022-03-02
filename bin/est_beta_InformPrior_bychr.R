@@ -77,7 +77,7 @@ if( opt$by.chr.sumstats==0 ){
     sumstats.n <- sumstats[,opt$sumstats.nID]
     sumstats.se <- sumstats[,opt$sumstats.seID]
     sumstats.frq <- sumstats[,opt$sumstats.frqID]
-    sigma2 <- median( 2*sumstats.n * sumstats.se *
+    sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
                       sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
@@ -124,7 +124,7 @@ for( chr in 1:22 ){
         if( chr==1 ){
             sumstats.se <- sumstats[,opt$sumstats.seID]
             sumstats.frq <- sumstats[,opt$sumstats.frqID]
-            sigma2 <- median( 2*sumstats.n * sumstats.se *
+            sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
                       sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
             snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
             allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )

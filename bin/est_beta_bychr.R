@@ -86,7 +86,7 @@ if( opt$by.chr.sumstats==0 ){
     sumstats.n <- sumstats[,opt$sumstats.nID]
     sumstats.se <- sumstats[,opt$sumstats.seID]
     sumstats.frq <- sumstats[,opt$sumstats.frqID]
-    sigma2 <- median( 2*sumstats.n * sumstats.se *
+    sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
                       sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
