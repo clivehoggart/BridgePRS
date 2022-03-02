@@ -120,8 +120,8 @@ lambda.ext <- paste( path, '/lambda/', sep='' )
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
+        sumstats.n <- sumstats[,opt$sumstats.nID]
         if( chr==1 ){
-            sumstats.n <- sumstats[,opt$sumstats.nID]
             sumstats.se <- sumstats[,opt$sumstats.seID]
             sumstats.frq <- sumstats[,opt$sumstats.frqID]
             sigma2 <- median( 2*sumstats.n * sumstats.se *
