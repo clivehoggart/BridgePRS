@@ -130,7 +130,7 @@ for( chr in 1:22 ){
             sumstats.n <- sumstats[,opt$sumstats.nID]
             sumstats.se <- sumstats[,opt$sumstats.seID]
             sumstats.frq <- sumstats[,opt$sumstats.frqID]
-            sigma2 <- median( 2*sumstats.n * sumstats.se *
+            sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
                               sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
         }
         snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
