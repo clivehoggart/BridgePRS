@@ -164,7 +164,7 @@ for( chr in 1:22 ){
     clump.use <- which( clump$P <= 1 )
 
     if( opt$ld.shrink==1 ){
-        infile <- paste0(opt$recomb.file,chr,'.txt.gz')
+        infile <- paste0(opt$recomb.file,'-',chr,'-final.txt.gz')
         recomb <- fread(infile)
     }
     if( opt$ld.shrink==0 ){
