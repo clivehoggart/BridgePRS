@@ -91,14 +91,14 @@ if( opt$by.chr.sumstats==0 ){
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
     if( opt$strand.check ){
-        ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
-                          sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |
-                          sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A" |
-                          sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T" |
-                          sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A" |
-                          sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T" |
-                          sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C" |
-                          sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G" )
+        ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
+                          (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
+                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A") |
+                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T") |
+                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A") |
+                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T") |
+                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C") |
+                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G") )
         sumstats <- sumstats[ptr.use,]
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)

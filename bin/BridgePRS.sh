@@ -394,7 +394,7 @@ then
     Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop2\_stage1 \
 	    --out.file $outdir/$pop2\_stage1 \
-	    --p.thresh 1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
+	    --p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
 	    --bfile $pop2_bfile \
 	    --test.data $pop2_test_data \
 	    --valid.data $pop2_valid_data \
