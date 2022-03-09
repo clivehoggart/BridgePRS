@@ -119,7 +119,8 @@ lambda.ext <- paste( path, '/lambda/', sep='' )
 
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
-        sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
+        sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''),
+                          data.table=FALSE )
         sumstats.n <- sumstats[,opt$sumstats.nID]
         if( chr==1 ){
             sumstats.se <- sumstats[,opt$sumstats.seID]
@@ -159,7 +160,7 @@ for( chr in 1:22 ){
 #    lambda.prior <- dget(paste(opt$prior,"_lambda_chr",chr,".Robj", sep=""))
 
     if( opt$ld.shrink==1 ){
-        infile <- paste0(opt$recomb.file,chr,'.txt.gz')
+        infile <- paste0(opt$recomb.file,'-',chr,'-final.txt.gz')
         recomb <- fread(infile)
     }
     if( opt$ld.shrink==0 ){
