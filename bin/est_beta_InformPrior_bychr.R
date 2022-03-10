@@ -180,10 +180,10 @@ for( chr in 1:22 ){
                                                   S.prior0=S.prior, ranking=opt$ranking,
                                                   strand.check=opt$strand.check )},
                      mc.cores=opt$n.cores )
-#for( i in 1:length(beta.prior) ){
-#    print(i)
-#    tmp <- read.NonCentralFit.clump( beta.prior=beta.prior[[i]], do.ld.shrink=opt$ld.shrink, recomb=recomb, Ne=opt$Ne, lambda.ext=lambda.ext, w.prior=w.prior, sumstats=sumstats, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, by.chr=0, sumstats.n=sumstats.n, lambda.prior0=lambda.prior, S.prior0=S.prior, ranking=opt$ranking )
-#}
+for( i in 1:length(beta.prior) ){
+    print(i)
+    tmp <- read.NonCentralFit.clump( beta.prior=beta.prior[[i]], do.ld.shrink=opt$ld.shrink, recomb=recomb, Ne=opt$Ne, lambda.ext=lambda.ext, w.prior=w.prior, sumstats=sumstats, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, by.chr=0, sumstats.n=median(sumstats.n), lambda.prior0=lambda.prior, S.prior0=S.prior, ranking=opt$ranking, strand.check=opt$strand.check )
+}
 
     names(fits) <- clump.ids
     fits.use <- which( !sapply( fits, is.null ) )

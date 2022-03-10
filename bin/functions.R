@@ -1,3 +1,15 @@
+beta.tail.approx <- function( x1, alpha, beta ){
+# Trapezium approximation
+    inc <- 1/(4*beta)
+    x <- seq(from=x1,by=inc,length=100)
+    logf <- (alpha-1)*log(x) + (beta-1)*log(1-x) - lgamma(alpha) - lgamma(beta) + lgamma(alpha+beta)
+    mx.logf <- max(logf)
+    f <- exp(logf-mx.logf)
+    height <- (f[-100] + f[-1]) / 2
+    area <- log(sum(height*inc)) + mx.logf
+    return(area)
+}
+
 alt.strand <- function(allele){
     allele1 <- ifelse( allele=='A', 'T', NA )
     allele1 <- ifelse( allele=='C', 'G', allele1 )
@@ -170,9 +182,15 @@ Pseudo.f.test <- function( beta, lambda, n.eff ){
     k <- length(beta)
 
     stat <- (n.eff-k) * ( t(beta) %*% lambda %*% beta ) / k
-    f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
+#    f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
 
-    return( f.tail )
+    beta.stat <- stat*k / ( stat*k + n.eff - k )
+    beta.tail <- pbeta( beta.stat, k/2 , (n.eff-k)/2, lower.tail=FALSE, log.p=TRUE )
+    if( is.infinite(f.tail) ){
+        beta.tail <- beta.tail.approx( beta.stat, k/2 , (n.eff-k)/2 )
+    }
+
+    return( beta.tail )
 }
 
 Pseudo.f.test.diag <- function( beta, lambda, n.eff ){
