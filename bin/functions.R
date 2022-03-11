@@ -330,19 +330,19 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                      beta.prior, lambda.ext, w.prior,
                                      precision=FALSE, by.chr, sumstats.n,
                                      ranking, lambda.prior0, S.prior0, strand.check ){
-    snps <- intersect( beta.prior$snp, sumstats$SNP )
+    chr <- beta.prior$chr[1]
+    if( by.chr ){
+        X.bed <- X.bed[[chr]]
+        bim <- bim[[chr]]
+    }
+    snps <- intersect( bim$V2, intersect( beta.prior$snp, sumstats$SNP ) )
     if( length(snps)>0 ){
         ptr.sumstats <- match( snps, sumstats$SNP )
         ptr.prior <- match( snps, beta.prior$snp )
         sumstats <- sumstats[ptr.sumstats,,drop=FALSE]
-        chr <- beta.prior$chr[1]
-        if( by.chr ){
-            X.bed <- X.bed[[chr]]
-            bim <- bim[[chr]]
-        }
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
-                                   beta.prior$effect.allele[ptr.prior],
-                                   beta.prior$ref.allele[ptr.prior], strand.check )
+                                   effect.allele=beta.prior$effect.allele[ptr.prior],
+                                   ref.allele=beta.prior$ref.allele[ptr.prior], strand.check )
 
         if( do.ld.shrink==1 ){
             ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
