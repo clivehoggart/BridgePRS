@@ -186,7 +186,7 @@ Pseudo.f.test <- function( beta, lambda, n.eff ){
 
     beta.stat <- stat*k / ( stat*k + n.eff - k )
     beta.tail <- pbeta( beta.stat, k/2 , (n.eff-k)/2, lower.tail=FALSE, log.p=TRUE )
-    if( is.infinite(f.tail) ){
+    if( is.infinite(beta.tail) ){
         beta.tail <- beta.tail.approx( beta.stat, k/2 , (n.eff-k)/2 )
     }
 
