@@ -344,7 +344,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    effect.allele=beta.prior$effect.allele[ptr.prior],
                                    ref.allele=beta.prior$ref.allele[ptr.prior], strand.check )
-        ptr.use <- which( ref.stats$af > 0.005 )
+        ptr.use <- which( 0.005 < ref.stats$af&ref.stats$af < 0.995 )
         if( length(ptr.use) > 0 ){
             if( length(ptr.use) < length(snps) ){
                 snps <- snps[ptr.use]
