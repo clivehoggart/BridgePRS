@@ -105,6 +105,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 
     XtX <- diag(s,nrow=k) %*% LD %*% diag(s,nrow=k)
     lambda2 <- XtX + lambda1*w.prior
+
     beta.tilde2 <- solve(lambda2) %*% ( w.prior*lambda1%*%beta.tilde1 +
                                         as.matrix(beta.data * s*s) )
 
@@ -343,96 +344,105 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    effect.allele=beta.prior$effect.allele[ptr.prior],
                                    ref.allele=beta.prior$ref.allele[ptr.prior], strand.check )
-
-        if( do.ld.shrink==1 ){
-            ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
-                                          Ne=Ne, m=length(ld.ids) )
-            ref.stats$ld <- ref.stats$ld * ld.shrink.factor
-        }
+        ptr.use <- which( ref.stats$af > 0.005 )
+        if( length(ptr.use) > 0 ){
+            if( length(ptr.use) < length(snps) ){
+                snps <- snps[ptr.use]
+                sumstats <-  sumstats[ptr.use,]
+                ptr.prior <- ptr.prior[ptr.use]
+                ref.stats$af <- ref.stats$af[ptr.use]
+                ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
+            }
+            if( do.ld.shrink==1 ){
+                ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
+                                              Ne=Ne, m=length(ld.ids) )
+                ref.stats$ld <- ref.stats$ld * ld.shrink.factor
+            }
 
 #        clump.ftest <- f.test( sumstats$BETA, ref.stats$ld, ref.stats$af, n, tau )
-        infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
-        lambda.prior <- as.matrix(fread(infile))
+            infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
+            lambda.prior <- as.matrix(fread(infile))
 
-        if( length(ptr.prior) < nrow(beta.prior) ){
-            beta <- as.matrix(beta.prior$beta.bar)
-            xTy <- ( lambda.prior %*% beta )[ptr.prior,,drop=FALSE]
-            lambda.prior <- lambda.prior[ptr.prior,ptr.prior,drop=FALSE]
-            beta <- solve(lambda.prior) %*% xTy
-            beta.prior <- beta.prior[ptr.prior,]
-            beta.prior$beta.bar <- beta
-        }
+            if( length(ptr.prior) < nrow(beta.prior) ){
+                beta <- as.matrix(beta.prior$beta.bar)
+                xTy <- ( lambda.prior %*% beta )[ptr.prior,,drop=FALSE]
+                lambda.prior <- lambda.prior[ptr.prior,ptr.prior,drop=FALSE]
+                beta <- solve(lambda.prior) %*% xTy
+                beta.prior <- beta.prior[ptr.prior,]
+                beta.prior$beta.bar <- beta
+            }
 
 #        beta.prior <- beta.prior[ptr.prior,,drop=FALSE]
 #        sigma.prior <- solve(lambda.prior)[ptr.prior,ptr.prior,drop=FALSE]
 #        lambda.prior <- solve(sigma.prior)
 
-        af.pop1 <- beta.prior$af
-        var.pop1 <- 2*af.pop1*(1-af.pop1)
-        lambda.prior0 <- lambda.prior0 * var.pop1^S.prior0
+            af.pop1 <- beta.prior$af
+            var.pop1 <- 2*af.pop1*(1-af.pop1)
+            lambda.prior0 <- lambda.prior0 * var.pop1^S.prior0
 
-        beta.bar <- matrix( ncol=length(w.prior), nrow=length(snps) )
-        colnames(beta.bar) <- 1:(length(w.prior))
-        kl <- vector(length=length(w.prior))
+            beta.bar <- matrix( ncol=length(w.prior), nrow=length(snps) )
+            colnames(beta.bar) <- 1:(length(w.prior))
+            kl <- vector(length=length(w.prior))
 
-        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1 &
-                      beta.prior$ref.allele==sumstats$ALLELE0, 1, 0 )
-        swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0 &
-                      beta.prior$ref.allele==sumstats$ALLELE1, -1, swtch )
+            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1 &
+                             beta.prior$ref.allele==sumstats$ALLELE0, 1, 0 )
+            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0 &
+                             beta.prior$ref.allele==sumstats$ALLELE1, -1, swtch )
 
-        ptr.miss <- which( swtch==0 )
-        if( strand.check & length(ptr.miss)>0 ){
-            coded.allele1 <- alt.strand( sumstats$ALLELE1 )
-            other.allele1 <- alt.strand( sumstats$ALLELE0 )
+            ptr.miss <- which( swtch==0 )
+            if( strand.check & length(ptr.miss)>0 ){
+                coded.allele1 <- alt.strand( sumstats$ALLELE1 )
+                other.allele1 <- alt.strand( sumstats$ALLELE0 )
 
-            swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
-                                       beta.prior$effect.allele[ptr.miss] &
-                                       other.allele1[ptr.miss]==
-                                       beta.prior$ref.allele[ptr.miss],
-                                      1, 0 )
+                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+                                           beta.prior$effect.allele[ptr.miss] &
+                                           other.allele1[ptr.miss]==
+                                           beta.prior$ref.allele[ptr.miss],
+                                          1, 0 )
 
-            swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
-                                       beta.prior$ref.allele[ptr.miss] &
-                                       other.allele1[ptr.miss]==
-                                       beta.prior$effect.allele[ptr.miss],
-                                      -1, swtch[ptr.miss] )
-        }
-
-        if( precision ){
-            lambda <- list( length=length(w.prior) )
-        }
-        for( i in 1:length(w.prior) ){
-            tmp <- noncentral.ridge.fit( beta.data=sumstats$BETA*swtch,
-                                        LD=ref.stats$ld, af=ref.stats$af,
-                                        beta.tilde1=beta.prior$beta.bar,
-                                        lambda0=lambda.prior0,
-                                        lambda1=lambda.prior,
-                                        w.prior=w.prior[i],
-                                        n=sumstats.n, precision=precision, ranking )
-            beta.bar[,i] <- tmp[[1]]
-            colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
-            kl[i] <- tmp[[3]]
-            names(kl)[i] <- paste('beta.bar',w.prior[i],sep="_")
-            if( precision ){
-                lambda[[i]] <- tmp[[2]]
+                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+                                           beta.prior$ref.allele[ptr.miss] &
+                                           other.allele1[ptr.miss]==
+                                           beta.prior$effect.allele[ptr.miss],
+                                          -1, swtch[ptr.miss] )
             }
-        }
 
-        beta.bar <- data.frame( beta.prior[,1:6],
-                               sumstats$BETA, beta.prior$beta.bar, beta.bar )
-        rownames(beta.bar) <- snps
-        colnames(beta.bar)[1:8] <- c('snp','clump.id','chr','effect.allele','ref.allele',
-                                     'p.value','beta_hat','beta_prior')
+            if( precision ){
+                lambda <- list( length=length(w.prior) )
+            }
+            for( i in 1:length(w.prior) ){
+                tmp <- noncentral.ridge.fit( beta.data=sumstats$BETA*swtch,
+                                            LD=ref.stats$ld, af=ref.stats$af,
+                                            beta.tilde1=beta.prior$beta.bar,
+                                            lambda0=lambda.prior0,
+                                            lambda1=lambda.prior,
+                                            w.prior=w.prior[i],
+                                            n=sumstats.n, precision=precision, ranking )
+                beta.bar[,i] <- tmp[[1]]
+                colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
+                kl[i] <- tmp[[3]]
+                names(kl)[i] <- paste('beta.bar',w.prior[i],sep="_")
+                if( precision ){
+                    lambda[[i]] <- tmp[[2]]
+                }
+            }
 
-        ret <- list(length=3)
-        ret[[1]] <- beta.bar
-        ret[[2]] <- kl
-        if( precision ){
-            names(lambda) <- colnames(beta.bar)[-(1:9)]
-            fwrite( lambda, paste0(beta.stem,'/lambda/',clump.i$SNP,'.gz') )
+            beta.bar <- data.frame( beta.prior[,1:6],
+                                   sumstats$BETA, beta.prior$beta.bar, beta.bar )
+            rownames(beta.bar) <- snps
+            colnames(beta.bar)[1:8] <- c('snp','clump.id','chr','effect.allele','ref.allele',
+                                         'p.value','beta_hat','beta_prior')
+
+            ret <- list(length=3)
+            ret[[1]] <- beta.bar
+            ret[[2]] <- kl
+            if( precision ){
+                names(lambda) <- colnames(beta.bar)[-(1:9)]
+                fwrite( lambda, paste0(beta.stem,'/lambda/',clump.i$SNP,'.gz') )
 #            ret[[2]] <- lambda
+            }
+            return(ret)
         }
-        return(ret)
     }
 }
 
