@@ -27,8 +27,6 @@ option_list = list(
                 help="Comma delimited lambda values", metavar="character"),
     make_option(c("--S"), type="character", default="1",
                 help="Comma delimited S values", metavar="character"),
-    make_option(c("--p.thresh"), type="numeric", default="0.01",
-                help="P-value threshold for selecting clumps", metavar="character"),
     make_option(c("--precision"), type="logical", default=FALSE,
                 help="Option to calculate precision matrix of each clump", metavar="character"),
     make_option(c("--n.cores"), type="numeric", default=1,
@@ -202,15 +200,15 @@ for( chr in 1:22 ){
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
-#    fits=list()
 #    for( i in 1:length(clump.use) ){
-#        fits[[i]] <- read.fit.clump( clump.i=clump[clump.use[i],],
+#        print(i)
+#        tmp <- read.fit.clump( clump.i=clump[clump.use[i],],
 #                               do.ld.shrink=opt$ld.shrink,
 #                               sumstats=sumstats,
 #                               recomb=recomb, Ne=opt$Ne,
 #                               X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
 #                               S=S, l=lambda, precision=precision,
-#                               by.chr=0, beta.stem=path )
+#                               by.chr=0, beta.stem=path, strand.check=opt$strand.check )
 #    }
 #fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, beta.stem=path )
     beta.bar <- lapply( fits, getElement, 1 )

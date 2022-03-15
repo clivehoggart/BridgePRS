@@ -112,7 +112,7 @@ do
   esac
 done
 
-if [ $indir -eq 0 ]
+if [ $indir = 0 ]
 then
     indir=$outdir
 fi
