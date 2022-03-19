@@ -98,7 +98,6 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
 
@@ -146,7 +145,6 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-        sumstats$BETA <- sumstats$BETA / sqrt(sigma2)
     }
     if( opt$by.chr==1 ){
         ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
