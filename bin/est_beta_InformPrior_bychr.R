@@ -176,6 +176,7 @@ for( chr in 1:22 ){
                                                   sumstats.n=median(sumstats.n),
                                                   lambda.prior0=lambda.prior,
                                                   S.prior0=S.prior, ranking=opt$ranking,
+                                                  sigma2=sigma2,
                                                   strand.check=opt$strand.check )},
                      mc.cores=opt$n.cores )
 #for( i in 1:length(beta.prior) ){
