@@ -33,8 +33,6 @@ ld.shrink <- function( snps, bim, recomb, m, Ne ){
     posn <- bim$V4[match( snps, bim$V2 )]
 
     ptr <- match( posn, recomb$Position )
-    ptr0 <- which(is.na(ptr))
-    ptr1 <- which(!is.na(ptr))
 
     ptr.begin <- which( recomb$Position < min(posn,na.rm=TRUE) )
     ptr.begin <- ifelse( length(ptr.begin)>1, max(ptr.begin), 1 )
@@ -47,6 +45,11 @@ ld.shrink <- function( snps, bim, recomb, m, Ne ){
 
     posn <- c( start.posn, posn, end.posn )
 
+    s <- order(posn)
+    ss <- order(s)
+    cbind(posn,map)[s,]
+    map <- map[s]
+    posn <- posn[s]
     ptr0 <- which(is.na(map))
     ptr1 <- which(!is.na(map))
 
@@ -58,11 +61,14 @@ ld.shrink <- function( snps, bim, recomb, m, Ne ){
             map[ptr0[ptr.fill]] <- a + b*(posn[ptr0[ptr.fill]] - posn[ptr1[i]] )
         }
     }
+    map <- map[ss]
+    posn <- posn[ss]
+    cbind(posn,map)[s,]
 
     map <- map[-c(1,length(map))]
     ld.shrink.factor <- diag(x=1,nrow=length(map),ncol=length(map))
     for( i in 1:(length(map)-1) ){
-        d <- map[-(1:i)] - map[i]
+        d <- abs(map[-(1:i)] - map[i])
         dd <- exp(-2*Ne*d/m)
         ld.shrink.factor[i,-(1:i)] <- dd
         ld.shrink.factor[-(1:i),i] <- dd
