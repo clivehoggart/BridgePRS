@@ -201,11 +201,10 @@ for( chr in 1:22 ){
 #    for( i in 1:length(clump.use) ){
 #        print(i)
 #        tmp <- read.fit.clump( clump.i=clump[clump.use[i],],
-#                               do.ld.shrink=opt$ld.shrink,
-#                               sumstats=sumstats,
-#                               recomb=recomb, Ne=opt$Ne,
-#                               X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
-#                               S=S, l=lambda, precision=precision,
+#                               do.ld.shrink=opt$ld.shrink, Ne=opt$Ne,
+#                               sumstats=sumstats, bim=bim, ld.ids=ld.ids, S=S,
+#                               recomb=recomb, precision=precision,
+#                               X.bed=ptr.bed, l=lambda,
 #                               by.chr=0, beta.stem=path, strand.check=opt$strand.check )
 #    }
 #fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, beta.stem=path )
