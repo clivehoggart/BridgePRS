@@ -373,6 +373,10 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
 
+            if( length(ptr.prior) == nrow(beta.prior) ){
+                lambda.prior <- lambda.prior[ptr.prior,ptr.prior,drop=FALSE]
+                beta.prior <- beta.prior[ptr.prior,]
+            }
             if( length(ptr.prior) < nrow(beta.prior) ){
                 beta <- as.matrix(beta.prior$beta.bar)
                 xTy <- ( lambda.prior %*% beta )[ptr.prior,,drop=FALSE]
