@@ -372,7 +372,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                               Ne=Ne, m=length(ld.ids) )
                 ref.stats$ld <- ref.stats$ld * ld.shrink.factor
             }
-            if( ranking==="pv.ftest" ){
+            if( ranking=="pv.ftest" ){
                 clump.ftest <- f.test( sumstats$BETA, ref.stats$ld,
                                       ref.stats$af, n, sigma2 )
             }
