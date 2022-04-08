@@ -448,7 +448,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 }
             }
 
-            if( ranking==="pv.ftest" ){
+            if( ranking=="pv.ftest" ){
                 beta.bar <- data.frame( beta.prior[,1:6],
                                        sumstats$BETA, clump.ftest, beta.prior$beta.bar,
                                        beta.bar )
