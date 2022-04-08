@@ -119,6 +119,7 @@ fi
 
 echo "Options in effect:"
 echo "outdir  : $outdir"
+echo "indir  : $indir"
 echo "bfile   : $bfile"
 echo "n_cores : $n_cores"
 echo "pop1_ld_ids : $pop1_ld_ids"
@@ -129,7 +130,6 @@ echo "pop1_valid_ids : $pop1_valid_ids"
 echo "pop2_valid_ids : $pop2_valid_ids"
 echo "pop1_test_ids : $pop1_test_ids"
 echo "pop2_test_ids : $pop2_test_ids"
-echo "outdir : $outdir"
 echo "pop1_qc_snplist : $pop1_qc_snplist"
 echo "pop2_qc_snplist : $pop2_qc_snplist"
 echo "do_clump_pop1 : $do_clump_pop1"
@@ -146,7 +146,6 @@ echo "by_chr : $by_chr"
 echo "by_chr_sumstats : $by_chr_sumstats"
 echo "pheno_name : $pheno_name"
 echo "cov_names : $cov_names"
-echo "indir : $indir"
 echo "pop1 : $pop1"
 echo "pop2 : $pop2"
 echo "n_max_locus : $n_max_locus"
@@ -166,15 +165,11 @@ mkdir $outdir/clump
 mkdir $outdir/models
 mkdir $outdir/models/lambda
 
-if [ $ranking != "pv" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
+if [ $ranking != "pv" ] && [ $ranking != "pv.ftest" ]
+    && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
     echo "Invalid argument, ranking="$ranking
     exit
-fi
-
-if [ $indir == "" ]
-then
-    indir=$outdir
 fi
 
 if [ $do_clump_pop1 -eq 1 ]
@@ -287,10 +282,10 @@ if [ $do_est_beta_InformPrior -eq 1  ]
 then
     rm $outdir/models/$pop2\_stage2*
     Rscript --vanilla ~/BridgePRS/bin/est_beta_InformPrior_bychr.R \
-	    --sumstats  $pop2_sumstats \
+	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
-	    --prior $outdir/models/stage1 \
-	    --param.file $outdir/$pop1\_stage1_best_model_params.dat \
+	    --prior $indir/models/stage1 \
+	    --param.file $indir/$pop1\_stage1_best_model_params.dat \
 	    --beta.stem $outdir/models/$pop2\_stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --w.prior 0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10 \
