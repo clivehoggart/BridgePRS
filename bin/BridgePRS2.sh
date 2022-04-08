@@ -165,8 +165,7 @@ mkdir $outdir/clump
 mkdir $outdir/models
 mkdir $outdir/models/lambda
 
-if [ $ranking != "pv" ] && [ $ranking != "pv.ftest" ]
-    && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
+if [ $ranking != "pv" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
     echo "Invalid argument, ranking="$ranking
     exit
