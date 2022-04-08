@@ -55,7 +55,6 @@ option_list = list(
                 help="File of genome-wide recombination rates", metavar="character"),
     make_option(c("--Ne"), type="numeric",
                 help="Effective population size", metavar="numeric", default=0),
-
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),

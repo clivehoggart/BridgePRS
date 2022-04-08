@@ -98,7 +98,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
                                  beta.tilde1, lambda0, lambda1, w.prior,
                                  n, precision=FALSE, ranking, sigma2 ){
     s2 <- 2*af*(1-af)
-    s <- as.vector(sqrt(s2))
+#    s <- as.vector(sqrt(s2))
     k <- length(beta.data)
     ret <- vector("list", 3)
 
@@ -113,7 +113,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
     lambda2 <- LD + lambda1*w.prior
 
     beta.tilde2 <- solve(lambda2) %*% ( w.prior*lambda1%*%beta.tilde1 +
-                                        as.matrix(beta.data * s*s) )
+                                        as.matrix(beta.data * s2) )
 
 # Is data driven posterior closer to informative prior than "ref" prior ?
 #    d.post.prior <- kl.dist( beta.tilde02, beta.tilde1, lambda02, w.prior*lambda1, n )
@@ -172,16 +172,17 @@ ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
     return( ret )
 }
 
-f.test <- function( beta, LD, af, n, tau ){
+f.test <- function( beta, LD, af, n, sigma2 ){
     l <- 0.01
     s2 <- 2*af*(1-af)
     l <- l*s2^(-1)
-    s <- as.vector(sqrt(s2))
     k <- length(beta)
 
-    lambda1 <- diag(s,nrow=k) %*% LD %*% diag(s,nrow=k) + diag(l,nrow=k)
-    beta.hat <- solve(lambda1) %*% as.matrix( beta * s*s )
-    stat <- tau * (n-k) * ( t(beta.hat) %*% lambda1 %*% beta.hat ) / k
+    lambda1 <- LD + diag(l,nrow=k)
+    beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
+    xx <- t(beta.hat) %*% lambda1 %*% beta.hat / sigma2
+#    print(xx)
+    stat <- (n-k) * xx / k
     f.tail <- pf( stat, k, n-k, lower.tail=FALSE )
 
     return( f.tail )
@@ -190,10 +191,12 @@ f.test <- function( beta, LD, af, n, tau ){
 Pseudo.f.test <- function( beta, lambda, n.eff, sigma2 ){
     k <- length(beta)
 
+    x <- ( t(beta) %*% lambda %*% beta ) / sigma2
+
     stat <- (n.eff-k) * ( t(beta) %*% lambda %*% beta ) / (k * sigma2)
 #    f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
 
-    beta.stat <- stat*k / ( stat*k + n.eff - k )
+    beta.stat <- as.numeric( stat*k / ( stat*k + n.eff - k ) )
     beta.tail <- pbeta( beta.stat, k/2 , (n.eff-k)/2, lower.tail=FALSE, log.p=TRUE )
     if( is.infinite(beta.tail) ){
         beta.tail <- beta.tail.approx( beta.stat, k/2 , (n.eff-k)/2 )
@@ -220,7 +223,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, str
     other.allele <- bim$V6[ptr.bed]
 
     swtch <- ifelse( coded.allele==effect.allele & other.allele==ref.allele, 1, 0 )
-    swtch <- ifelse( coded.allele==ref.allele & other.allele==other.allele, -1, swtch )
+    swtch <- ifelse( coded.allele==ref.allele & other.allele==effect.allele, -1, swtch )
     ptr.miss <- which( swtch==0 )
     if( strand.check & length(ptr.miss)>0 ){
         coded.allele1 <- alt.strand( coded.allele )
@@ -319,10 +322,10 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    clump.i$P, ref.stats$af,
                                    sumstats$BETA, beta.bar )
-#    rownames(beta.bar) <- names(ref.stats$af)
             colnames(beta.bar)[1:8] <- c('snp','clump.id','chr',
                                          'effect.allele','ref.allele',
                                          'p.value','af','beta_hat')
+#    rownames(beta.bar) <- names(ref.stats$af)
 
             ret <- list()
             ret[[1]] <- beta.bar
@@ -353,7 +356,8 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
         sumstats <- sumstats[ptr.sumstats,,drop=FALSE]
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    effect.allele=beta.prior$effect.allele[ptr.prior],
-                                   ref.allele=beta.prior$ref.allele[ptr.prior], strand.check )
+                                   ref.allele=beta.prior$ref.allele[ptr.prior],
+                                   strand.check )
         ptr.use <- which( 0.005 < ref.stats$af&ref.stats$af < 0.995 )
         if( length(ptr.use) > 0 ){
             if( length(ptr.use) < length(snps) ){
@@ -368,8 +372,10 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                               Ne=Ne, m=length(ld.ids) )
                 ref.stats$ld <- ref.stats$ld * ld.shrink.factor
             }
-
-#        clump.ftest <- f.test( sumstats$BETA, ref.stats$ld, ref.stats$af, n, tau )
+            if( ranking==="pv.ftest" ){
+                clump.ftest <- f.test( sumstats$BETA, ref.stats$ld,
+                                      ref.stats$af, n, sigma2 )
+            }
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
 
@@ -442,11 +448,22 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 }
             }
 
-            beta.bar <- data.frame( beta.prior[,1:6],
-                                   sumstats$BETA, beta.prior$beta.bar, beta.bar )
+            if( ranking==="pv.ftest" ){
+                beta.bar <- data.frame( beta.prior[,1:6],
+                                       sumstats$BETA, clump.ftest, beta.prior$beta.bar,
+                                       beta.bar )
+                colnames(beta.bar)[1:9] <- c('snp','clump.id','chr',
+                                             'effect.allele','ref.allele','p.value',
+                                             'beta_hat','p.value.ftest','beta_prior')
+            }else{
+                beta.bar <- data.frame( beta.prior[,1:6],
+                                       sumstats$BETA, beta.prior$beta.bar,
+                                       beta.bar )
+                colnames(beta.bar)[1:8] <- c('snp','clump.id','chr',
+                                             'effect.allele','ref.allele','p.value',
+                                             'beta_hat','beta_prior')
+            }
             rownames(beta.bar) <- snps
-            colnames(beta.bar)[1:8] <- c('snp','clump.id','chr','effect.allele','ref.allele',
-                                         'p.value','beta_hat','beta_prior')
 
             ret <- list(length=3)
             ret[[1]] <- beta.bar
@@ -522,7 +539,14 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
     n.clumps <- length(beta.bar)
     batches <- ceiling(n.clumps/b.size)
     chr <- as.numeric(sapply( sapply(beta.bar,getElement,'chr'), getElement, 1 ))
-    pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value'), getElement, 1 ))
+    if( ranking=="pv" ){
+        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value'),
+                                  getElement, 1 ))
+    }
+    if( ranking=="pv.ftest" ){
+        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value.test'),
+                                  getElement, 1 ))
+    }
 
     if( ranking=="f.stat" | ranking=="thinned.f.stat" ){
         pred.genome <- list(length=nrow(kl.thresh))
