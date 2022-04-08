@@ -441,8 +441,10 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                             ranking=ranking, sigma2=sigma2 )
                 beta.bar[,i] <- tmp[[1]]
                 colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
-                kl[i] <- tmp[[3]]
-                names(kl)[i] <- paste('beta.bar',w.prior[i],sep="_")
+                if( ranking=="f.stat" | ranking=="thinned.f.stat" ){
+                    kl[i] <- tmp[[3]]
+                    names(kl)[i] <- paste('beta.bar',w.prior[i],sep="_")
+                }
                 if( precision ){
                     lambda[[i]] <- tmp[[2]]
                 }

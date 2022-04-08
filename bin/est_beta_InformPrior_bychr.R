@@ -199,9 +199,11 @@ for( chr in 1:22 ){
 #        lambda.fit <- lapply( fits, getElement, 2 )
 #        dput( lambda.fit, paste(opt$beta.stem,"_lambda_chr",chr,".Robj", sep="" ) )
 #    }
-    kl.out <- t(simplify2array(lapply( fits, getElement, 2 )))
-    kl.out <- data.frame( names(fits), kl.out )
-    colnames(kl.out)[1] <- 'clumnp.id'
-    outfile <- paste(opt$beta.stem,"_KLdist_chr",chr,".txt.gz", sep="")
-    fwrite( kl.out, outfile )
+    if( opt$ranking=="f.stat" | opt$ranking=="thinned.f.stat" ){
+        kl.out <- t(simplify2array(lapply( fits, getElement, 2 )))
+        kl.out <- data.frame( names(fits), kl.out )
+        colnames(kl.out)[1] <- 'clumnp.id'
+        outfile <- paste(opt$beta.stem,"_KLdist_chr",chr,".txt.gz", sep="")
+        fwrite( kl.out, outfile )
+    }
 }
