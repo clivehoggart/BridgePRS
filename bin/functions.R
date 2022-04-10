@@ -173,25 +173,23 @@ ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
 }
 
 f.test <- function( beta, LD, af, n, sigma2 ){
-    l <- 0.01
+    l <- 1
     s2 <- 2*af*(1-af)
     l <- l*s2^(-1)
     k <- length(beta)
 
     lambda1 <- LD + diag(l,nrow=k)
     beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
-    xx <- t(beta.hat) %*% lambda1 %*% beta.hat / sigma2
-#    print(xx)
-    stat <- (n-k) * xx / k
-    f.tail <- pf( stat, k, n-k, lower.tail=FALSE )
+    xx <- t(beta.hat) %*% lambda1 %*% beta.hat
+    print(xx/sigma2)
+    stat <- (n-k) * xx / (k*sigma2)
+    f.tail <- pf( stat, k, n-k, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
 }
 
 Pseudo.f.test <- function( beta, lambda, n.eff, sigma2 ){
     k <- length(beta)
-
-    x <- ( t(beta) %*% lambda %*% beta ) / sigma2
 
     stat <- (n.eff-k) * ( t(beta) %*% lambda %*% beta ) / (k * sigma2)
 #    f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
