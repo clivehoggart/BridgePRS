@@ -544,7 +544,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
                                   getElement, 1 ))
     }
     if( ranking=="pv.ftest" ){
-        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value.test'),
+        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value.ftest'),
                                   getElement, 1 ))
     }
 
@@ -558,7 +558,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
             colnames(pred.genome[[j]]) <- colnames(kl.metric)
         }
     }
-    if( ranking=="pv" ){
+    if( ranking=="pv" | ranking=="pv.ftest" ){
         pred.genome <- list(length=nrow(p.thresh))
         ptr.beta.use <- grep( 'beta.bar', colnames(beta.bar[[1]]) )
         nc <- length(ptr.beta.use)

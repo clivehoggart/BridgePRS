@@ -109,7 +109,7 @@ for( chr in 1:22 ){
             nme.thresh <- rownames(kl.thresh)
         }
     }
-    if( opt$ranking=='pv' ){
+    if( opt$ranking=='pv' | opt$ranking=='pv.ftest' ){
         kl.metric <- NULL
         kl.thresh <- NULL
         n.thresh <- nrow(p.thresh)
