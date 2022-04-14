@@ -394,7 +394,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             }
             if( ranking=="thinned.pv.ftest" ){
                 clump.ftest <- f.test.diag( sumstats$BETA, ref.stats$ld,
-                                           sumstats.n, sigma2 )
+                                           ref.stats$af, sumstats.n, sigma2 )
             }
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
