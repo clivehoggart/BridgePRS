@@ -181,7 +181,6 @@ f.test <- function( beta, LD, af, n, sigma2 ){
     lambda1 <- LD + diag(l,nrow=k)
     beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
     xx <- t(beta.hat) %*% lambda1 %*% beta.hat
-    print(xx/sigma2)
     stat <- (n-k) * xx / (k*sigma2)
     f.tail <- pf( stat, k, n-k, lower.tail=FALSE, log.p=TRUE )
 
@@ -208,6 +207,18 @@ Pseudo.f.test.diag <- function( beta, lambda, n.eff, sigma2 ){
 
     stat <- (n.eff-k) * sum(beta * lambda * beta) / (k * sigma2)
     f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
+
+    return( f.tail )
+}
+
+f.test.diag <- function( beta, LD, af, n.eff, sigma2 ){
+    e <- eigen(LD,symmetric=TRUE)
+    TT <- cumsum(e$values)/sum(e$values)
+    k.eff <- min(which(TT>0.95))
+    b <- (t(e$vector) %*% beta)[1:k.eff]
+    lambda <- e$values[1:k.eff]
+    stat <- (n.eff-k.eff) * b * lambda * b / (k.eff*sigma2)
+    f.tail <- pf( stat, k.eff, n.eff-k.eff, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
 }
