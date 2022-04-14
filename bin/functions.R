@@ -126,17 +126,11 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 #    ret[[3]] <- kl.02 - kl.12
 
     if( ranking=="f.stat" ){
-        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2,
+        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2, LD,
                                    n.eff=n*(1+w.prior), sigma2=sigma2 )
     }
 
     if( ranking=="thinned.f.stat" ){
-        lambda.data <- lambda2 - w.prior*diag(lambda0,k)
-        e <- eigen(lambda.data,symmetric=TRUE)
-        TT <- cumsum(e$values)/sum(e$values)
-        k.eff <- min(which(TT>0.95))
-        e <- eigen(lambda2,symmetric=TRUE)
-        b1 <- t(e$vector) %*% beta.tilde2
         ret[[3]] <- -Pseudo.f.test.diag( b1[1:k.eff,,drop=FALSE], e$values[1:k.eff],
                                         n.eff=n*(1+w.prior), sigma2=sigma2 )
     }
@@ -181,9 +175,9 @@ f.test <- function( beta, LD, af, n, sigma2 ){
     beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
     xx <- t(beta.hat) %*% lambda1 %*% beta.hat
     stat <- (n-k) * xx / (k*sigma2)
-    f.tail <- pf( stat, k, n-k, lower.tail=FALSE, log.p=TRUE )
+    f.tail <- pf( stat, k, n-k, lower.tail=FALSE, log.p=FALSE )
 
-    return( f.tail )
+    Return.tail )
 }
 
 Pseudo.f.test <- function( beta, lambda, n.eff, sigma2 ){
@@ -201,23 +195,37 @@ Pseudo.f.test <- function( beta, lambda, n.eff, sigma2 ){
     return( beta.tail )
 }
 
-Pseudo.f.test.diag <- function( beta, lambda, n.eff, sigma2 ){
+f.test.diag <- function( beta, LD, af, n, sigma2 ){
+    l <- 0.01
     k <- length(beta)
+    s2 <- 2*af*(1-af)
 
-    stat <- (n.eff-k) * sum(beta * lambda * beta) / (k * sigma2)
-    f.tail <- pf( stat, k, n.eff-k, lower.tail=FALSE, log.p=TRUE )
+    lambda1 <- LD + diag(l,nrow=k)
+    beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
+
+    e <- eigen(LD,symmetric=TRUE)
+    TT <- cumsum(e$values)/sum(e$values)
+    k.eff <- min(which(TT>0.95))
+
+    b <- (t(e$vector) %*% beta.hat)[1:k.eff]
+    lambda <- e$values[1:k.eff]
+
+    stat <- (n-k.eff) * b * lambda * b / (k.eff*sigma2)
+    f.tail <- pf( stat, k.eff, n-k.eff, lower.tail=FALSE, log.p=FALSE )
 
     return( f.tail )
 }
 
-f.test.diag <- function( beta, LD, n, sigma2 ){
+Pseudo.f.test.diag <- function( beta, lambda, LD, n.eff, sigma2 ){
     e <- eigen(LD,symmetric=TRUE)
     TT <- cumsum(e$values)/sum(e$values)
     k.eff <- min(which(TT>0.95))
+
+    e <- eigen(lambda,symmetric=TRUE)
     b <- (t(e$vector) %*% beta)[1:k.eff]
-    lambda <- e$values[1:k.eff]
-    stat <- (n-k.eff) * b * lambda * b / (k.eff*sigma2)
-    f.tail <- pf( stat, k.eff, n-k.eff, lower.tail=FALSE, log.p=TRUE )
+
+    stat <- (n.eff-k.eff) * sum(b * e[1:k.eff] * b ) / (k.eff * sigma2)
+    f.tail <- pf( stat, k.eff, n.eff-k.eff, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
 }
