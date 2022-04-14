@@ -175,6 +175,7 @@ ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
 f.test <- function( beta, LD, af, n, sigma2 ){
     l <- 0.01
     k <- length(beta)
+    s2 <- 2*af*(1-af)
 
     lambda1 <- LD + diag(l,nrow=k)
     beta.hat <- solve(lambda1) %*% as.matrix( beta * s2 )
@@ -385,7 +386,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             }
             if( ranking=="thinned.pv.ftest" ){
                 clump.ftest <- f.test.diag( sumstats$BETA, ref.stats$ld,
-                                           ref.stats$af, sumstats.n, sigma2 )
+                                           sumstats.n, sigma2 )
             }
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
