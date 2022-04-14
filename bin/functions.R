@@ -177,7 +177,7 @@ f.test <- function( beta, LD, af, n, sigma2 ){
     stat <- (n-k) * xx / (k*sigma2)
     f.tail <- pf( stat, k, n-k, lower.tail=FALSE, log.p=FALSE )
 
-    Return.tail )
+    return( f.tail )
 }
 
 Pseudo.f.test <- function( beta, lambda, n.eff, sigma2 ){
