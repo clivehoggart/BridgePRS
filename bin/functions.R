@@ -134,7 +134,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
         lambda.data <- lambda2 - w.prior*diag(lambda0,k)
         e <- eigen(lambda.data,symmetric=TRUE)
         TT <- cumsum(e$values)/sum(e$values)
-        k.eff <- min(which(TT>0.999))
+        k.eff <- min(which(TT>0.95))
         e <- eigen(lambda2,symmetric=TRUE)
         b1 <- t(e$vector) %*% beta.tilde2
         ret[[3]] <- -Pseudo.f.test.diag( b1[1:k.eff,,drop=FALSE], e$values[1:k.eff],
@@ -173,9 +173,7 @@ ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
 }
 
 f.test <- function( beta, LD, af, n, sigma2 ){
-    l <- 1
-    s2 <- 2*af*(1-af)
-    l <- l*s2^(-1)
+    l <- 0.01
     k <- length(beta)
 
     lambda1 <- LD + diag(l,nrow=k)
@@ -211,14 +209,14 @@ Pseudo.f.test.diag <- function( beta, lambda, n.eff, sigma2 ){
     return( f.tail )
 }
 
-f.test.diag <- function( beta, LD, af, n.eff, sigma2 ){
+f.test.diag <- function( beta, LD, n, sigma2 ){
     e <- eigen(LD,symmetric=TRUE)
     TT <- cumsum(e$values)/sum(e$values)
     k.eff <- min(which(TT>0.95))
     b <- (t(e$vector) %*% beta)[1:k.eff]
     lambda <- e$values[1:k.eff]
-    stat <- (n.eff-k.eff) * b * lambda * b / (k.eff*sigma2)
-    f.tail <- pf( stat, k.eff, n.eff-k.eff, lower.tail=FALSE, log.p=TRUE )
+    stat <- (n-k.eff) * b * lambda * b / (k.eff*sigma2)
+    f.tail <- pf( stat, k.eff, n-k.eff, lower.tail=FALSE, log.p=TRUE )
 
     return( f.tail )
 }
@@ -385,6 +383,10 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 clump.ftest <- f.test( sumstats$BETA, ref.stats$ld,
                                       ref.stats$af, sumstats.n, sigma2 )
             }
+            if( ranking=="thinned.pv.ftest" ){
+                clump.ftest <- f.test.diag( sumstats$BETA, ref.stats$ld,
+                                           ref.stats$af, sumstats.n, sigma2 )
+            }
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
 
@@ -459,7 +461,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 }
             }
 
-            if( ranking=="pv.ftest" ){
+            if( ranking=="pv.ftest" | ranking=="pv.ftest.thinned" ){
                 beta.bar <- data.frame( beta.prior[,1:6],
                                        sumstats$BETA, clump.ftest, beta.prior$beta.bar,
                                        beta.bar )
@@ -554,7 +556,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
         pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value'),
                                   getElement, 1 ))
     }
-    if( ranking=="pv.ftest" ){
+    if( ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
         pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value.ftest'),
                                   getElement, 1 ))
     }
@@ -569,7 +571,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
             colnames(pred.genome[[j]]) <- colnames(kl.metric)
         }
     }
-    if( ranking=="pv" | ranking=="pv.ftest" ){
+    if( ranking=="pv" | ranking=="pv.ftest" | ranking=="pv.ftest.thinned" ){
         pred.genome <- list(length=nrow(p.thresh))
         ptr.beta.use <- grep( 'beta.bar', colnames(beta.bar[[1]]) )
         nc <- length(ptr.beta.use)
