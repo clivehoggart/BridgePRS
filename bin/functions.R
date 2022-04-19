@@ -145,7 +145,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
     s2 <- 2*af*(1-af)
     l <- l*s2^S
-    s <- as.vector(sqrt(s2))
+#    s <- as.vector(sqrt(s2))
     k <- length(beta.data)
 
     beta0 <- rep(0,k)
@@ -153,7 +153,7 @@ ridge.fit <- function( beta.data, LD, af, l, S=1, precision=FALSE ){
 
 #    lambda1 <- diag(s,nrow=k) %*% LD %*% diag(s,nrow=k) + lambda0
     lambda1 <- LD + lambda0
-    beta.tilde <- solve(lambda1) %*% as.matrix( beta.data * s*s )
+    beta.tilde <- solve(lambda1) %*% as.matrix( beta.data * s2 )
 
 #    kl1 <- kl.dist( beta0, beta.tilde, lambda0, lambda1 )
 #    kl2 <- kl.dist( beta.tilde, beta0, lambda1, lambda0, n )
@@ -210,7 +210,7 @@ f.test.diag <- function( beta, LD, af, n, sigma2 ){
     b <- (t(e$vector) %*% beta.hat)[1:k.eff]
     lambda <- e$values[1:k.eff]
 
-    stat <- (n-k.eff) * b * lambda * b / (k.eff*sigma2)
+    stat <- (n-k.eff) * sum(b * lambda * b) / (k.eff*sigma2)
     f.tail <- pf( stat, k.eff, n-k.eff, lower.tail=FALSE, log.p=FALSE )
 
     return( f.tail )
