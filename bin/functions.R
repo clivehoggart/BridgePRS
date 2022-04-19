@@ -470,7 +470,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 }
             }
 
-            if( ranking=="pv.ftest" | ranking=="pv.ftest.thinned" ){
+            if( ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
                 beta.bar <- data.frame( beta.prior[,1:6],
                                        sumstats$BETA, clump.ftest, beta.prior$beta.bar,
                                        beta.bar )
@@ -580,7 +580,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
             colnames(pred.genome[[j]]) <- colnames(kl.metric)
         }
     }
-    if( ranking=="pv" | ranking=="pv.ftest" | ranking=="pv.ftest.thinned" ){
+    if( ranking=="pv" | ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
         pred.genome <- list(length=nrow(p.thresh))
         ptr.beta.use <- grep( 'beta.bar', colnames(beta.bar[[1]]) )
         nc <- length(ptr.beta.use)
