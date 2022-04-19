@@ -95,7 +95,7 @@ if( !is.null(opt$pred2) ){
     ptr.min <- which(fit.ridge$lambda==fit.ridge$lambda.min)
     ptr.min1 <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
     ptr.min2 <- which(fit.ridge2$lambda==fit.ridge2$lambda.min)
-    mse <- c( fit.ridge$cvsd[ptr.min], fit.ridge1$cvsd[ptr.min1], fit.ridge2$cvsd[ptr.min2] )
+    mse <- c( fit.ridge$cvm[ptr.min], fit.ridge1$cvm[ptr.min1], fit.ridge2$cvm[ptr.min2] )
 #logL2 <- -n*( mse - as.numeric(mse[1]) ) / (2*v.target)
 #probM2 <- exp(logL2) / sum(exp(logL2))
     logL <- -n*log(mse) / 2
