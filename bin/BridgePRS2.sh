@@ -406,7 +406,7 @@ then
     rm $outdir/$pop2\_weighted_combined_var_explained.txt
     Rscript --vanilla ~/BridgePRS/bin/pred_combine_en.R \
 	    --pred1 stage2 \
-	    --pred2 stage1 \
+	    --pred2 sweep \
 	    --pred.dir2 $indir \
 	    --pop2 $pop2 \
 	    --outdir $outdir \
