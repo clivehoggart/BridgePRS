@@ -70,6 +70,7 @@ v.target <- var(target[,opt$pheno.name])
 
 nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
 
+write( paste("Test data of", nrow(target), "samples"), file=logfile )
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
                         family="gaussian",
                         alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
@@ -113,6 +114,7 @@ if( opt$valid.data!=0 ){
         target <- target[match(pred1$id,target$IID),]
         pred1 <- pred1[,-1]
     }
+    write( paste("Validation data of", nrow(target), "samples"), file=logfile )
 
     if( opt$cov.names!="000" ){
         covs <-  cbind( 1, target[,cov.names] )
