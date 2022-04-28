@@ -1,11 +1,12 @@
-genos.cor <- function(genos,maf.thresh=0.01){
+genos.cor <- function(genos,maf.thresh=0.005){
     m <- apply(genos,2,mean,na.rm=TRUE)
     maf <- ifelse( m<1, m, 2-m ) / 2
     genos <- t(t(genos)-m)
-    genos <- genos[,which(maf>maf.thresh)]
+    genos <- genos[,which(maf>maf.thresh),drop=FALSE]
     s <- apply(genos,2,sd,na.rm=TRUE)
     genos <- t(t(genos)/s)
     genos <- ifelse( is.na(genos), 0, genos )
+    print(maf)
     M <- cor(genos,use="pairwise.complete.obs")
     return(M)
 }
@@ -296,7 +297,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
     ld <- cov(X,use='pairwise.complete')
 
     if( n.eff ){
-        if( ncol(X)>1 ){
+        if( ncol(X)>1 & sum( 0.005 < ref.stats$af&ref.stats$af < 0.995 )>1 ){
             n.eff <- eff.gao(genos=X)
         }else{
             n.eff <- 1
