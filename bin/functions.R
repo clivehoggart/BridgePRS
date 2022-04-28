@@ -1,3 +1,29 @@
+genos.cor <- function(genos,maf.thresh=0.01){
+    m <- apply(genos,2,mean,na.rm=TRUE)
+    maf <- ifelse( m<1, m, 2-m ) / 2
+    genos <- t(t(genos)-m)
+    genos <- genos[,which(maf>maf.thresh)]
+    s <- apply(genos,2,sd,na.rm=TRUE)
+    genos <- t(t(genos)/s)
+    genos <- ifelse( is.na(genos), 0, genos )
+    M <- cor(genos,use="pairwise.complete.obs")
+    return(M)
+}
+
+eff.gao <- function(M=NULL,genos=NULL,X=NULL){
+    if( !is.null(genos) ){
+        M <- genos.cor(genos)
+    }
+    if( !is.null(X) ){
+        M <- cor(X,use="pairwise.complete.obs")
+    }
+    T <- eigen(M,only.values=TRUE)
+    T <- T$values
+    TT <- cumsum(T)/sum(T)
+    ef <- min(which(TT>0.995))
+    return(ef)
+}
+
 beta.tail.approx <- function( x1, alpha, beta ){
 # Trapezium approximation
     inc <- 1/(4*beta)
@@ -230,7 +256,9 @@ Pseudo.f.test.diag <- function( beta, lambda, LD, n.eff, sigma2 ){
     return( f.tail )
 }
 
-est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, strand.check ){
+est.ref.stats <- function( snps, ids, X.bed, bim,
+                          effect.allele, ref.allele, strand.check,
+                          n.eff=FALSE ){
     ids <- intersect( ld.ids, dimnames(X.bed)[[1]] )
     X <- X.bed[ ids, snps, drop=FALSE ]
     ptr.bed <- match( snps, colnames(X.bed) )
@@ -265,12 +293,16 @@ est.ref.stats <- function( snps, ids, X.bed, bim, effect.allele, ref.allele, str
     }
 
     af <- apply(X,2,mean,na.rm=TRUE)/2
-#    ld <- cor(X,use='pairwise.complete')
     ld <- cov(X,use='pairwise.complete')
+
+    if( n.eff ){
+        n.eff <- eff.gao(genos=X)
+    }
 
     ret <- list()
     ret$af <- af
     ret$ld <- ld
+    ret$n.eff <- n.eff
     return(ret)
 }
 
@@ -295,7 +327,8 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
     if( length(snps)>0 ){
         sumstats <- sumstats[match( snps, sumstats$SNP ),]
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
-                                   sumstats$ALLELE1, sumstats$ALLELE0, strand.check )
+                                   sumstats$ALLELE1, sumstats$ALLELE0,
+                                   strand.check, n.eff=FALSE )
 
         ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 )
         if( length(ptr.use)>0 ){
@@ -373,7 +406,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    effect.allele=beta.prior$effect.allele[ptr.prior],
                                    ref.allele=beta.prior$ref.allele[ptr.prior],
-                                   strand.check )
+                                   strand.check, n.eff=(ranking=="pv.minP") )
         ptr.use <- which( 0.005 < ref.stats$af&ref.stats$af < 0.995 )
         if( length(ptr.use) > 0 ){
             if( length(ptr.use) < length(snps) ){
@@ -389,12 +422,15 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 ref.stats$ld <- ref.stats$ld * ld.shrink.factor
             }
             if( ranking=="pv.ftest" ){
-                clump.ftest <- f.test( sumstats$BETA, ref.stats$ld,
-                                      ref.stats$af, sumstats.n, sigma2 )
+                pv.target <- f.test( sumstats$BETA, ref.stats$ld,
+                                    ref.stats$af, sumstats.n, sigma2 )
             }
             if( ranking=="thinned.pv.ftest" ){
-                clump.ftest <- f.test.diag( sumstats$BETA, ref.stats$ld,
-                                           ref.stats$af, sumstats.n, sigma2 )
+                pv.target <- f.test.diag( sumstats$BETA, ref.stats$ld,
+                                         ref.stats$af, sumstats.n, sigma2 )
+            }
+            if( ranking=="pv.minP" ){
+                pv.target <- min(sumstats$P) * ref.stats$n.eff
             }
             infile <- paste0( lambda.ext, beta.prior$clump.id[1],'.gz' )
             lambda.prior <- as.matrix(fread(infile))
@@ -470,13 +506,14 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 }
             }
 
-            if( ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
+            if( ranking=="pv.ftest" | ranking=="thinned.pv.ftest" |
+                ranking=="pv.minP" ){
                 beta.bar <- data.frame( beta.prior[,1:6],
-                                       sumstats$BETA, clump.ftest, beta.prior$beta.bar,
+                                       sumstats$BETA, pv.target, beta.prior$beta.bar,
                                        beta.bar )
                 colnames(beta.bar)[1:9] <- c('snp','clump.id','chr',
                                              'effect.allele','ref.allele','p.value',
-                                             'beta_hat','p.value.ftest','beta_prior')
+                                             'beta_hat','pv.target','beta_prior')
             }else{
                 beta.bar <- data.frame( beta.prior[,1:6],
                                        sumstats$BETA, beta.prior$beta.bar,
@@ -565,8 +602,8 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
         pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value'),
                                   getElement, 1 ))
     }
-    if( ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
-        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'p.value.ftest'),
+    if( ranking=="pv.minP" | ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
+        pval <- as.numeric(sapply( sapply(beta.bar,getElement,'pv.target'),
                                   getElement, 1 ))
     }
 
@@ -580,7 +617,8 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
             colnames(pred.genome[[j]]) <- colnames(kl.metric)
         }
     }
-    if( ranking=="pv" | ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
+    if( ranking=="pv" | ranking=="pv.minP" |
+        ranking=="pv.ftest" | ranking=="thinned.pv.ftest" ){
         pred.genome <- list(length=nrow(p.thresh))
         ptr.beta.use <- grep( 'beta.bar', colnames(beta.bar[[1]]) )
         nc <- length(ptr.beta.use)
@@ -598,7 +636,8 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
                                             ptr.beta.use=ptr.beta.use,
                                             clump.id=names(beta.bar)[i],
                                             X.bed=X.bed, bim=bim, by.chr=by.chr,
-                                            ids.use=ids.use, strand.check=strand.check )},
+                                            ids.use=ids.use,
+                                            strand.check=strand.check )},
                          mc.cores=n.cores )
 #        for( i in i.clump.use ){
 #            pred <- get.pred.clump( beta.bar=beta.bar[[i]], ptr.beta.use=ptr.beta.use, clump.id=names(beta.bar)[i], X.bed=X.bed, bim=bim, by.chr=by.chr, ids.use=ids.use, strand.check=strand.check )

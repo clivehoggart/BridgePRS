@@ -40,6 +40,8 @@ option_list = list(
                 help="SE column name", metavar="character"),
     make_option(c("--sumstats.frqID"), type="character", default="FRQ",
                 help="Freq column name", metavar="character"),
+    make_option(c("--sumstats.P"), type="character", default="P",
+                help="P-value column name", metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--param.file"), type="character", default=NULL,
@@ -83,8 +85,9 @@ if( opt$by.chr.sumstats==0 ){
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
-    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+    p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
+    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
+    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
     if( opt$strand.check ){
         ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
                           (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
@@ -129,9 +132,10 @@ for( chr in 1:22 ){
             allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
             allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
             beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+            p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
         }
-        sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-        colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+        sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
+        colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
         if( opt$strand.check ){
             ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
                               sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |

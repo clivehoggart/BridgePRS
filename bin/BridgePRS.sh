@@ -301,6 +301,7 @@ then
 	    --sumstats.nID $sumstats_n \
 	    --sumstats.seID $sumstats_se \
 	    --sumstats.frqID $sumstats_frq \
+	    --sumstats.P $sumstats_p \
 	    --precision 0 \
 	    --n.cores $n_cores \
 	    --recomb.file $recomb_pop2_file \
