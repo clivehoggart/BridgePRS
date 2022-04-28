@@ -296,7 +296,11 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
     ld <- cov(X,use='pairwise.complete')
 
     if( n.eff ){
-        n.eff <- eff.gao(genos=X)
+        if( ncol(X)>1 ){
+            n.eff <- eff.gao(genos=X)
+        }else{
+            n.eff <- 1
+        }
     }
 
     ret <- list()
