@@ -158,7 +158,7 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 
     if( ranking=="thinned.f.stat" ){
         ret[[3]] <- -Pseudo.f.test.diag( beta=beta.tilde2, lambda=lambda2,
-                                        LD=ref.stats$LD
+                                        LD=ref.stats$LD,
                                         n.eff=n*(1+w.prior), sigma2=sigma2 )
     }
 
