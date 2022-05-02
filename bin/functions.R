@@ -152,12 +152,13 @@ noncentral.ridge.fit <- function( beta.data, LD, af,
 #    ret[[3]] <- kl.02 - kl.12
 
     if( ranking=="f.stat" ){
-        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2, LD,
+        ret[[3]] <- -Pseudo.f.test( beta.tilde2, lambda2,
                                    n.eff=n*(1+w.prior), sigma2=sigma2 )
     }
 
     if( ranking=="thinned.f.stat" ){
-        ret[[3]] <- -Pseudo.f.test.diag( b1[1:k.eff,,drop=FALSE], e$values[1:k.eff],
+        ret[[3]] <- -Pseudo.f.test.diag( beta=beta.tilde2, lambda=lambda2,
+                                        LD=ref.stats$LD
                                         n.eff=n*(1+w.prior), sigma2=sigma2 )
     }
 
