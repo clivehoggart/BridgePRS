@@ -180,7 +180,7 @@ for( k in 1:n.thresh ){
     }
 }
 ptr.col <- order(apply(VE.test,2,max),decreasing=TRUE)[1]
-s <- c(order(VE.test[,ptr.col],decreasing=TRUE),1)
+s <- order(VE.test[,ptr.col],decreasing=TRUE)
 
 if( opt$all.preds ){
     fwrite( all.preds.test, paste( opt$out.file, '_all_preds_test.dat',sep='' ))
