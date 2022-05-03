@@ -216,7 +216,6 @@ then
 	    --beta.stem $outdir/models/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --precision FALSE \
-	    --lambda 0.05,0.1,0.2,0.5,1,2,5 \
 	    --lambda 0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20 \
 	    --S 0,0.25,0.5,0.75,1 \
 	    --sumstats.snpID $sumstats_snpID \
