@@ -185,8 +185,37 @@ if( opt$valid.data!=0 ){
     }
 }
 
+tmp <- strsplit( names(w.ridge1), "_" )
+tau <- as.numeric(sapply(tmp,getElement,2))
+tau.weights2 <- tapply( w.ridge1, tau, sum )
+
+tmp <- strsplit( names(w.ridge2), "_" )
+lambda <- as.numeric(sapply(tmp,getElement,2))
+alpha <- as.numeric(sapply(tmp,getElement,3))
+lambda.weights2 <- tapply( w.ridge2, lambda, sum )
+alpha.weights2 <- tapply( w.ridge2, alpha, sum )
+
+tmp <- strsplit( names(w.ridge), "_" )
+l <- sapply(tmp,length)
+lambda <- as.numeric(sapply(tmp,getElement,2))
+alpha <- as.numeric(sapply(tmp,getElement,3))
+tau <- as.numeric(sapply(tmp,getElement,2))
+tau.weights1 <- tapply( w.ridge[l==3], tau[l==3], sum )
+alpha.weights1 <- tapply( w.ridge[l==4], alpha[l==4], sum )
+lambda.weights1 <- tapply( w.ridge[l==4], lambda[l==4], sum )
+
+tau.weights <- tau.weights2 * probM.ridge[2] + tau.weights1 * probM.ridge[1]
+alpha.weights <- alpha.weights2 * probM.ridge[3] + alpha.weights1 * probM.ridge[1]
+lambda.weights <- lambda.weights2 * probM.ridge[3] + lambda.weights1 * probM.ridge[1]
+
+write.table( tau.weights, paste0(opt$outdir,"/",opt$pop2,"_tau_weights.dat"), row.names=TRUE )
+write.table( alpha.weights, paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
+write.table( lambda.weights, paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+
+# Contribution of stage 2 model
 w.ridge11 <- w.ridge[1:length(w.ridge1)] * probM.ridge[1] +
     w.ridge1 * probM.ridge[2]
+# Contribution of single ancestry model
 w.ridge22 <- w.ridge[-(1:length(w.ridge1))] * probM.ridge[1] +
     w.ridge2 * probM.ridge[3]
 
@@ -201,9 +230,9 @@ for( chr in 1:22 ){
     beta.bar1 <- beta.list(beta.bar1)
     beta.bar2 <- beta.list(beta.bar2)
 
-    kl <- fread(paste0(opt$outdir,"/models/",opt$pop,"_",
-                              opt$pred1,"_KLdist_chr",chr,".txt.gz"),
-                       data.table=FALSE)[,-1]
+    kl <- fread(paste0(opt$pred.dir1,"/models/",opt$pop,"_",
+                       opt$pred1,"_KLdist_chr",chr,".txt.gz"),
+                data.table=FALSE)[,-1]
     if( chr==1 ){
         p.clump <- sapply(sapply(beta.bar1,getElement,'p.value'),getElement,1)
         F <- ecdf(p.clump)
