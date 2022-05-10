@@ -230,7 +230,7 @@ for( chr in 1:22 ){
     beta.bar1 <- beta.list(beta.bar1)
     beta.bar2 <- beta.list(beta.bar2)
 
-    kl <- fread(paste0(opt$pred.dir1,"/models/",opt$pop,"_",
+    kl <- fread(paste0(pred.dir1,"/models/",opt$pop,"_",
                        opt$pred1,"_KLdist_chr",chr,".txt.gz"),
                 data.table=FALSE)[,-1]
     if( chr==1 ){
