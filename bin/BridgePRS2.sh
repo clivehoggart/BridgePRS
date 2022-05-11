@@ -397,6 +397,7 @@ then
 	    --cov.names $cov_names \
 	    --pheno.name $pheno_name \
 	    --all.preds TRUE \
+	    --non.overlapping TRUE \
 	    --ranking "pv" \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr
