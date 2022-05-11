@@ -208,6 +208,10 @@ tau.weights <- tau.weights2 * probM.ridge[2] + tau.weights1 * probM.ridge[1]
 alpha.weights <- alpha.weights2 * probM.ridge[3] + alpha.weights1 * probM.ridge[1]
 lambda.weights <- lambda.weights2 * probM.ridge[3] + lambda.weights1 * probM.ridge[1]
 
+tau.weights <- cbind( tau.weights1, tau.weights2, tau.weights )
+alpha.weights <- cbind( alpha.weights1, alpha.weights2, alpha.weights )
+lambda.weights <- cbind( lambda.weights1, lambda.weights2, lambda.weights )
+
 write.table( tau.weights, paste0(opt$outdir,"/",opt$pop2,"_tau_weights.dat"), row.names=TRUE )
 write.table( alpha.weights, paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
 write.table( lambda.weights, paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
