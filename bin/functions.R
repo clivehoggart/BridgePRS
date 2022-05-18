@@ -568,12 +568,16 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
         coded.allele1 <- alt.strand( coded.allele )
         other.allele1 <- alt.strand( other.allele )
 
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==beta.bar$effect.allele[ptr.miss] &
-                                   other.allele1[ptr.miss]==beta.bar$ref.allele[ptr.miss],
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss] ==
+                                   beta.bar$effect.allele[ptr.miss] &
+                                   other.allele1[ptr.miss] ==
+                                   beta.bar$ref.allele[ptr.miss],
                                   1, 0 )
 
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==beta.bar$ref.allele[ptr.miss] &
-                                   other.allele1[ptr.miss]==beta.bar$effect.allele[ptr.miss],
+        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+                                   beta.bar$ref.allele[ptr.miss] &
+                                   other.allele1[ptr.miss]==
+                                   beta.bar$effect.allele[ptr.miss],
                                   -1, swtch[ptr.miss] )
     }
     ptr.use <- which( swtch!=0 )

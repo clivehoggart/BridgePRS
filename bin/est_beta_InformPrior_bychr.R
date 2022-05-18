@@ -17,8 +17,8 @@ option_list = list(
                 help="File listing IDs to use for estimating LD", metavar="character"),
     make_option(c("-b", "--beta.stem"), type="character",
                 help="Out file stem", metavar="character"),
-    make_option(c("--w.prior"), type="character",
-                help="Comma delimited prior weights", metavar="character"),
+    make_option(c("--fst"), type="numeric",
+                help="Fst between populations", metavar="character"),
     make_option(c("--precision"), type="numeric", default=0,
                 help="Logicial to calculate precision matrix of each clump",
                metavar="character"),
@@ -72,7 +72,10 @@ tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
-w.prior <- as.numeric(strsplit( opt$w.prior, ',' )[[1]])
+params <- read.table( opt$param.file, header=TRUE)
+lambda.prior <- params$lambda.opt
+S.prior <- params$S.opt
+n.prior <- params$N
 
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
@@ -101,6 +104,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+    w.prior <- n.prior * (1-as.numeric(opt$fst))^(2*(0:5)) / sumstats.n
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
 
@@ -109,10 +113,6 @@ if( opt$by.chr==0 ){
     bim <- fread( paste(opt$bfile,'.bim',sep='' ) )
     ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
 }
-
-params <- read.table( opt$param.file, header=TRUE)
-lambda.prior <- params$lambda.opt
-S.prior <- params$S.opt
 
 tmp <- strsplit( opt$prior, '/' )[[1]]
 path <- paste(head(tmp,n=-1L),'/',sep='',collapse='')
@@ -124,6 +124,7 @@ for( chr in 1:22 ){
                           data.table=FALSE )
         sumstats.n <- sumstats[,opt$sumstats.nID]
         if( chr==1 ){
+            sumstats.n <- sumstats[,opt$sumstats.nID]
             sumstats.se <- sumstats[,opt$sumstats.seID]
             sumstats.frq <- sumstats[,opt$sumstats.frqID]
             sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
@@ -133,7 +134,8 @@ for( chr in 1:22 ){
             allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
             beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
             p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
-        }
+            w.prior <- n.prior * (1-as.numeric(opt$fst))^(2*(0:5)) / sumstats.n
+       }
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
         if( opt$strand.check ){

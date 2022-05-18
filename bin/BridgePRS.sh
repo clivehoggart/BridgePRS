@@ -40,7 +40,7 @@ usage()
   exit 2
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long bfile:,outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -103,6 +103,7 @@ do
     --sumstats_se) sumstats_se=$2 ; shift 2 ;;
     --sumstats_frq) sumstats_frq=$2 ; shift 2 ;;
     --strand_check) strand_check=$2 ; shift 2 ;;
+    --fst) fst=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     # If invalid options were passed, then getopt should have reported an error,
@@ -159,6 +160,7 @@ echo "ranking : $ranking"
 echo "ld_shrink : $ld_shrink"
 echo "ids_col : $ids_col"
 echo "strand_check : $strand_check"
+echo "fst : $fst"
 echo ""
 
 mkdir $outdir
@@ -293,7 +295,7 @@ then
 	    --param.file $outdir/$pop1\_stage1_best_model_params.dat \
 	    --beta.stem $outdir/models/$pop2\_stage2 \
 	    --bfile $pop2_ld_bfile \
-	    --w.prior 0.2,0.5,1,2,5,10 \
+	    --fst $fst \
 	    --sumstats.snpID $sumstats_snpID \
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
