@@ -18,7 +18,7 @@ option_list = list(
     make_option(c("-b", "--beta.stem"), type="character",
                 help="Out file stem", metavar="character"),
     make_option(c("--fst"), type="numeric",
-                help="Fst between populations", metavar="character"),
+                help="Fst between populations", metavar="numeric"),
     make_option(c("--precision"), type="numeric", default=0,
                 help="Logicial to calculate precision matrix of each clump",
                metavar="character"),
@@ -48,14 +48,12 @@ option_list = list(
                 help="File of lambda and S parameters", metavar="character"),
     make_option(c("--ranking"), type="character", default="p-value",
                 help="Method to rank loci", metavar="character"),
-
     make_option(c("--ld.shrink"), type="numeric",
                 help="Indicator for shrinking LD matrix", metavar="numeric", default=0),
     make_option(c("--recomb.file"), type="character", default=NULL,
                 help="File of genome-wide recombination rates", metavar="character"),
     make_option(c("--Ne"), type="numeric",
                 help="Effective population size", metavar="numeric", default=0),
-
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
