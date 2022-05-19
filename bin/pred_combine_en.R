@@ -132,34 +132,6 @@ if( opt$valid.data!=0 ){
     ci <- boot.ci(b,type='norm')
     ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
     VE.ridge1 <- c( b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
-    pred1 <- fread(paste0(pred.dir1, "/", opt$pop,'_',opt$pred1,
-                          '_all_preds_valid.dat'), data.table=FALSE)
-
-    ptr <- c( 1, grep("_10_",colnames(pred1)), grep("_15_",colnames(pred1)),
-             grep("_20_",colnames(pred1)), grep("_50_",colnames(pred1)) )
-    pred1 <- pred1[,ptr]
-
-    target <- fread(opt$valid.data,data.table=FALSE)
-    if( opt$ids.col ){
-        target <- target[match(pred1$id,target$IID),]
-        pred1 <- pred1[,-1]
-    }
-    write( paste("Validation data of", nrow(target), "samples"), file=logfile )
-
-    if( opt$cov.names!="000" ){
-        covs <-  cbind( 1, target[,cov.names] )
-    }else{
-        covs <- matrix(ncol=1,nrow=nrow(target),data=1)
-    }
-    colnames(covs) <- paste('X',colnames(covs),sep='.')
-    prs.ridge1 <- predict( fit.ridge1, as.matrix(pred1), s='lambda.min' )
-
-    data <- data.frame( target[,opt$pheno.name], prs.ridge1, covs )
-    colnames(data)[1:2] <- c('y','PRS')
-    b <- boot(data,var.explained,stype="i",R=10000,parallel='multicore',ncpus=opt$n.cores)
-    ci <- boot.ci(b,type='norm')
-    ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
-    VE.ridge1 <- c( b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
 
     if( !is.null(opt$pred2) ){
         pred2 <- fread(paste0( pred.dir2, "/", opt$pop,'_',opt$pred2,
