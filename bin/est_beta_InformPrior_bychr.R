@@ -102,7 +102,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    w.prior <- n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n)
+    w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n) )
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
 
