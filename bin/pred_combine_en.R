@@ -68,6 +68,13 @@ if( opt$ids.col ){
 }
 v.target <- var(target[,opt$pheno.name])
 
+#ptr <- c( grep("_0.5_", colnames(pred1)),
+#         grep("_1_", colnames(pred1)),
+#         grep("_2_", colnames(pred1)),
+#         grep("_5_", colnames(pred1)),
+#         grep("_10_", colnames(pred1)) )
+#pred1 <- pred1[,ptr]
+
 nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
 
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
@@ -110,6 +117,13 @@ if( !is.null(opt$pred2) ){
 if( opt$valid.data!=0 ){
     pred1 <- fread(paste0(pred.dir1, "/", opt$pop,'_',opt$pred1,
                           '_all_preds_valid.dat'), data.table=FALSE)
+
+#    ptr <- c( 1, grep("_0.5_", colnames(pred1)),
+#             grep("_1_", colnames(pred1)),
+#             grep("_2_", colnames(pred1)),
+#             grep("_5_", colnames(pred1)),
+#             grep("_10_", colnames(pred1)) )
+#    pred1 <- pred1[,ptr]
 
     target <- fread(opt$valid.data,data.table=FALSE)
     if( opt$ids.col ){
