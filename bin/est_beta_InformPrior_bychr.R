@@ -102,7 +102,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n) )
+    w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
 
@@ -132,7 +132,7 @@ for( chr in 1:22 ){
             allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
             beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
             p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
-            w.prior <- n.prior * (1-as.numeric(opt$fst))^(2*(0:5)) / median(sumstats.n)
+            w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
        }
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
