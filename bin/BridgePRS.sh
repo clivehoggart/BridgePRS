@@ -1,4 +1,5 @@
 #!/bin/bash
+# update key
 # Set some default values:
 pheno_name="y"
 ext=""
