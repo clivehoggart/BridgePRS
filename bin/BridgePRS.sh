@@ -126,28 +126,28 @@ then
     indir=$outdir
 fi
 
-if [ pop1_ld_bfile=0 ]
+if [ $pop1_ld_bfile = 0 ]
 then
     pop1_ld_bfile=$bfile
 fi
-if [ pop2_ld_bfile=0 ]
+if [ $pop2_ld_bfile=0 ]
 then
     pop2_ld_bfile=$bfile
 fi
-if [ pop1_bfile=0 ]
+if [ $pop1_bfile=0 ]
 then
     pop1_bfile=$bfile
 fi
-if [ pop2_bfile=0 ]
+if [ $pop2_bfile=0 ]
 then
     pop2_bfile=$bfile
 fi
 
-if [ by_chr_ld=0 ]
+if [ $by_chr_ld=0 ]
 then
     by_chr_ld=$by_chr
 fi
-if [ by_chr_target=0 ]
+if [ $by_chr_target=0 ]
 then
     by_chr_target=$by_chr
 fi
