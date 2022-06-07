@@ -35,7 +35,7 @@ option_list = list(
                 help="Name of phenotype", metavar="character"),
     make_option(c("--ranking"), type="character", default="pv",
                 help="Method to rank loci", metavar="character"),
-    make_option(c("--by.chr"), type="numeric", default=1,
+    make_option(c("--by.chr"), type="logical", default=TRUE,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
