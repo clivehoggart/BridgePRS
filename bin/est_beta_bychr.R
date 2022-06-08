@@ -74,6 +74,10 @@ write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
 opt$beta.stem <- ifelse( is.null(opt$beta.stem), opt$clump.stem, opt$beta.stem )
 
+lambda <- as.numeric(strsplit( opt$lambda, ',' )[[1]])
+S <- as.numeric(strsplit( opt$S, ',' )[[1]])
+precision <- opt$precision
+
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
@@ -101,19 +105,15 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-}
-
-lambda <- as.numeric(strsplit( opt$lambda, ',' )[[1]])
-S <- as.numeric(strsplit( opt$S, ',' )[[1]])
-precision <- opt$precision
-if( !is.null(opt$param.file) ){
-    params <- read.table( opt$param.file, header=TRUE)
-    lambda <- params$lambda.opt
-    S <- params$S.opt
-    N <- median(sumstats.n)
-    out <- data.frame(S,lambda,p,N)
-    colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
-    write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
+    if( !is.null(opt$param.file) ){
+        params <- read.table( opt$param.file, header=TRUE)
+        lambda <- params$lambda.opt
+        S <- params$S.opt
+        N <- median(sumstats.n)
+        out <- data.frame(S,lambda,p,N)
+        colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
+        write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
+    }
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
@@ -133,6 +133,15 @@ for( chr in 1:22 ){
             sumstats.frq <- sumstats[,opt$sumstats.frqID]
             sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
                               sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+            if( !is.null(opt$param.file) ){
+                params <- read.table( opt$param.file, header=TRUE)
+                lambda <- params$lambda.opt
+                S <- params$S.opt
+                N <- median(sumstats.n)
+                out <- data.frame(S,lambda,p,N)
+                colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
+                write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
+            }
         }
         snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
         allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
