@@ -108,6 +108,7 @@ if( opt$by.chr.sumstats==0 ){
     if( !is.null(opt$param.file) ){
         params <- read.table( opt$param.file, header=TRUE)
         lambda <- params$lambda.opt
+        p <- params$p.opt
         S <- params$S.opt
         N <- median(sumstats.n)
         out <- data.frame(S,lambda,p,N)
@@ -136,6 +137,7 @@ for( chr in 1:22 ){
             if( !is.null(opt$param.file) ){
                 params <- read.table( opt$param.file, header=TRUE)
                 lambda <- params$lambda.opt
+                p <- params$p.opt
                 S <- params$S.opt
                 N <- median(sumstats.n)
                 out <- data.frame(S,lambda,p,N)
