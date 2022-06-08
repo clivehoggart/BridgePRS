@@ -206,12 +206,16 @@ if( length(tmp)==3 ){
     lambda.opt <- as.numeric(tmp[[2]])
     S.opt <- as.numeric(tmp[[3]])
     p.opt <- nme.thresh[ptr.col]
-    write.table( data.frame(S.opt,lambda.opt,p.opt), paste( opt$out.file, '_best_model_params.dat', sep='' ), row.names=FALSE, quote=FALSE )
+    write.table( data.frame(S.opt,lambda.opt,p.opt),
+                paste( opt$out.file, '_best_model_params.dat', sep='' ),
+                row.names=FALSE, quote=FALSE )
 }
 if( length(tmp)==2 ){
     tau.opt <- as.numeric(tmp[[2]])
     p.opt <- nme.thresh[ptr.col]
-    write.table( data.frame(tau.opt,p.opt), paste( opt$out.file, '_best_model_params.dat', sep='' ), row.names=FALSE, quote=FALSE )
+    write.table( data.frame(tau.opt,p.opt),
+                paste( opt$out.file, '_best_model_params.dat', sep='' ),
+                row.names=FALSE, quote=FALSE )
 }
 #prsice <- fread('/sc/arion/work/hoggac01/platelets/prsice.best')
 #ptr <- match(test.data$IID,prsice$IID)

@@ -28,7 +28,8 @@ option_list = list(
     make_option(c("--S"), type="character", default="1",
                 help="Comma delimited S values", metavar="character"),
     make_option(c("--precision"), type="logical", default=FALSE,
-                help="Option to calculate precision matrix of each clump", metavar="character"),
+                help="Option to calculate precision matrix of each clump",
+                metavar="character"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character"),
     make_option(c("--bfile"), type="character",
@@ -109,6 +110,10 @@ if( !is.null(opt$param.file) ){
     params <- read.table( opt$param.file, header=TRUE)
     lambda <- params$lambda.opt
     S <- params$S.opt
+    N <- median(sumstats.n)
+    out <- data.frame(S,lambda,p,N)
+    colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
+    write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,1])
@@ -200,13 +205,14 @@ for( chr in 1:22 ){
 #    for( i in 1:length(clump.use) ){
 #        print(i)
 #        tmp <- read.fit.clump( clump.i=clump[clump.use[i],],
-#                               do.ld.shrink=opt$ld.shrink, Ne=opt$Ne,
-#                               sumstats=sumstats, bim=bim, ld.ids=ld.ids, S=S,
-#                               recomb=recomb, precision=precision,
-#                               X.bed=ptr.bed, l=lambda,
-#                               by.chr=0, beta.stem=path, strand.check=opt$strand.check )
+#                                        do.ld.shrink=opt$ld.shrink,
+#                                        sumstats=sumstats,
+#                                        recomb=recomb, Ne=opt$Ne,
+#                                        X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
+#                                        S=S, l=lambda, precision=precision, by.chr=0,
+#                                        beta.stem=path,
+#                                        strand.check=opt$strand.check )
 #    }
-#fits <- read.fit.clump( clump.i=clump[clump.use[i],], do.ld.shrink=opt$ld.shrink, sumstats=sumstats, recomb=recomb, Ne=opt$Ne, X.bed=ptr.bed, bim=bim, ld.ids=ld.ids, S=S, l=lambda, precision=precision, by.chr=0, beta.stem=path )
     beta.bar <- lapply( fits, getElement, 1 )
     names(beta.bar) <- clump$SNP[clump.use]
 
