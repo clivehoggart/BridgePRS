@@ -38,7 +38,8 @@ pop1_bfile=0
 pop2_bfile=0
 cov_names="000"
 ld_shrink=0
-recomb_file=""
+recomb_pop1_file=""
+recomb_pop2_file=""
 
 usage()
 {
