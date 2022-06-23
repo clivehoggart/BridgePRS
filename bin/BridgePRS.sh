@@ -37,6 +37,8 @@ pop2_ld_bfile=0
 pop1_bfile=0
 pop2_bfile=0
 cov_names="000"
+ld_shrink=0
+recomb_file=""
 
 usage()
 {
