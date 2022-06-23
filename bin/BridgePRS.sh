@@ -22,9 +22,6 @@ pop1="pop1"
 pop2="pop2"
 thinned_snplist=0
 n_max_locus=0
-ld_shrink=0
-recomb_pop1_file=0
-recomb_pop2_file=0
 N_pop1=10000
 N_pop2=10000
 ids_col=TRUE
@@ -40,6 +37,8 @@ cov_names="000"
 ld_shrink=0
 recomb_pop1_file=NULL
 recomb_pop2_file=NULL
+by_chr_ld=0
+by_chr_target=0
 
 usage()
 {
