@@ -404,7 +404,7 @@ if [ $do_est_beta_pop2 -eq 1  ]
 then
     rm $outdir/models/$pop2\_stage1*
     Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
-	    --clump.stem $indir/clump/$pop2 \
+	    --clump.stem $outdir/clump/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
