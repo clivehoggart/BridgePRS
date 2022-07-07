@@ -108,7 +108,7 @@ if( !is.null(opt$pred2) ){
 #logL2 <- -n*( mse - as.numeric(mse[1]) ) / (2*v.target)
 #probM2 <- exp(logL2) / sum(exp(logL2))
     logL <- -n*log(mse) / 2
-    logL <- logL - min(logL)
+    logL <- logL - max(logL)
     probM.ridge <- exp(logL) / sum(exp(logL))
 }
 
