@@ -455,6 +455,7 @@ then
     Rscript --vanilla ~/BridgePRS/bin/pred_combine_en.R \
 	    --pred1 stage2 \
 	    --pred2 stage1 \
+	    --pred.dir2 $indir \
 	    --pop2 $pop2 \
 	    --outdir $outdir \
 	    --valid.data $pop2_valid_data \
