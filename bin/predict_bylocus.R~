@@ -35,7 +35,7 @@ option_list = list(
                 help="Name of phenotype", metavar="character"),
     make_option(c("--ranking"), type="character", default="pv",
                 help="Method to rank loci", metavar="character"),
-    make_option(c("--by.chr"), type="logical", default=TRUE,
+    make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
@@ -56,10 +56,19 @@ if( opt$cov.names!="000" ){
 }
 test.data <- fread(opt$test.data,data.table=FALSE)
 ids.use <- as.character( test.data$IID )
-
+if( opt$cov.names!="000" ){
+    test.covs <- cbind( 1, as.matrix(test.data[,cov.names]) )
+}else{
+    test.covs <- rep(1,nrow(test.data))
+}
 if( opt$valid.data!=0 ){
     valid.data <- fread(opt$valid.data,data.table=FALSE)
     ids.use <- as.character(c( ids.use, valid.data$IID ))
+    if( opt$cov.names!="000" ){
+        valid.covs <- cbind( 1, as.matrix(valid.data[,cov.names]) )
+    }else{
+        valid.covs <- rep(1,nrow(valid.data))
+    }
 }
 
 tmp <- as.numeric(strsplit( opt$p.thresh, ',' )[[1]])
@@ -130,29 +139,18 @@ if( opt$valid.data!=0 ){
 
     valid.ids <- intersect( valid.data$IID, ids.use )
     valid.data <- valid.data[match(valid.ids, valid.data$IID ),]
-    if( opt$cov.names!="000" ){
-        valid.covs <- cbind( 1, as.matrix(valid.data[,cov.names]) )
-    }else{
-        valid.covs <- rep(1,nrow(valid.data))
-    }
     ptr.valid <- match( valid.data$IID, rownames(pred.genome[[1]]) )
     all.preds.valid <- as.data.table(valid.ids)
     colnames(all.preds.valid)[1] <- 'ids'
 
     fit.valid0 <- summary(lm( valid.data[,opt$pheno.name] ~ 0 + valid.covs ))
 }
-
 VE.test <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
 rownames(VE.test) <- colnames(pred.genome[[1]])
 colnames(VE.test) <- nme.thresh
 
 test.ids <- intersect( test.data$IID, ids.use )
 test.data <- test.data[match(test.ids, test.data$IID ),]
-if( opt$cov.names!="000" ){
-    test.covs <- cbind( 1, as.matrix(test.data[,cov.names]) )
-}else{
-    test.covs <- rep(1,nrow(test.data))
-}
 ptr.test <- match( test.data$IID, rownames(pred.genome[[1]]) )
 all.preds.test <- as.data.table(test.ids)
 colnames(all.preds.test)[1] <- 'ids'
@@ -208,16 +206,12 @@ if( length(tmp)==3 ){
     lambda.opt <- as.numeric(tmp[[2]])
     S.opt <- as.numeric(tmp[[3]])
     p.opt <- nme.thresh[ptr.col]
-    write.table( data.frame(S.opt,lambda.opt,p.opt),
-                paste( opt$out.file, '_best_model_params.dat', sep='' ),
-                row.names=FALSE, quote=FALSE )
+    write.table( data.frame(S.opt,lambda.opt,p.opt), paste( opt$out.file, '_best_model_params.dat', sep='' ), row.names=FALSE, quote=FALSE )
 }
 if( length(tmp)==2 ){
     tau.opt <- as.numeric(tmp[[2]])
     p.opt <- nme.thresh[ptr.col]
-    write.table( data.frame(tau.opt,p.opt),
-                paste( opt$out.file, '_best_model_params.dat', sep='' ),
-                row.names=FALSE, quote=FALSE )
+    write.table( data.frame(tau.opt,p.opt), paste( opt$out.file, '_best_model_params.dat', sep='' ), row.names=FALSE, quote=FALSE )
 }
 #prsice <- fread('/sc/arion/work/hoggac01/platelets/prsice.best')
 #ptr <- match(test.data$IID,prsice$IID)
