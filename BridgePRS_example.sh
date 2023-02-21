@@ -1,7 +1,10 @@
 ~/BridgePRS/bin/BridgePRS.sh \
     --strand_check 1 \
     --outdir out \
+    --by_chr 0 \
     --by_chr_sumstats .Phenotype.glm.linear.gz \
+    --pop1 EUR \
+    --pop2 AFR \
     --pop1_sumstats ~/BridgePRS/data/sumstats/EUR.chr \
     --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
     --pop1_bfile ~/BridgePRS/data/bfiles/bfile3 \
@@ -25,7 +28,7 @@
     --sumstats_frq A1_FREQ \
     --pheno_name y \
     --cov_names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10 \
-    --n_cores 4 \
+    --n_cores 50 \
     --do_clump_pop1 1 \
     --do_est_beta_pop1 1 \
     --do_predict_pop1 1 \
