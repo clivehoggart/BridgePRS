@@ -14,6 +14,7 @@ do_clump_pop2=1
 do_est_beta_pop2=1
 do_predict_pop2=1
 do_combine=1
+by_chr=0
 by_chr_ld=0
 by_chr_target=0
 by_chr_sumstats=0
