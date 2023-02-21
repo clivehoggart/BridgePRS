@@ -82,6 +82,7 @@ write( paste("Test data of", nrow(target), "samples"), file=logfile )
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
                         family="gaussian",
                         alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
+w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
 
 if( !is.null(opt$pred2) ){
     pred2 <- fread(paste0(pred.dir2, "/", opt$pop,'_',opt$pred2,'_all_preds_test.dat'),
@@ -97,7 +98,6 @@ if( !is.null(opt$pred2) ){
                             alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 
     w.ridge <- getGlmnetFit( fit.ridge, X, s='lambda.min', sparse=FALSE )[-1]
-    w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
     w.ridge2 <- getGlmnetFit( fit.ridge2, as.matrix(pred2), s='lambda.min', sparse=FALSE )[-1]
 
     n <- fit.ridge$glmnet.fit$nobs
@@ -201,88 +201,104 @@ if( opt$valid.data!=0 ){
     }
 }
 
-if( !is.null(opt$pred2) ){
-    tmp <- strsplit( names(w.ridge2), "_" )
-    tau <- as.numeric(sapply(tmp,getElement,2))
-    tau.weights2 <- tapply( w.ridge2, tau, sum )
-}
-
 tmp <- strsplit( names(w.ridge1), "_" )
 lambda <- as.numeric(sapply(tmp,getElement,2))
 alpha <- as.numeric(sapply(tmp,getElement,3))
 lambda.weights2 <- tapply( w.ridge1, lambda, sum )
 alpha.weights2 <- tapply( w.ridge1, alpha, sum )
+if( is.null(opt$pred2) ){
+    write.table( alpha.weights2,
+                paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
+    write.table( lambda.weights2,
+                paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+}
 
-tmp <- strsplit( names(w.ridge), "_" )
-l <- sapply(tmp,length)
-lambda <- as.numeric(sapply(tmp,getElement,2))
-alpha <- as.numeric(sapply(tmp,getElement,3))
-tau <- as.numeric(sapply(tmp,getElement,2))
-tau.weights1 <- tapply( w.ridge[l==3], tau[l==3], sum )
-alpha.weights1 <- tapply( w.ridge[l==4], alpha[l==4], sum )
-lambda.weights1 <- tapply( w.ridge[l==4], lambda[l==4], sum )
+if( !is.null(opt$pred2) ){
+    tmp <- strsplit( names(w.ridge2), "_" )
+    tau <- as.numeric(sapply(tmp,getElement,2))
+    tau.weights2 <- tapply( w.ridge2, tau, sum )
 
-tau.weights <- tau.weights2 * probM.ridge[2] + tau.weights1 * probM.ridge[1]
-alpha.weights <- alpha.weights2 * probM.ridge[3] + alpha.weights1 * probM.ridge[1]
-lambda.weights <- lambda.weights2 * probM.ridge[3] + lambda.weights1 * probM.ridge[1]
+    tmp <- strsplit( names(w.ridge), "_" )
+    l <- sapply(tmp,length)
+    lambda <- as.numeric(sapply(tmp,getElement,2))
+    alpha <- as.numeric(sapply(tmp,getElement,3))
+    tau <- as.numeric(sapply(tmp,getElement,2))
+    tau.weights1 <- tapply( w.ridge[l==3], tau[l==3], sum )
+    alpha.weights1 <- tapply( w.ridge[l==4], alpha[l==4], sum )
+    lambda.weights1 <- tapply( w.ridge[l==4], lambda[l==4], sum )
 
-tau.weights <- cbind( tau.weights1, tau.weights2, tau.weights )
-alpha.weights <- cbind( alpha.weights1, alpha.weights2, alpha.weights )
-lambda.weights <- cbind( lambda.weights1, lambda.weights2, lambda.weights )
+    tau.weights <- tau.weights2 * probM.ridge[2] + tau.weights1 * probM.ridge[1]
+    alpha.weights <- alpha.weights2 * probM.ridge[3] + alpha.weights1 * probM.ridge[1]
+    lambda.weights <- lambda.weights2 * probM.ridge[3] + lambda.weights1 * probM.ridge[1]
 
-write.table( tau.weights, paste0(opt$outdir,"/",opt$pop2,"_tau_weights.dat"), row.names=TRUE )
-write.table( alpha.weights, paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
-write.table( lambda.weights, paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+    tau.weights <- cbind( tau.weights1, tau.weights2, tau.weights )
+    alpha.weights <- cbind( alpha.weights1, alpha.weights2, alpha.weights )
+    lambda.weights <- cbind( lambda.weights1, lambda.weights2, lambda.weights )
 
+    write.table( tau.weights,
+                paste0(opt$outdir,"/",opt$pop2,"_tau_weights.dat"), row.names=TRUE )
+    write.table( alpha.weights,
+                paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
+    write.table( lambda.weights,
+                paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+}
+
+w.ridge11 <- w.ridge1
+if( !is.null(opt$pred2) ){
 # Contribution of single ancestry model
-w.ridge11 <- w.ridge[1:length(w.ridge1)] * probM.ridge[1] +
-    w.ridge1 * probM.ridge[2]
+    w.ridge11 <- w.ridge[1:length(w.ridge1)] * probM.ridge[1] +
+        w.ridge1 * probM.ridge[2]
 # Contribution of stage 2 model
-w.ridge22 <- w.ridge[-(1:length(w.ridge1))] * probM.ridge[1] +
-    w.ridge2 * probM.ridge[3]
+    w.ridge22 <- w.ridge[-(1:length(w.ridge1))] * probM.ridge[1] +
+        w.ridge2 * probM.ridge[3]
+}
 
 beta.bar.genome <- as.data.frame(matrix( nrow=0, ncol=4 ))
 for( chr in 1:22 ){
     beta.bar1 <- fread(paste0(pred.dir1,"/models/",opt$pop,"_",
                               opt$pred1,"_beta_bar_chr",chr,".txt.gz"),
                        data.table=FALSE)
-    beta.bar2 <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
-                              opt$pred2,"_beta_bar_chr",chr,".txt.gz"),
-                       data.table=FALSE)
     beta.bar1 <- beta.list(beta.bar1)
-    beta.bar2 <- beta.list(beta.bar2)
 
-    kl <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
-                       opt$pred2,"_KLdist_chr",chr,".txt.gz"),
-                data.table=FALSE)[,-1]
-    if( chr==1 ){
-        p.clump <- sapply(sapply(beta.bar2,getElement,'p.value'),getElement,1)
-        F <- ecdf(p.clump)
-        q <- F(10^(-(1:8)))
-        kl.thresh <- apply( kl, 2, quantile, 1-q, na.rm=TRUE )
-    }
+    if( !is.null(opt$pred2) ){
+        beta.bar2 <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
+                                  opt$pred2,"_beta_bar_chr",chr,".txt.gz"),
+                           data.table=FALSE)
+        beta.bar2 <- beta.list(beta.bar2)
 
-    tmp <- strsplit( names(w.ridge22), '_' )
-    w.thresh <- sapply(tmp,getElement,3)
-    w.beta.bar <- paste( sapply(tmp,getElement,1),
-                        sapply(tmp,getElement,2), sep='_' )
-    u.w.thresh <- unique(w.thresh)
-    beta.bar22 <- as.data.frame(matrix( nrow=0, ncol=4 ))
-    for( i in 1:length(beta.bar2) ){
-        beta.bar <- as.data.frame(matrix( nrow=nrow(beta.bar2[[i]]), ncol=4 ))
-        beta.bar[,1:3] <- beta.bar2[[i]][,c('snp','effect.allele','ref.allele')]
-        beta.bar[,4] <- 0
-        for( j in 1:length(u.w.thresh) ){
-            ptr.weight <- which( w.thresh==u.w.thresh[j] )
-            ptr.beta.bar <- match( w.beta.bar[ptr.weight], colnames(beta.bar2[[i]]) )
-            ptr.kl <- match( colnames(beta.bar2[[i]])[ptr.beta.bar], colnames(kl) )
-            ptr <- which( kl[i,ptr.kl] > kl.thresh[j,ptr.kl] )
-            tmp <- matrix( nrow=nrow(beta.bar2[[i]]), ncol=length(ptr.beta.bar), data=0 )
-            tmp[,ptr] <- as.matrix(beta.bar2[[i]][,ptr.beta.bar[ptr]])
-            beta.bar[,4] <- beta.bar[,4] + tmp %*% w.ridge22[ptr.weight]
+        kl <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
+                           opt$pred2,"_KLdist_chr",chr,".txt.gz"),
+                    data.table=FALSE)[,-1]
+        if( chr==1 ){
+            p.clump <- sapply(sapply(beta.bar2,getElement,'p.value'),getElement,1)
+            F <- ecdf(p.clump)
+            q <- F(10^(-(1:8)))
+            kl.thresh <- apply( kl, 2, quantile, 1-q, na.rm=TRUE )
         }
-        if( sum(beta.bar[,4])!=0 ){
-            beta.bar22 <- rbind( beta.bar22, beta.bar )
+
+        tmp <- strsplit( names(w.ridge22), '_' )
+        w.thresh <- sapply(tmp,getElement,3)
+        w.beta.bar <- paste( sapply(tmp,getElement,1),
+                            sapply(tmp,getElement,2), sep='_' )
+        u.w.thresh <- unique(w.thresh)
+        beta.bar22 <- as.data.frame(matrix( nrow=0, ncol=4 ))
+
+        for( i in 1:length(beta.bar2) ){
+            beta.bar <- as.data.frame(matrix( nrow=nrow(beta.bar2[[i]]), ncol=4 ))
+            beta.bar[,1:3] <- beta.bar2[[i]][,c('snp','effect.allele','ref.allele')]
+            beta.bar[,4] <- 0
+            for( j in 1:length(u.w.thresh) ){
+                ptr.weight <- which( w.thresh==u.w.thresh[j] )
+                ptr.beta.bar <- match( w.beta.bar[ptr.weight], colnames(beta.bar2[[i]]) )
+                ptr.kl <- match( colnames(beta.bar2[[i]])[ptr.beta.bar], colnames(kl) )
+                ptr <- which( kl[i,ptr.kl] > kl.thresh[j,ptr.kl] )
+                tmp <- matrix( nrow=nrow(beta.bar2[[i]]), ncol=length(ptr.beta.bar), data=0 )
+                tmp[,ptr] <- as.matrix(beta.bar2[[i]][,ptr.beta.bar[ptr]])
+                beta.bar[,4] <- beta.bar[,4] + tmp %*% w.ridge22[ptr.weight]
+            }
+            if( sum(beta.bar[,4])!=0 ){
+                beta.bar22 <- rbind( beta.bar22, beta.bar )
+            }
         }
     }
 
@@ -311,12 +327,16 @@ for( chr in 1:22 ){
         }
     }
 
-    i.snps <- intersect(beta.bar11$V1,beta.bar22$V1)
-    ptr1 <- match( i.snps, beta.bar11$V1 )
-    ptr2 <- match( i.snps, beta.bar22$V1 )
-    beta.bar11[ ptr1, 4] <- beta.bar11[ ptr1, 4] + beta.bar22[ ptr2, 4]
-    beta.bar.chr <- rbind( beta.bar11, beta.bar22[-ptr2,] )
-    beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr )
+    if( !is.null(opt$pred2) ){
+        i.snps <- intersect(beta.bar11$V1,beta.bar22$V1)
+        ptr1 <- match( i.snps, beta.bar11$V1 )
+        ptr2 <- match( i.snps, beta.bar22$V1 )
+        beta.bar11[ ptr1, 4] <- beta.bar11[ ptr1, 4] + beta.bar22[ ptr2, 4]
+        beta.bar.chr <- rbind( beta.bar11, beta.bar22[-ptr2,] )
+        beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr )
+    }else{
+        beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr11 )
+    }
 }
 write.table( beta.bar.genome,
           paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_snp_weights.dat"),
