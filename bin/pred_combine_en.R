@@ -201,9 +201,11 @@ if( opt$valid.data!=0 ){
     }
 }
 
-tmp <- strsplit( names(w.ridge1), "_" )
-tau <- as.numeric(sapply(tmp,getElement,2))
-tau.weights2 <- tapply( w.ridge1, tau, sum )
+if( !is.null(opt$pred2) ){
+    tmp <- strsplit( names(w.ridge1), "_" )
+    tau <- as.numeric(sapply(tmp,getElement,2))
+    tau.weights2 <- tapply( w.ridge1, tau, sum )
+}
 
 tmp <- strsplit( names(w.ridge2), "_" )
 lambda <- as.numeric(sapply(tmp,getElement,2))
@@ -308,6 +310,7 @@ for( chr in 1:22 ){
             beta.bar22 <- rbind( beta.bar22, beta.bar )
         }
     }
+
     i.snps <- intersect(beta.bar11$V1,beta.bar22$V1)
     ptr1 <- match( i.snps, beta.bar11$V1 )
     ptr2 <- match( i.snps, beta.bar22$V1 )
