@@ -5,6 +5,7 @@
     --by_chr_sumstats .Phenotype.glm.linear.gz \
     --pop1 EUR \
     --pop2 AFR \
+    --fst 0.15 \
     --pop1_sumstats ~/BridgePRS/data/sumstats/EUR.chr \
     --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
     --pop1_bfile ~/BridgePRS/data/bfiles/bfile3 \
