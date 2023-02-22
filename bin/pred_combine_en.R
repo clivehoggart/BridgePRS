@@ -335,7 +335,7 @@ for( chr in 1:22 ){
         beta.bar.chr <- rbind( beta.bar11, beta.bar22[-ptr2,] )
         beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr )
     }else{
-        beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr11 )
+        beta.bar.genome <- rbind( beta.bar.genome, beta.bar11 )
     }
 }
 write.table( beta.bar.genome,
