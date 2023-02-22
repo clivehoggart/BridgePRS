@@ -255,7 +255,7 @@ then
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
-	    --beta.stem $outdir/models/$pop1 \
+	    --beta.stem $outdir/models/$pop1\_stage1 \
 	    --bfile $pop1_ld_bfile \
 	    --precision FALSE \
 	    --lambda 0.1,0.2,0.5,1,2,5,10,20 \
@@ -280,7 +280,7 @@ if [ $do_predict_pop1 -eq 1  ]
 then
     rm $outdir/$pop1\_stage1*
     Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
-	    --beta.stem $outdir/models/$pop1 \
+	    --beta.stem $outdir/models/$pop1\_stage1 \
 	    --out.file  $outdir/$pop1\_stage1 \
 	    --p.thresh  1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
 	    --non.overlapping FALSE \
@@ -412,6 +412,9 @@ then
 	    --ld.ids $pop2_ld_ids \
 	    --beta.stem $outdir/models/$pop2\_stage1 \
 	    --bfile $pop2_ld_bfile \
+	    --precision FALSE \
+	    --lambda 0.2,0.5,1,2,5,10,20,50 \
+	    --S 0,0.25,0.5,0.75,1 \
 	    --sumstats.snpID $sumstats_snpID \
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
@@ -419,16 +422,13 @@ then
 	    --sumstats.nID $sumstats_n \
 	    --sumstats.seID $sumstats_se \
 	    --sumstats.frqID $sumstats_frq \
-	    --precision FALSE \
-	    --lambda 0.2,0.5,1,2,5,10,20,50 \
-	    --S 0,0.25,0.5,0.75,1 \
 	    --n.cores $n_cores \
-	    --recomb.file $recomb_pop2_file \
-	    --Ne $N_pop2 \
+	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \
+	    --recomb.file $recomb_pop2_file \
 	    --ld.shrink $ld_shrink \
 	    --strand.check $strand_check \
-	    --by.chr $by_chr_ld
+	    --Ne $N_pop2
 fi
 
 if [ $do_predict_pop2 -eq 1  ]
