@@ -3,7 +3,37 @@ library(MASS)
 library(parallel)
 library(data.table)
 library("optparse")
-source('~/BridgePRS/bin/functions.R')
+
+get_scriptpath <- function() {
+  # https://github.com/molgenis/molgenis-pipelines/wiki/How-to-source-another_file.R-from-within-your-R-script
+  # returns path of the script
+  this_file <- NULL
+  # This file may be 'sourced'
+  for (i in -(1:sys.nframe())) {
+    if (identical(sys.function(i), base::source)) {
+        this_file <- (normalizePath(sys.frame(i)$ofile))
+    }
+  }
+
+  if (!is.null(this_file)) return(dirname(this_file))
+
+  # But it may also be called from the command line
+  args <- commandArgs(trailingOnly = FALSE)
+  args_trailing <- commandArgs(trailingOnly = TRUE)
+  args <- args[seq.int(from = 1,
+    length.out = length(args) - length(args_trailing))]
+  res <- gsub("^(?:--file=(.*)|.*)$", "\\1", args)
+
+  # If multiple --file arguments are given, R uses the last one
+  res <- tail(res[res != ""], 1)
+  if (0 < length(res)) return(dirname(res))
+
+  # Both are not the case. Maybe we are in an R GUI?
+  return(NULL)
+}
+
+funcpath <- paste(get_scriptpath(), "functions.R", sep = "/")
+source(funcpath)
 options(stringsAsFactors=FALSE)
 
 option_list = list(
@@ -104,7 +134,7 @@ if( opt$by.chr.sumstats==0 ){
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
     w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
 }
-ld.ids <- as.character(read.table(opt$ld.ids)[,1])
+ld.ids <- as.character(read.table(opt$ld.ids)[, 2])
 
 if( opt$by.chr==0 ){
     ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
