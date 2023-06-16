@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -eo pipefail
+
 # update key
 # Set some default values:
 pheno_name="y"
@@ -155,7 +158,9 @@ fi
 
 echo "Options in effect:"
 echo "outdir  : $outdir"
-echo "bfile   : $bfile"
+if [[ ! -z $bfile ]]; then
+  echo "bfile   : $bfile"
+fi
 echo "n_cores : $n_cores"
 echo "pop1_ld_ids : $pop1_ld_ids"
 echo "pop2_ld_ids : $pop2_ld_ids"
@@ -203,16 +208,24 @@ echo "strand_check : $strand_check"
 echo "fst : $fst"
 echo ""
 
-mkdir $outdir
-mkdir $outdir/clump
-mkdir $outdir/models
-mkdir $outdir/models/lambda
+mkdir -p $outdir/clump
+mkdir -p $outdir/models/lambda
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
     echo "Invalid argument, ranking="$ranking
     exit
 fi
+
+# Get the directory of the script
+# https://stackoverflow.com/a/246128/2137376
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  scriptdir=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$scriptdir/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+scriptdir=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 if [ $indir == "" ]
 then
@@ -241,15 +254,15 @@ then
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
 	      --out $outdir/clump/$pop1\_$chr
-	rm $outdir/clump/$pop1\_$chr.clumped.gz
+	rm -f -- $outdir/clump/$pop1\_$chr.clumped.gz
 	gzip $outdir/clump/$pop1\_$chr.clumped
     done
 fi
 
 if [ $do_est_beta_pop1 -eq 1  ]
 then
-    rm $outdir/models/$pop1*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    rm -f -- $outdir/models/$pop1*
+    Rscript --vanilla $scriptdir/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -278,8 +291,8 @@ fi
 
 if [ $do_predict_pop1 -eq 1  ]
 then
-    rm $outdir/$pop1\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    rm -f -- $outdir/$pop1\_stage1*
+    Rscript --vanilla $scriptdir/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop1\_stage1 \
 	    --out.file  $outdir/$pop1\_stage1 \
 	    --p.thresh  1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -297,9 +310,9 @@ fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
 then
-    rm $outdir/models/stage1*
-    rm $outdir/models/lambda/rs*.gz
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    rm -f -- $outdir/models/stage1*
+    rm -f -- $outdir/models/lambda/rs*.gz
+    Rscript --vanilla $scriptdir/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -327,8 +340,8 @@ fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
 then
-    rm $outdir/models/$pop2\_stage2*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_InformPrior_bychr.R \
+    rm -f -- $outdir/models/$pop2\_stage2*
+    Rscript --vanilla $scriptdir/est_beta_InformPrior_bychr.R \
 	    --sumstats  $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --prior $outdir/models/stage1 \
@@ -357,8 +370,8 @@ fi
 
 if [ $do_predict_pop2_stage2 -eq 1  ]
 then
-    rm $outdir/$pop2\_stage2*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    rm -f -- $outdir/$pop2\_stage2*
+    Rscript --vanilla $scriptdir/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop2\_stage2 \
 	    --out.file $outdir/$pop2\_stage2 \
 	    --p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -396,15 +409,15 @@ then
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
 	      --out $outdir/clump/$pop2\_$chr
-	rm $outdir/clump/$pop2\_$chr.clumped.gz
+	rm -f -- $outdir/clump/$pop2\_$chr.clumped.gz
 	gzip $outdir/clump/$pop2\_$chr.clumped
     done
 fi
 
 if [ $do_est_beta_pop2 -eq 1  ]
 then
-    rm $outdir/models/$pop2\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    rm -f -- $outdir/models/$pop2\_stage1*
+    Rscript --vanilla $scriptdir/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -433,8 +446,8 @@ fi
 
 if [ $do_predict_pop2 -eq 1  ]
 then
-    rm $outdir/$pop2\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    rm -f -- $outdir/$pop2\_stage1*
+    Rscript --vanilla $scriptdir/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop2\_stage1 \
 	    --out.file $outdir/$pop2\_stage1 \
 	    --p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -452,8 +465,8 @@ fi
 
 if [ $do_combine -eq 1  ]
 then
-    rm $outdir/$pop2\_weighted_combined_var_explained.txt
-    Rscript --vanilla ~/BridgePRS/bin/pred_combine_en.R \
+    rm -f -- $outdir/$pop2\_weighted_combined_var_explained.txt
+    Rscript --vanilla $scriptdir/pred_combine_en.R \
 	    --pred1 stage1 \
 	    --pred2 stage2 \
 	    --pop2 $pop2 \
