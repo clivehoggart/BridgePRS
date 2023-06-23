@@ -62,13 +62,16 @@ parallelises clumping step by running by chromosomes.
 	--by_chr_sumstats. If set assumes sumstats are split by chromosome and are
 		labelled pop1_sumstatsXby_chr_sumstats, where X indexes the chromosomes
 
-	--pop1_qc_snplist. List of variants to use in clumping of population 1 sumstats
-		(required)
-
-	--pop2_qc_snplist. As above for population 2 (required).
-
 	--pop1_bfile. Population 1 plink binary file to calculate PRS in test and
 		validation sets (required)
+
+	--pop2_bfile. As above for population 2 (required)
+
+	--pop1_qc_snplist. List of QCed variants for pop1_bfile. Clumping of population 1
+ 		sumstats will use only these variants (required)
+
+	--pop2_qc_snplist. As above for population 2 (required). Intersection of variants
+ 		in pop1_qc_snplist and pop2_qc_snplist will be used for pop2 PRS.
 
 	--pop1_test_data. Population 1 phenotype and covariate test file. Requires a
 		column labelled IID of IDs to use (required)
@@ -78,8 +81,6 @@ parallelises clumping step by running by chromosomes.
 	--pop1_ld_bfile. Population 1 plink binary file for LD estimation (required)
 
 	--pop1_ld_ids. Population 1 IDs of individuals to use for LD estimation (required)
-
-	--pop2_bfile. As above for population 2 (required)
 
 	--pop2_test_data. As above for population 2 (required)
 
