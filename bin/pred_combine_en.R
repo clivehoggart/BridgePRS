@@ -338,6 +338,7 @@ for( chr in 1:22 ){
         beta.bar.genome <- rbind( beta.bar.genome, beta.bar11 )
     }
 }
+colnames(beta.bar.genome) <- c('snp','effect.allele','ref.allele','effect')
 write.table( beta.bar.genome,
           paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_snp_weights.dat"),
           col.names=TRUE, row.names=FALSE, quote=FALSE )

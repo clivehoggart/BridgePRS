@@ -543,11 +543,8 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
 }
 
 get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
-                           by.chr, ids.use, strand.check ){
-    if( by.chr==1 ){
-        bim <- bim[[beta.bar$chr[1]]]
-        X.bed <- X.bed[[beta.bar$chr[1]]]
-    }
+                           ids.use, strand.check ){
+    snps <- intersect( beta.bar$snp, bim$V2 )
     X <- X.bed[ ids.use, beta.bar$snp, drop=FALSE ]
 
     ptr <- match( beta.bar$snp, colnames(X) )
@@ -602,7 +599,7 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
 }
 
 get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
-                            ids.use, b.size=100, n.cores=20, by.chr,
+                            ids.use, b.size=100, n.cores=20,
                             kl.metric, kl.thresh, ranking, strand.check ){
     n.clumps <- length(beta.bar)
     batches <- ceiling(n.clumps/b.size)
@@ -644,7 +641,7 @@ get.pred.genome <- function( beta.bar, p.thresh, X.bed, bim,
                              get.pred.clump( beta.bar=beta.bar[[i]],
                                             ptr.beta.use=ptr.beta.use,
                                             clump.id=names(beta.bar)[i],
-                                            X.bed=X.bed, bim=bim, by.chr=by.chr,
+                                            X.bed=X.bed, bim=bim,
                                             ids.use=ids.use,
                                             strand.check=strand.check )},
                          mc.cores=n.cores )

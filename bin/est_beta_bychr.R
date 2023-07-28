@@ -213,8 +213,8 @@ for( chr in 1:22 ){
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
-#    for( i in 1:length(clump.use) ){
-#        print(i)
+    for( i in 1:length(clump.use) ){
+        print(i)
 #        tmp <- read.fit.clump( clump.i=clump[clump.use[i],],
 #                                        do.ld.shrink=opt$ld.shrink,
 #                                        sumstats=sumstats,

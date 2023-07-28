@@ -111,7 +111,7 @@ for( chr in 1:22 ){
     pred.chr <- get.pred.genome( beta.bar,
                                 p.thresh=p.thresh, X.bed=ptr.bed,
                                 bim=bim, ids.use=ids.use, b.size=100,
-                                n.cores=as.numeric(opt$n.cores), by.chr=0,
+                                n.cores=as.numeric(opt$n.cores),
                                 kl.metric, kl.thresh, opt$ranking, opt$strand.check )
     if( chr==1 ){
         pred.genome <- pred.chr

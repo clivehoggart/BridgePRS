@@ -1,0 +1,41 @@
+dir=/sc/arion/projects/psychgen/projects/BridgePRS/new_data
+
+    ~/BridgePRS/bin/BridgePRS.sh \
+        --outdir /sc/arion/work/hoggac01/BridgePRS/test \
+        --strand_check 1 \
+	--by_chr 1 \
+        --pop1 EUR \
+        --pop2 AFR \
+	--fst 0.15 \
+        --pop1_sumstats $dir/EUR-SBP-simulated.sumstats \
+        --pop2_sumstats $dir/AFR-SBP-simulated.sumstats \
+        --pop1_bfile $dir/bfiles/chr \
+        --pop1_test_data $dir/eur.pheno  \
+        --pop1_ld_bfile $dir/bfiles/chr \
+        --pop1_ld_ids $dir/EUR_IDs.txt \
+        --pop2_bfile $dir/bfiles/chr \
+        --pop2_test_data $dir/afr.pheno  \
+        --pop2_ld_bfile $dir/bfiles/chr \
+        --pop2_ld_ids $dir/AFR_IDs.txt \
+	--pop1_qc_snplist $dir/csxsnp \
+	--pop2_qc_snplist $dir/csxsnp \
+        --pheno_name pheno100 \
+        --sumstats_snpID ID \
+        --sumstats_p P \
+        --sumstats_beta BETA \
+        --sumstats_allele1 A1 \
+        --sumstats_allele0 AX \
+        --sumstats_n OBS_CT \
+        --sumstats_se SE \
+        --sumstats_frq A1_FREQ \
+        --n_cores 30 \
+        --do_clump_pop1 1 \
+        --do_est_beta_pop1 1 \
+        --do_predict_pop1 0 \
+        --do_est_beta_pop1_precision 0 \
+        --do_est_beta_InformPrior 0 \
+        --do_predict_pop2_stage2 0 \
+        --do_clump_pop2 1 \
+        --do_est_beta_pop2 1 \
+        --do_predict_pop2 0 \
+        --do_combine 0
