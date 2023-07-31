@@ -3,7 +3,7 @@ library(MASS)
 library(parallel)
 library(data.table)
 library("optparse")
-source('~/BridgePRS/bin/functions.R')
+source('~/BridgePRS/src/functions.R')
 options(stringsAsFactors=FALSE)
 
 option_list = list(

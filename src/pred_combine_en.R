@@ -3,7 +3,7 @@ library(boot)
 library(glmnet)
 library(doMC)
 library("optparse")
-source('~/BridgePRS/bin/functions.R')
+source('~/BridgePRS/src/functions.R')
 
 var.explained <- function(data,ptr){
     ptr.X <- grep('X',colnames(data))
