@@ -249,7 +249,7 @@ fi
 if [ $do_est_beta_pop1 -eq 1  ]
 then
     rm $outdir/models/$pop1*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -279,7 +279,7 @@ fi
 if [ $do_predict_pop1 -eq 1  ]
 then
     rm $outdir/$pop1\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop1\_stage1 \
 	    --out.file  $outdir/$pop1\_stage1 \
 	    --p.thresh  1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -299,7 +299,7 @@ if [ $do_est_beta_pop1_precision -eq 1  ]
 then
     rm $outdir/models/stage1*
     rm $outdir/models/lambda/rs*.gz
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -328,7 +328,7 @@ fi
 if [ $do_est_beta_InformPrior -eq 1  ]
 then
     rm $outdir/models/$pop2\_stage2*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_InformPrior_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/est_beta_InformPrior_bychr.R \
 	    --sumstats  $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --prior $outdir/models/stage1 \
@@ -358,7 +358,7 @@ fi
 if [ $do_predict_pop2_stage2 -eq 1  ]
 then
     rm $outdir/$pop2\_stage2*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop2\_stage2 \
 	    --out.file $outdir/$pop2\_stage2 \
 	    --p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -404,7 +404,7 @@ fi
 if [ $do_est_beta_pop2 -eq 1  ]
 then
     rm $outdir/models/$pop2\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/est_beta_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/est_beta_bychr.R \
 	    --clump.stem $indir/clump/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --thinned.snplist $thinned_snplist \
@@ -434,7 +434,7 @@ fi
 if [ $do_predict_pop2 -eq 1  ]
 then
     rm $outdir/$pop2\_stage1*
-    Rscript --vanilla ~/BridgePRS/bin/predict_bychr.R \
+    Rscript --vanilla ~/BridgePRS/src/predict_bychr.R \
 	    --beta.stem $outdir/models/$pop2\_stage1 \
 	    --out.file $outdir/$pop2\_stage1 \
 	    --p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8 \
@@ -453,7 +453,7 @@ fi
 if [ $do_combine -eq 1  ]
 then
     rm $outdir/$pop2\_weighted_combined_var_explained.txt
-    Rscript --vanilla ~/BridgePRS/bin/pred_combine_en.R \
+    Rscript --vanilla ~/BridgePRS/src/pred_combine_en.R \
 	    --pred1 stage1 \
 	    --pred2 stage2 \
 	    --pop2 $pop2 \
