@@ -1,4 +1,4 @@
-~/BridgePRS/bin/BridgePRS.sh \
+~/BridgePRS/src/BridgePRS.sh \
     --strand_check 1 \
     --outdir out \
     --by_chr 0 \
