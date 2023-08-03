@@ -174,7 +174,8 @@ if( opt$valid.data!=0 ){
         ci <- boot.ci(b,type='norm')
         ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
         VE.ridge.w <- c(b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
-        write.table( data.frame( target$IID, prs.weighted ),
+        out <- data.frame( target$IID, prs.ridge, prs.ridge1, prs.ridge2, prs.weighted )
+        write.table( out,
                     paste0(opt$outfile,"_weighted_combined_preds.dat"),
                     col.names=FALSE, row.names=FALSE, quote=FALSE )
 
