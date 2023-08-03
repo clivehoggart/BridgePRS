@@ -454,10 +454,11 @@ if [ $do_combine -eq 1  ]
 then
     rm $outdir/$pop2\_weighted_combined_var_explained.txt
     Rscript --vanilla ~/BridgePRS/src/pred_combine_en.R \
-	    --pred1 stage1 \
-	    --pred2 stage2 \
-	    --pop2 $pop2 \
-	    --outdir $outdir \
+	    --pred1 $outdir/${pop2}_stage1 \
+	    --pred2 $outdir/${pop2}_stage2 \
+	    --models1 $outdir/models/${pop2}_stage1 \
+	    --models2 $outdir/models/${pop2}_stage2 \
+	    --outfile $outdir/${pop2} \
 	    --valid.data $pop2_valid_data \
 	    --test.data $pop2_test_data \
 	    --n.cores $n_cores \

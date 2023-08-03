@@ -15,15 +15,15 @@ var.explained <- function(data,ptr){
 }
 
 option_list = list(
-    make_option(c("--pred.dir1"), type="character", default=NULL,
-                help="", metavar="character"),
-    make_option(c("--pred.dir2"), type="character", default=NULL,
-                help="", metavar="character"),
     make_option(c("--pred1"), type="character", default=NULL,
                 help="", metavar="character"),
     make_option(c("--pred2"), type="character", default=NULL,
                 help="", metavar="character"),
-    make_option(c("--outdir"), type="character", default=NULL,
+    make_option(c("--models1"), type="character", default=NULL,
+                help="", metavar="character"),
+    make_option(c("--models2"), type="character", default=NULL,
+                help="", metavar="character"),
+    make_option(c("--outfile"), type="character", default=NULL,
                 help="", metavar="character"),
     make_option(c("--pop2"), type="character", default=NULL,
                 help="", metavar="character"),
@@ -46,7 +46,7 @@ print(opt)
 
 tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
-logfile <- paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_var_explained.log")
+logfile <- paste0(opt$outfile,"_weighted_combined_var_explained.log")
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
 if( opt$cov.names!="000" ){
@@ -56,11 +56,7 @@ registerDoMC(cores = opt$n.cores)
 
 #### Prediction ####
 
-pred.dir1 <- ifelse( is.null(opt$pred.dir1), opt$outdir, opt$pred.dir1 )
-pred.dir2 <- ifelse( is.null(opt$pred.dir2), opt$outdir, opt$pred.dir2 )
-
-pred1 <- fread(paste0(pred.dir1, "/", opt$pop,'_',opt$pred1,'_all_preds_test.dat'),
-               data.table=FALSE)
+pred1 <- fread(paste0(opt$pred1,'_all_preds_test.dat'), data.table=FALSE)
 target <- fread(opt$test.data,data.table=FALSE)
 if( opt$ids.col ){
     target <- target[match(pred1$id,target$IID),]
@@ -85,8 +81,7 @@ fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
 w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
 
 if( !is.null(opt$pred2) ){
-    pred2 <- fread(paste0(pred.dir2, "/", opt$pop,'_',opt$pred2,'_all_preds_test.dat'),
-                   data.table=FALSE)
+    pred2 <- fread(paste0(opt$pred2,'_all_preds_test.dat'), data.table=FALSE)
     if( opt$ids.col ){
         pred2 <- pred2[,-1]
     }
@@ -115,8 +110,7 @@ if( !is.null(opt$pred2) ){
 
 #### Validation ####
 if( opt$valid.data!=0 ){
-    pred1 <- fread(paste0(pred.dir1, "/", opt$pop,'_',opt$pred1,
-                          '_all_preds_valid.dat'), data.table=FALSE)
+    pred1 <- fread(paste0(opt$pred1,'_all_preds_valid.dat'), data.table=FALSE)
 
 #    ptr <- c( 1, grep("_0.5_", colnames(pred1)),
 #             grep("_1_", colnames(pred1)),
@@ -148,8 +142,7 @@ if( opt$valid.data!=0 ){
     VE.ridge1 <- c( b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
 
     if( !is.null(opt$pred2) ){
-        pred2 <- fread(paste0( pred.dir2, "/", opt$pop,'_',opt$pred2,
-                              '_all_preds_valid.dat'), data.table=FALSE)
+        pred2 <- fread(paste0( opt$pred2, '_all_preds_valid.dat'), data.table=FALSE)
         if( opt$ids.col ){
             pred2 <- pred2[,-1]
         }
@@ -182,7 +175,7 @@ if( opt$valid.data!=0 ){
         ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
         VE.ridge.w <- c(b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
         write.table( data.frame( target$IID, prs.weighted ),
-                    paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_preds.dat"),
+                    paste0(opt$outfile,"_weighted_combined_preds.dat"),
                     col.names=FALSE, row.names=FALSE, quote=FALSE )
 
         out <- rbind( VE.ridge, VE.ridge1, VE.ridge2, VE.ridge.w )
@@ -190,14 +183,14 @@ if( opt$valid.data!=0 ){
         colnames(out) <- c('Prob','Est','2.5%','97.5%','cv.dev','cv.dev.sd')
         rownames(out) <- c('Ridge','Ridge1','Ridge2','Ridge.w')
         print(out)
-        write.csv( out, paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_var_explained.txt"), row.names=TRUE )
+        write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"), row.names=TRUE )
     }
     if( is.null(opt$pred2) ){
         out <- rbind( VE.ridge1 )
         colnames(out) <- c('Est','2.5%','97.5%','cv.dev','cv.dev.sd')
         rownames(out) <- c('Ridge')
         print(out)
-        write.csv( out, paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_var_explained.txt"), row.names=TRUE )
+        write.csv( out, paste0(opt$outfile,"_combined_var_explained.txt"), row.names=TRUE )
     }
 }
 
@@ -208,9 +201,9 @@ lambda.weights2 <- tapply( w.ridge1, lambda, sum )
 alpha.weights2 <- tapply( w.ridge1, alpha, sum )
 if( is.null(opt$pred2) ){
     write.table( alpha.weights2,
-                paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
+                paste0(opt$outdir,"_alpha_weights.dat"), row.names=TRUE )
     write.table( lambda.weights2,
-                paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+                paste0(opt$outdir,"_lambda_weights.dat"), row.names=TRUE )
 }
 
 if( !is.null(opt$pred2) ){
@@ -236,11 +229,11 @@ if( !is.null(opt$pred2) ){
     lambda.weights <- cbind( lambda.weights1, lambda.weights2, lambda.weights )
 
     write.table( tau.weights,
-                paste0(opt$outdir,"/",opt$pop2,"_tau_weights.dat"), row.names=TRUE )
+                paste0(opt$outfile,"_tau_weights.dat"), row.names=TRUE )
     write.table( alpha.weights,
-                paste0(opt$outdir,"/",opt$pop2,"_alpha_weights.dat"), row.names=TRUE )
+                paste0(opt$outfile,"_alpha_weights.dat"), row.names=TRUE )
     write.table( lambda.weights,
-                paste0(opt$outdir,"/",opt$pop2,"_lambda_weights.dat"), row.names=TRUE )
+                paste0(opt$outfile,"_lambda_weights.dat"), row.names=TRUE )
 }
 
 w.ridge11 <- w.ridge1
@@ -255,19 +248,16 @@ if( !is.null(opt$pred2) ){
 
 beta.bar.genome <- as.data.frame(matrix( nrow=0, ncol=4 ))
 for( chr in 1:22 ){
-    beta.bar1 <- fread(paste0(pred.dir1,"/models/",opt$pop,"_",
-                              opt$pred1,"_beta_bar_chr",chr,".txt.gz"),
+    beta.bar1 <- fread(paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz"),
                        data.table=FALSE)
     beta.bar1 <- beta.list(beta.bar1)
 
-    if( !is.null(opt$pred2) ){
-        beta.bar2 <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
-                                  opt$pred2,"_beta_bar_chr",chr,".txt.gz"),
+    if( !is.null(opt$models2) ){
+        beta.bar2 <- fread(paste0(opt$models2,"_beta_bar_chr",chr,".txt.gz"),
                            data.table=FALSE)
         beta.bar2 <- beta.list(beta.bar2)
 
-        kl <- fread(paste0(pred.dir2,"/models/",opt$pop,"_",
-                           opt$pred2,"_KLdist_chr",chr,".txt.gz"),
+        kl <- fread(paste0(opt$models2,"_KLdist_chr",chr,".txt.gz"),
                     data.table=FALSE)[,-1]
         if( chr==1 ){
             p.clump <- sapply(sapply(beta.bar2,getElement,'p.value'),getElement,1)
@@ -340,5 +330,5 @@ for( chr in 1:22 ){
 }
 colnames(beta.bar.genome) <- c('snp','effect.allele','ref.allele','effect')
 write.table( beta.bar.genome,
-          paste0(opt$outdir,"/",opt$pop2,"_weighted_combined_snp_weights.dat"),
+          paste0(opt$outfile,"_weighted_combined_snp_weights.dat"),
           col.names=TRUE, row.names=FALSE, quote=FALSE )
