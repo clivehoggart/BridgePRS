@@ -38,7 +38,7 @@ cov_names="000"
 ld_shrink=0
 recomb_pop1_file=NULL
 recomb_pop2_file=NULL
-binary=1
+binary=0
 
 usage()
 {
