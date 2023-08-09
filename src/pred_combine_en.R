@@ -187,7 +187,7 @@ if( opt$valid.data!=0 ){
     colnames(covs) <- paste('X',colnames(covs),sep='.')
     prs.ridge1 <- predict( fit.ridge1, as.matrix(pred1), s='lambda.min' )
 
-    VE.ridge1 <- calc_ve(prs_ridge1, fit.ridge1)
+    VE.ridge1 <- calc_ve(prs.ridge1, fit.ridge1)
 
     if( !is.null(opt$pred2) ){
         pred2 <- fread(paste0( opt$pred2, '_all_preds_valid.dat'), data.table=FALSE)
@@ -205,7 +205,7 @@ if( opt$valid.data!=0 ){
         VE.ridge2 <- calc_ve(prs.ridge2, fit.ridge2)
 
         prs.weighted <- apply( cbind( prs.ridge, prs.ridge1, prs.ridge2 ) %*% diag(probM.ridge), 1, sum )
-        VE.ridge.w <- calc_ve(prs_weighted, NULL)
+        VE.ridge.w <- calc_ve(prs.weighted, NULL)
 
         out <- data.frame( target$IID, prs.ridge, prs.ridge1, prs.ridge2, prs.weighted )
         write.table( out,
