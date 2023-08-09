@@ -83,7 +83,7 @@ option_list = list(
     make_option(c("--ids.col"), type="logical", default=TRUE,
                 help="", metavar="logical"),
     make_option(c("--n.cores"), type="numeric", default=1,
-                help="Number of processors for mclapply to use", metavar="character")
+                help="Number of processors for mclapply to use", metavar="character"),
     make_option(c("--binary"), type="numeric", default=0,
                 help="Indicator for binary outcome", metavar="numeric")
 )
