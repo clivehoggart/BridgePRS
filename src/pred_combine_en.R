@@ -5,13 +5,58 @@ library(doMC)
 library("optparse")
 source('~/BridgePRS/src/functions.R')
 
-var.explained <- function(data,ptr){
-    ptr.X <- grep('X',colnames(data))
-    ptr.PRS <- grep('PRS',colnames(data))
-    fit0 <- summary(lm( data$y ~ 0 + as.matrix(data[,ptr.X]), subset=ptr ))
-    fit1 <- summary(lm( data$y ~ 0 + as.matrix(data[,ptr.X]) + as.matrix(data[,ptr.PRS]), subset=ptr ))
-    R2 <- 1 - (1-fit1$adj.r.squared) / (1-fit0$adj.r.squared)
-    return(R2)
+calc_ve <- function(prs, myfit) {
+    data <- data.frame(target[, opt$pheno.name], prs, covs)
+    colnames(data)[1:2] <- c("y", "PRS")
+    b <- boot(data, function(x, ptr) var_explained(x, ptr, family),
+              stype = "i", R = 10000, parallel = "multicore",
+              ncpus = opt$n.cores)
+    ci <- boot.ci(b, type = "norm")
+
+    cvm <- 1
+    cvsd <- 1
+    if( !is.null(myfit) ){
+        ptr_min <- which(myfit$lambda == myfit$lambda.min)
+        cvm <-  myfit$cvm[ptr.min]
+        cvsd <- myfit$cvsd[ptr.min]
+    }
+
+    c(b$t0, ci$normal[-1], cvm, cvsd)
+}
+
+var_explained <- function(data, ptr, fam = "gaussian") {
+  # Covariates
+  ptr_x <- grep("X", colnames(data))
+  # PRS
+  ptr_prs <- grep("PRS", colnames(data))
+
+  # Difference in R2
+  if (fam == "gaussian") {
+    # Null Model
+    fit0 <- lm(data$y ~ 0 + as.matrix(data[, ptr_x]), subset = ptr)
+    # Full Model
+    fit1 <- lm(
+      data$y ~ 0 + as.matrix(data[, ptr_x]) + as.matrix(data[, ptr_prs]),
+      subset = ptr)
+    r2 <- (1 - (1 - summary(fit1)$adj.r.squared) /
+               (1 - summary(fit0)$adj.r.squared))
+  } else {
+    if (fam == "binomial" && all(range(data$y) == c(1, 2))) {
+      data$y <- data$y - 1
+    }
+    # Null Model
+    fit0 <- glm(data$y ~ 0 + as.matrix(data[, ptr_x]),
+                subset = ptr, family = fam)
+    # Full Model
+    fit1 <- glm(
+      data$y ~ 0 + as.matrix(data[, ptr_x]) + as.matrix(data[, ptr_prs]),
+      subset = ptr, family = fam)
+    n <- length(fit0$y)
+    d_null <- -2 * logLik(fit0)[1]
+    d_full <- -2 * logLik(fit1)[1]
+    r2 <- (1 - exp((d_full - d_null) / n)) / (1 - exp(-d_null / n))
+  }
+  return(r2)
 }
 
 option_list = list(
@@ -142,12 +187,7 @@ if( opt$valid.data!=0 ){
     colnames(covs) <- paste('X',colnames(covs),sep='.')
     prs.ridge1 <- predict( fit.ridge1, as.matrix(pred1), s='lambda.min' )
 
-    data <- data.frame( target[,opt$pheno.name], prs.ridge1, covs )
-    colnames(data)[1:2] <- c('y','PRS')
-    b <- boot(data,var.explained,stype="i",R=10000,parallel='multicore',ncpus=opt$n.cores)
-    ci <- boot.ci(b,type='norm')
-    ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
-    VE.ridge1 <- c( b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
+    VE.ridge1 <- calc_ve(prs_ridge1, fit.ridge1)
 
     if( !is.null(opt$pred2) ){
         pred2 <- fread(paste0( opt$pred2, '_all_preds_valid.dat'), data.table=FALSE)
@@ -161,34 +201,19 @@ if( opt$valid.data!=0 ){
         ptr.fit1 <- match( names(w.ridge1), names(w.ridge) )
         ptr.fit2 <- match( names(w.ridge2), names(w.ridge) )
 
-        data <- data.frame( target[,opt$pheno.name], prs.ridge, covs )
-        colnames(data)[1:2] <- c('y','PRS')
-        b <- boot(data,var.explained,stype="i",R=10000,parallel='multicore',ncpus=opt$n.cores)
-        ci <- boot.ci(b,type='norm')
-        ptr.min <- which(fit.ridge$lambda==fit.ridge$lambda.min)
-        VE.ridge <- c(b$t0,ci$normal[-1], fit.ridge$cvm[ptr.min], fit.ridge$cvsd[ptr.min] )
-
-        data <- data.frame( target[,opt$pheno.name], prs.ridge2, covs )
-        colnames(data)[1:2] <- c('y','PRS')
-        b <- boot(data,var.explained,stype="i",R=10000,parallel='multicore',ncpus=opt$n.cores)
-        ci <- boot.ci(b,type='norm')
-        ptr.min <- which(fit.ridge2$lambda==fit.ridge2$lambda.min)
-        VE.ridge2 <- c(b$t0,ci$normal[-1], fit.ridge2$cvm[ptr.min], fit.ridge2$cvsd[ptr.min] )
+        VE.ridge <- calc_ve(prs.ridge, fit.ridge)
+        VE.ridge2 <- calc_ve(prs.ridge2, fit.ridge2)
 
         prs.weighted <- apply( cbind( prs.ridge, prs.ridge1, prs.ridge2 ) %*% diag(probM.ridge), 1, sum )
-        data <- data.frame( target[,opt$pheno.name], prs.weighted, covs )
-        colnames(data)[1:2] <- c('y','PRS')
-        b <- boot(data,var.explained,stype="i",R=10000,parallel='multicore',ncpus=opt$n.cores)
-        ci <- boot.ci(b,type='norm')
-        ptr.min <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
-        VE.ridge.w <- c(b$t0,ci$normal[-1], fit.ridge1$cvm[ptr.min], fit.ridge1$cvsd[ptr.min] )
+        VE.ridge.w <- calc_ve(prs_weighted, NULL)
+
         out <- data.frame( target$IID, prs.ridge, prs.ridge1, prs.ridge2, prs.weighted )
         write.table( out,
                     paste0(opt$outfile,"_weighted_combined_preds.dat"),
                     col.names=FALSE, row.names=FALSE, quote=FALSE )
 
         out <- rbind( VE.ridge, VE.ridge1, VE.ridge2, VE.ridge.w )
-        out <- cbind( c(probM.ridge,0), out )
+        out <- cbind( c(probM.ridge,1), out )
         colnames(out) <- c('Prob','Est','2.5%','97.5%','cv.dev','cv.dev.sd')
         rownames(out) <- c('Ridge','Ridge1','Ridge2','Ridge.w')
         print(out)
