@@ -40,11 +40,19 @@ option_list = list(
                 metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric")
+    make_option(c("--binary"), type="numeric", default=0,
+                help="Indicator for binary outcome", metavar="numeric")
 )
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 
 print(opt)
+
+if( opt$binary==1 ){
+    family <- "binomial"
+}else{
+    family <- "gaussian"
+}
 
 logfile <- paste0(opt$out.file,".log")
 tmp <- t(data.frame(opt))
@@ -139,7 +147,7 @@ if( opt$valid.data!=0 ){
     all.preds.valid <- as.data.table(valid.ids)
     colnames(all.preds.valid)[1] <- 'ids'
 
-    fit.valid0 <- summary(lm( valid.data[,opt$pheno.name] ~ 0 + valid.covs ))
+    fit.valid0 <- summary(glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family ))
 }
 
 VE.test <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
@@ -157,16 +165,18 @@ ptr.test <- match( test.data$IID, rownames(pred.genome[[1]]) )
 all.preds.test <- as.data.table(test.ids)
 colnames(all.preds.test)[1] <- 'ids'
 
-fit.test0 <- summary(lm( test.data[,opt$pheno.name] ~ 0 + test.covs ))
+fit.test0 <- summary(glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family ))
 
 for( k in 1:n.thresh ){
     for( j in 1:ncol(pred.genome[[k]]) ){
-        fit.test1 <- summary(lm( test.data[,opt$pheno.name] ~
-                                     0 + pred.genome[[k]][ptr.test,j] + test.covs ))
+        fit.test1 <- summary(glm( test.data[,opt$pheno.name] ~
+                                      0 + pred.genome[[k]][ptr.test,j] + test.covs,
+                                 family=family ))
         VE.test[j,k] <- 1 - (1-fit.test1$adj.r.squared) / (1-fit.test0$adj.r.squared)
         if( opt$valid.data!=0 ){
-            fit.valid1 <- summary(lm( valid.data[,opt$pheno.name] ~
-                                          0 + pred.genome[[k]][ptr.valid,j] + valid.covs ))
+            fit.valid1 <- summary(glm( valid.data[,opt$pheno.name] ~
+                                           0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
+                                      family=family ))
             VE.valid[j,k] <- 1 - (1-fit.valid1$adj.r.squared) / (1-fit.valid0$adj.r.squared)
         }
     }

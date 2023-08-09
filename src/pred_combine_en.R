@@ -39,10 +39,18 @@ option_list = list(
                 help="", metavar="logical"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character")
+    make_option(c("--binary"), type="numeric", default=0,
+                help="Indicator for binary outcome", metavar="numeric")
 )
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 print(opt)
+
+if( opt$binary==1 ){
+    family <- "binomial"
+}else{
+    family <- "gaussian"
+}
 
 tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
@@ -76,7 +84,7 @@ nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
-                        family="gaussian",
+                        family=family,
                         alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
 
@@ -86,10 +94,10 @@ if( !is.null(opt$pred2) ){
         pred2 <- pred2[,-1]
     }
     X <- as.matrix(cbind( pred1, pred2 ))
-    fit.ridge <- cv.glmnet( y=target[,opt$pheno.name], x=X, family="gaussian",
+    fit.ridge <- cv.glmnet( y=target[,opt$pheno.name], x=X, family=family,
                            alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
     fit.ridge2 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred2),
-                            family="gaussian",
+                            family=family,
                             alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 
     w.ridge <- getGlmnetFit( fit.ridge, X, s='lambda.min', sparse=FALSE )[-1]
