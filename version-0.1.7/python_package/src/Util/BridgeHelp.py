@@ -29,8 +29,13 @@ class BridgeHelp:
 
 
     def web_guide(self): 
-        import webbrowser 
-        webbrowser.open(self.dirname+'/'+'bridge.html')
+        webpage = self.dirname+'/bridge.html'
+        import platform 
+        if platform.system().upper()[0:3] == 'LIN': 
+            import webbrowser
+            webbrowser.open(webpage) 
+        else:  
+            os.system('open '+webpage) 
         sys.exit() 
         return 
 
