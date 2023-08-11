@@ -151,7 +151,7 @@ if( !is.null(opt$pred2) ){
 #    w.ridge2 <- getGlmnetFit( fit.ridge2, as.matrix(pred2), s='lambda.min', sparse=FALSE )[-1]
     w.ridge <- as.vector(coef( fit.ridge, s='lambda.min' )[-1])
     w.ridge2 <- as.vector(coef( fit.ridge2, s='lambda.min' )[-1])
-    names(w.ridge) <- colnames(pred)
+    names(w.ridge) <- colnames(X)
     names(w.ridge2) <- colnames(pred2)
 
     n <- fit.ridge$glmnet.fit$nobs
