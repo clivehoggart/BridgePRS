@@ -131,7 +131,9 @@ write( paste("Test data of", nrow(target), "samples"), file=logfile )
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
                         family=family,
                         alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
-w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
+#w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
+w.ridge1 <- as.vector(coef( fit.ridge1, s='lambda.min' ))[-1]
+names(w.ridge1) <- colnames(pred1)
 
 if( !is.null(opt$pred2) ){
     pred2 <- fread(paste0(opt$pred2,'_all_preds_test.dat'), data.table=FALSE)
@@ -145,8 +147,12 @@ if( !is.null(opt$pred2) ){
                             family=family,
                             alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 
-    w.ridge <- getGlmnetFit( fit.ridge, X, s='lambda.min', sparse=FALSE )[-1]
-    w.ridge2 <- getGlmnetFit( fit.ridge2, as.matrix(pred2), s='lambda.min', sparse=FALSE )[-1]
+#    w.ridge <- getGlmnetFit( fit.ridge, X, s='lambda.min', sparse=FALSE )[-1]
+#    w.ridge2 <- getGlmnetFit( fit.ridge2, as.matrix(pred2), s='lambda.min', sparse=FALSE )[-1]
+    w.ridge <- as.vector(coef( fit.ridge, s='lambda.min' )[-1])
+    w.ridge2 <- as.vector(coef( fit.ridge2, s='lambda.min' )[-1])
+    names(w.ridge) <- colnames(X)
+    names(w.ridge2) <- colnames(pred2)
 
     n <- fit.ridge$glmnet.fit$nobs
     ptr.min <- which(fit.ridge$lambda==fit.ridge$lambda.min)
