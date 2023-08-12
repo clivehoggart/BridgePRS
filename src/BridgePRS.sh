@@ -408,7 +408,7 @@ then
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \
-	    --strand.check $strand_check \
+	    --strand.check $strand_check
 fi
 
 if [ $do_predict_pop2 -eq 1  ]
