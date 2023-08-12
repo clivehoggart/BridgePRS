@@ -50,12 +50,6 @@ option_list = list(
                 help="Freq column name", metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
-    make_option(c("--ld.shrink"), type="numeric",
-                help="Indicator for shrinking LD matrix", metavar="numeric", default=0),
-    make_option(c("--recomb.file"), type="character", default=NULL,
-                help="File of genome-wide recombination rates", metavar="character"),
-    make_option(c("--Ne"), type="numeric",
-                help="Effective population size", metavar="numeric", default=0),
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
@@ -174,14 +168,6 @@ for( chr in 1:22 ){
     clump <- read.table(infile,header=TRUE,stringsAsFactors=FALSE)
     clump.use <- which( clump$P <= 1 )
 
-    if( opt$ld.shrink==1 ){
-        infile <- paste0(opt$recomb.file,'-',chr,'-final.txt.gz')
-        recomb <- fread(infile)
-    }
-    if( opt$ld.shrink==0 ){
-        recomb <- NULL
-    }
-
     if( opt$thinned.snplist!=0 ){
         thinned.snplist <- fread(opt$thinned.snplist)$V2
         if( !is.null(opt$sumstats2) ){
@@ -204,9 +190,7 @@ for( chr in 1:22 ){
     fits <- mclapply( 1:length(clump.use),
                      function(i){
                          read.fit.clump( clump.i=clump[clump.use[i],],
-                                        do.ld.shrink=opt$ld.shrink,
                                         sumstats=sumstats,
-                                        recomb=recomb, Ne=opt$Ne,
                                         X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
                                         S=S, l=lambda, precision=precision, by.chr=0,
                                         beta.stem=path,
@@ -216,9 +200,7 @@ for( chr in 1:22 ){
 #    for( i in 1:length(clump.use) ){
 #        print(i)
 #        tmp <- read.fit.clump( clump.i=clump[clump.use[i],],
-#                                        do.ld.shrink=opt$ld.shrink,
 #                                        sumstats=sumstats,
-#                                        recomb=recomb, Ne=opt$Ne,
 #                                        X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
 #                                        S=S, l=lambda, precision=precision, by.chr=0,
 #                                        beta.stem=path,

@@ -312,7 +312,6 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 }
 
 read.fit.clump <- function( clump.i, sumstats, ld.ids,
-                           do.ld.shrink, recomb, Ne,
                            X.bed, bim, l=10, S=1, precision=FALSE,
                            by.chr, beta.stem, strand.check ){
     clump.snps <-  unlist(strsplit( clump.i$SP2, ',' ))
@@ -341,12 +340,6 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
             snps <- snps[ptr.use]
             sumstats <- sumstats[ptr.use,]
-
-            if( do.ld.shrink ){
-                ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
-                                              Ne=Ne, m=length(ld.ids) )
-                ref.stats$ld <- ref.stats$ld * ld.shrink.factor
-            }
 
             n.models <- length(S)*length(l)
             beta.bar <- matrix( ncol=n.models, nrow=length(snps) )
@@ -393,7 +386,6 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
 }
 
 read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
-                                     do.ld.shrink, recomb, Ne,
                                      beta.prior, lambda.ext, w.prior,
                                      precision=FALSE, by.chr, sumstats.n,
                                      ranking, sigma2,
@@ -420,11 +412,6 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                 ptr.prior <- ptr.prior[ptr.use]
                 ref.stats$af <- ref.stats$af[ptr.use]
                 ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
-            }
-            if( do.ld.shrink==1 ){
-                ld.shrink.factor <- ld.shrink( snps, bim=bim, recomb=recomb,
-                                              Ne=Ne, m=length(ld.ids) )
-                ref.stats$ld <- ref.stats$ld * ld.shrink.factor
             }
             if( ranking=="pv.ftest" ){
                 pv.target <- f.test( sumstats$BETA, ref.stats$ld,

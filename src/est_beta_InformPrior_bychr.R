@@ -48,12 +48,6 @@ option_list = list(
                 help="File of lambda and S parameters", metavar="character"),
     make_option(c("--ranking"), type="character", default="p-value",
                 help="Method to rank loci", metavar="character"),
-    make_option(c("--ld.shrink"), type="numeric",
-                help="Indicator for shrinking LD matrix", metavar="numeric", default=0),
-    make_option(c("--recomb.file"), type="character", default=NULL,
-                help="File of genome-wide recombination rates", metavar="character"),
-    make_option(c("--Ne"), type="numeric",
-                help="Effective population size", metavar="numeric", default=0),
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
@@ -160,19 +154,9 @@ for( chr in 1:22 ){
     beta.prior <- beta.list(beta.prior)
 #    lambda.prior <- dget(paste(opt$prior,"_lambda_chr",chr,".Robj", sep=""))
 
-    if( opt$ld.shrink==1 ){
-        infile <- paste0(opt$recomb.file,'-',chr,'-final.txt.gz')
-        recomb <- fread(infile)
-    }
-    if( opt$ld.shrink==0 ){
-        recomb <- NULL
-    }
-
     fits <- mclapply( 1:length(beta.prior),
                      function(i){
                          read.NonCentralFit.clump( beta.prior=beta.prior[[i]],
-                                                  do.ld.shrink=opt$ld.shrink,
-                                                  recomb=recomb, Ne=opt$Ne,
                                                   lambda.ext=lambda.ext,
                                                   w.prior=w.prior, sumstats=sumstats,
                                                   X.bed=ptr.bed, bim=bim,

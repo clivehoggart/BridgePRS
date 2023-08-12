@@ -23,8 +23,6 @@ pop1="pop1"
 pop2="pop2"
 thinned_snplist=0
 n_max_locus=0
-N_pop1=10000
-N_pop2=10000
 ids_col=TRUE
 ranking=f.stat
 pop1_valid_data=0
@@ -35,9 +33,6 @@ pop2_ld_bfile=0
 pop1_bfile=0
 pop2_bfile=0
 cov_names="000"
-ld_shrink=0
-recomb_pop1_file=NULL
-recomb_pop2_file=NULL
 binary=0
 
 usage()
@@ -48,7 +43,7 @@ usage()
   exit 2
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,bfile:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,recomb_pop1_file:,recomb_pop2_file:,N_pop1:,N_pop2:,ranking:,ld_shrink:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,bfile:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -97,12 +92,9 @@ do
     --pop2) pop2=$2 ; shift 2 ;;
     --thinned_snplist) thinned_snplist=$2 ; shift 2 ;;
     --n_max_locus) n_max_locus=$2 ; shift 2 ;;
-    --recomb_pop1_file) recomb_pop1_file=$2 ; shift 2 ;;
-    --recomb_pop2_file) recomb_pop2_file=$2 ; shift 2 ;;
     --N_pop1) N_pop1=$2 ; shift 2 ;;
     --N_pop2) N_pop2=$2 ; shift 2 ;;
     --ranking) ranking=$2 ; shift 2 ;;
-    --ld_shrink) ld_shrink=$2 ; shift 2 ;;
     --ids_col) ids_col=$2 ; shift 2 ;;
     --sumstats_p) sumstats_p=$2 ; shift 2 ;;
     --sumstats_snpID) sumstats_snpID=$2 ; shift 2 ;;
@@ -194,12 +186,7 @@ echo "pop1 : $pop1"
 echo "pop2 : $pop2"
 echo "n_max_locus : $n_max_locus"
 echo "thinned_snplist : $thinned_snplist"
-echo "recomb_pop1_file : $recomb_pop1_file"
-echo "recomb_pop2_file : $recomb_pop2_file"
-echo "N_pop1 : $N_pop1"
-echo "N_pop2 : $N_pop2"
 echo "ranking : $ranking"
-echo "ld_shrink : $ld_shrink"
 echo "ids_col : $ids_col"
 echo "strand_check : $strand_check"
 echo "fst : $fst"
@@ -273,10 +260,7 @@ then
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \
-	    --recomb.file $recomb_pop1_file \
-	    --ld.shrink $ld_shrink \
-	    --strand.check $strand_check \
-	    --Ne $N_pop1
+	    --strand.check $strand_check
 fi
 
 if [ $do_predict_pop1 -eq 1  ]
@@ -322,9 +306,6 @@ then
 	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
-	    --recomb.file $recomb_pop1_file \
-	    --ld.shrink $ld_shrink \
-	    --Ne $N_pop1 \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
 fi
@@ -350,11 +331,8 @@ then
 	    --sumstats.P $sumstats_p \
 	    --precision 0 \
 	    --n.cores $n_cores \
-	    --recomb.file $recomb_pop2_file \
-	    --Ne $N_pop2 \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --ranking $ranking \
-	    --ld.shrink $ld_shrink \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
 fi
@@ -430,10 +408,7 @@ then
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \
-	    --recomb.file $recomb_pop2_file \
-	    --ld.shrink $ld_shrink \
 	    --strand.check $strand_check \
-	    --Ne $N_pop2
 fi
 
 if [ $do_predict_pop2 -eq 1  ]
