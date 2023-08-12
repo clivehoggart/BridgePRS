@@ -41,7 +41,7 @@ option_list = list(
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
-                help="Keep only non-ambiguous SNPs", metavar="numeric")
+                help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--binary"), type="numeric", default=0,
                 help="Indicator for binary outcome", metavar="numeric")
 )
