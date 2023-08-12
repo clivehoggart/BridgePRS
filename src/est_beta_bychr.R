@@ -3,10 +3,11 @@ library(MASS)
 library(parallel)
 library(data.table)
 library("optparse")
-source('~/BridgePRS/src/functions.R')
 options(stringsAsFactors=FALSE)
 
 option_list = list(
+    make_option(c("--fpath"), type="character", default=NULL,
+                help="Function File Path", metavar="character"),
     make_option(c("-c", "--clump.stem"), type="character",
                 help="Clump stem", metavar="character"),
     make_option(c("-s", "--sumstats"), type="character",
@@ -60,6 +61,8 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 
 print(opt)
+
+source(opt$fpath)
 
 logfile <- paste0(opt$beta.stem,".log")
 tmp <- t(data.frame(opt))

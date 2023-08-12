@@ -3,7 +3,6 @@ library(boot)
 library(glmnet)
 library(doMC)
 library("optparse")
-source('~/BridgePRS/src/functions.R')
 
 calc_ve <- function(prs, myfit) {
     data <- data.frame(target[, opt$pheno.name], prs, covs)
@@ -60,6 +59,8 @@ var_explained <- function(data, ptr, fam = "gaussian") {
 }
 
 option_list = list(
+    make_option(c("--fpath"), type="character", default=NULL,
+                help="Function File Path", metavar="character"),
     make_option(c("--pred1"), type="character", default=NULL,
                 help="", metavar="character"),
     make_option(c("--pred2"), type="character", default=NULL,
@@ -90,6 +91,8 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 print(opt)
+
+source(opt$fpath)
 
 if( opt$binary==1 ){
     family <- "binomial"

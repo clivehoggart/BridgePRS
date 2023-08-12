@@ -3,10 +3,11 @@ library(MASS)
 library(parallel)
 library(data.table)
 library("optparse")
-source('~/BridgePRS/src/functions.R')
 options(stringsAsFactors=FALSE)
 
 option_list = list(
+    make_option(c("--fpath"), type="character", default=NULL,
+                help="Function File Path", metavar="character"),
     make_option(c("-b", "--beta.stem"), type="character",
                 help="Beta estimate file", metavar="character"),
     make_option(c("-o", "--out.file"), type="character",
@@ -49,6 +50,8 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 
 print(opt)
+
+source(opt$fpath)
 
 if( opt$binary==1 ){
     family <- "binomial"
