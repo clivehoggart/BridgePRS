@@ -170,10 +170,11 @@ ptr.test <- match( test.data$IID, rownames(pred.genome[[1]]) )
 all.preds.test <- as.data.table(test.ids)
 colnames(all.preds.test)[1] <- 'ids'
 
-if( family=="gaussian" )
+if( family=="gaussian" ){
     fit.test0 <- summary(lm( test.data[,opt$pheno.name] ~ 0 + test.covs ))
-else
+}else{
     fit.test0 <- summary(glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family ))
+}
 
 for( k in 1:n.thresh ){
     for( j in 1:ncol(pred.genome[[k]]) ){
