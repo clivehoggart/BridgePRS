@@ -190,9 +190,9 @@ for( chr in 1:22 ){
     fits <- mclapply( 1:length(clump.use),
                      function(i){
                          read.fit.clump( clump.i=clump[clump.use[i],],
-                                        sumstats=sumstats,
-                                        X.bed=ptr.bed, bim=bim, ld.ids=ld.ids,
-                                        S=S, l=lambda, precision=precision, by.chr=0,
+                                        sumstats=sumstats, ld.ids=ld.ids,
+                                        X.bed=ptr.bed, bim=bim,
+                                        l=lambda, S=S, precision=precision, by.chr=0,
                                         beta.stem=path,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )

@@ -149,8 +149,11 @@ if( opt$valid.data!=0 ){
     all.preds.valid <- as.data.table(valid.ids)
     colnames(all.preds.valid)[1] <- 'ids'
 
-    fit.valid0 <- summary(glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family ))
-}
+    if( family=="gaussian" )
+        fit.valid0 <- summary(lm( valid.data[,opt$pheno.name] ~ 0 + valid.covs ))
+    else
+        fit.valid0 <- summary(glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family ))
+    }
 
 VE.test <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
 rownames(VE.test) <- colnames(pred.genome[[1]])
@@ -167,19 +170,39 @@ ptr.test <- match( test.data$IID, rownames(pred.genome[[1]]) )
 all.preds.test <- as.data.table(test.ids)
 colnames(all.preds.test)[1] <- 'ids'
 
-fit.test0 <- summary(glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family ))
+if( family=="gaussian" )
+    fit.test0 <- summary(lm( test.data[,opt$pheno.name] ~ 0 + test.covs ))
+else
+    fit.test0 <- summary(glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family ))
 
 for( k in 1:n.thresh ){
     for( j in 1:ncol(pred.genome[[k]]) ){
-        fit.test1 <- summary(glm( test.data[,opt$pheno.name] ~
-                                      0 + pred.genome[[k]][ptr.test,j] + test.covs,
-                                 family=family ))
-        VE.test[j,k] <- 1 - (1-fit.test1$adj.r.squared) / (1-fit.test0$adj.r.squared)
-        if( opt$valid.data!=0 ){
-            fit.valid1 <- summary(glm( valid.data[,opt$pheno.name] ~
-                                           0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
-                                      family=family ))
-            VE.valid[j,k] <- 1 - (1-fit.valid1$adj.r.squared) / (1-fit.valid0$adj.r.squared)
+        if( family=="gaussian" ){
+            fit.test1 <- summary(lm( test.data[,opt$pheno.name] ~
+                                         0 + pred.genome[[k]][ptr.test,j] + test.covs ))
+            VE.test[j,k] <- 1 - (1-fit.test1$adj.r.squared) / (1-fit.test0$adj.r.squared)
+            if( opt$valid.data!=0 ){
+                fit.valid1 <- summary(lm( valid.data[,opt$pheno.name] ~
+                                              0 + pred.genome[[k]][ptr.valid,j] + valid.covs ))
+                VE.valid[j,k] <- 1 - (1-fit.valid1$adj.r.squared) / (1-fit.valid0$adj.r.squared)
+            }
+        }else{
+            fit.test1 <- summary(glm( test.data[,opt$pheno.name] ~
+                                          0 + pred.genome[[k]][ptr.test,j] + test.covs,
+                                     family=family ))
+            n <- length(fit.test0$y)
+            d_null <- -2 * logLik(fit.test0)[1]
+            d_full <- -2 * logLik(fit.test1)[1]
+            VE.test[j,k] <- (1 - exp((d_full - d_null) / n)) / (1 - exp(-d_null / n))
+            if( opt$valid.data!=0 ){
+                fit.valid1 <- summary(hlm( valid.data[,opt$pheno.name] ~
+                                               0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
+                                          family=family ))
+                n <- length(fit.valid0$y)
+                d_null <- -2 * logLik(fit.valid0)[1]
+                d_full <- -2 * logLik(fit.valid1)[1]
+                VE.valid[j,k] <- (1 - exp((d_full - d_null) / n)) / (1 - exp(-d_null / n))
+            }
         }
     }
     if( opt$all.preds ){
