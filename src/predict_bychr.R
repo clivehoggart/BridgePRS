@@ -16,8 +16,6 @@ option_list = list(
                 default="1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8",
                 help="P-value threshold to select clumps",
                 metavar="character"),
-    make_option(c("--all.preds"), type="logical", default=TRUE,
-                help="Flag to write all predictions", metavar="character"),
     make_option(c("--bfile"), type="character",
                 help="Plink file to extract test & train genotype data",
                 metavar="character"),
