@@ -235,7 +235,7 @@ then
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
 	      --out $outdir/clump/$pop1\_$chr
-	rm $outdir/clump/$pop1\_$chr.clumped.gz
+	rm -f $outdir/clump/$pop1\_$chr.clumped.gz
 	gzip $outdir/clump/$pop1\_$chr.clumped
     done
 fi
@@ -252,7 +252,6 @@ then
 	    --ld.ids $pop1_ld_ids \
 	    --beta.stem $outdir/models/$pop1\_stage1 \
 	    --bfile $pop1_ld_bfile \
-	    --precision FALSE \
 	    --lambda 0.1,0.2,0.5,1,2,5,10,20 \
 	    --S 0,0.25,0.5,0.75,1 \
 	    --sumstats.snpID $sumstats_snpID \
@@ -336,7 +335,6 @@ then
 	    --sumstats.seID $sumstats_se \
 	    --sumstats.frqID $sumstats_frq \
 	    --sumstats.P $sumstats_p \
-	    --precision 0 \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --ranking $ranking \
@@ -403,7 +401,6 @@ then
 	    --ld.ids $pop2_ld_ids \
 	    --beta.stem $outdir/models/$pop2\_stage1 \
 	    --bfile $pop2_ld_bfile \
-	    --precision FALSE \
 	    --lambda 0.2,0.5,1,2,5,10,20,50 \
 	    --S 0,0.25,0.5,0.75,1 \
 	    --sumstats.snpID $sumstats_snpID \

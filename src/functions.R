@@ -261,6 +261,16 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
                           effect.allele, ref.allele, strand.check,
                           n.eff=FALSE ){
     ids <- intersect( ld.ids, dimnames(X.bed)[[1]] )
+    if( length(ids)<10 ){
+        print("Few than 10 individuals to estimate LD")
+        stop()
+    }
+    X <- X.bed[ ids, snps, drop=FALSE ]
+    ptr.bed <- match( snps, colnames(X.bed) )
+    if( length(ptr.bed)==0 ){
+        print("SNPs used in clumping and ref data do not overlap")
+        stop()
+    }
     X <- X.bed[ ids, snps, drop=FALSE ]
     ptr.bed <- match( snps, colnames(X.bed) )
     X <- X[,match( snps, colnames(X)), drop=FALSE ]
