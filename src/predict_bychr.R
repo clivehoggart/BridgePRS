@@ -16,9 +16,6 @@ option_list = list(
                 default="1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8",
                 help="P-value threshold to select clumps",
                 metavar="character"),
-    make_option(c("--non.overlapping"), type="logical", default=FALSE,
-                help="Flag to set non-overlapping p-value thresholds",
-                metavar="character"),
     make_option(c("--all.preds"), type="logical", default=TRUE,
                 help="Flag to write all predictions", metavar="character"),
     make_option(c("--bfile"), type="character",
@@ -78,11 +75,11 @@ if( opt$valid.data!=0 ){
 tmp <- as.numeric(strsplit( opt$p.thresh, ',' )[[1]])
 p.thresh <- matrix(ncol=2,nrow=length(tmp))
 p.thresh[,1] <- tmp
-if( opt$non.overlapping ){
-    p.thresh[,2] <- c(tmp[-1],-1)
-}else{
+#if( opt$non.overlapping ){
+#    p.thresh[,2] <- c(tmp[-1],-1)
+#}else{
     p.thresh[,2] <- -1
-}
+#}
 
 if( opt$by.chr==0 ){
     ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
