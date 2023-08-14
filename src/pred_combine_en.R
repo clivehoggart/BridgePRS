@@ -15,7 +15,7 @@ calc_ve <- function(prs, myfit) {
     cvm <- 1
     cvsd <- 1
     if( !is.null(myfit) ){
-        ptr_min <- which(myfit$lambda == myfit$lambda.min)
+        ptr.min <- which(myfit$lambda == myfit$lambda.min)
         cvm <-  myfit$cvm[ptr.min]
         cvsd <- myfit$cvsd[ptr.min]
     }
@@ -127,7 +127,7 @@ v.target <- var(target[,opt$pheno.name])
 #         grep("_10_", colnames(pred1)) )
 #pred1 <- pred1[,ptr]
 
-nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
+nfolds <- ifelse( nrow(target)<500, nrow(target), 500 )
 
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 
@@ -244,9 +244,9 @@ lambda.weights2 <- tapply( w.ridge1, lambda, sum )
 alpha.weights2 <- tapply( w.ridge1, alpha, sum )
 if( is.null(opt$pred2) ){
     write.table( alpha.weights2,
-                paste0(opt$outdir,"_alpha_weights.dat"), row.names=TRUE )
+                paste0(opt$outfile,"_alpha_weights.dat"), row.names=TRUE )
     write.table( lambda.weights2,
-                paste0(opt$outdir,"_lambda_weights.dat"), row.names=TRUE )
+                paste0(opt$outfile,"_lambda_weights.dat"), row.names=TRUE )
 }
 
 if( !is.null(opt$pred2) ){

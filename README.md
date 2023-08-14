@@ -80,7 +80,8 @@ parallelises clumping step by running by chromosomes.
 
 	--pop1_ld_bfile. Population 1 plink binary file for LD estimation (required)
 
-	--pop1_ld_ids. Population 1 IDs of individuals to use for LD estimation (required)
+	--pop1_ld_ids. Population 1 IDs of individuals to use for LD estimation, matches on
+ 			2nd column, i.e. IID (required)
 
 	--pop2_test_data. As above for population 2 (required)
 

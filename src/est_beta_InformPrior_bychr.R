@@ -101,7 +101,7 @@ if( opt$by.chr.sumstats==0 ){
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
     w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
 }
-ld.ids <- as.character(read.table(opt$ld.ids)[,1])
+ld.ids <- as.character(read.table(opt$ld.ids)[,2])
 
 if( opt$by.chr==0 ){
     ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
