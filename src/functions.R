@@ -262,7 +262,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
                           n.eff=FALSE ){
     ids <- intersect( ld.ids, dimnames(X.bed)[[1]] )
     if( length(ids)<10 ){
-        print("Few than 10 individuals to estimate LD")
+        print("Fewer than 10 individuals to estimate LD")
         stop()
     }
     X <- X.bed[ ids, snps, drop=FALSE ]

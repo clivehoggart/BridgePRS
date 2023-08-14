@@ -150,7 +150,7 @@ if( opt$valid.data!=0 ){
     if( family=="gaussian" )
         fit.valid0 <- summary(lm( valid.data[,opt$pheno.name] ~ 0 + valid.covs ))
     else
-        fit.valid0 <- summary(glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family ))
+        fit.valid0 <- glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family )
     }
 
 VE.test <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
@@ -171,7 +171,7 @@ colnames(all.preds.test)[1] <- 'ids'
 if( family=="gaussian" ){
     fit.test0 <- summary(lm( test.data[,opt$pheno.name] ~ 0 + test.covs ))
 }else{
-    fit.test0 <- summary(glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family ))
+    fit.test0 <- glm( test.data[,opt$pheno.name] ~ 0 + test.covs, family=family )
 }
 
 for( k in 1:n.thresh ){
@@ -186,17 +186,17 @@ for( k in 1:n.thresh ){
                 VE.valid[j,k] <- 1 - (1-fit.valid1$adj.r.squared) / (1-fit.valid0$adj.r.squared)
             }
         }else{
-            fit.test1 <- summary(glm( test.data[,opt$pheno.name] ~
-                                          0 + pred.genome[[k]][ptr.test,j] + test.covs,
-                                     family=family ))
+            fit.test1 <- glm( test.data[,opt$pheno.name] ~
+                                  0 + pred.genome[[k]][ptr.test,j] + test.covs,
+                             family=family )
             n <- length(fit.test0$y)
             d_null <- -2 * logLik(fit.test0)[1]
             d_full <- -2 * logLik(fit.test1)[1]
             VE.test[j,k] <- (1 - exp((d_full - d_null) / n)) / (1 - exp(-d_null / n))
             if( opt$valid.data!=0 ){
-                fit.valid1 <- summary(glm( valid.data[,opt$pheno.name] ~
-                                               0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
-                                          family=family ))
+                fit.valid1 <- glm( valid.data[,opt$pheno.name] ~
+                                       0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
+                                  family=family )
                 n <- length(fit.valid0$y)
                 d_null <- -2 * logLik(fit.valid0)[1]
                 d_full <- -2 * logLik(fit.valid1)[1]
