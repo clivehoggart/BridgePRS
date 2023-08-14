@@ -204,25 +204,21 @@ for( k in 1:n.thresh ){
             }
         }
     }
-    if( opt$all.preds ){
-        if( length(colnames(pred.genome[[k]]))>0 ){
-            tmp <- pred.genome[[k]]
-            colnames(tmp) <- paste( colnames(tmp), nme.thresh[k], sep='_' )
-            all.preds.test <- cbind( all.preds.test, tmp[ptr.test,] )
-            if( opt$valid.data!=0 ){
-                all.preds.valid <- cbind( all.preds.valid, tmp[ptr.valid,] )
-            }
+    if( length(colnames(pred.genome[[k]]))>0 ){
+        tmp <- pred.genome[[k]]
+        colnames(tmp) <- paste( colnames(tmp), nme.thresh[k], sep='_' )
+        all.preds.test <- cbind( all.preds.test, tmp[ptr.test,] )
+        if( opt$valid.data!=0 ){
+            all.preds.valid <- cbind( all.preds.valid, tmp[ptr.valid,] )
         }
     }
 }
 ptr.col <- order(apply(VE.test,2,max),decreasing=TRUE)[1]
 s <- order(VE.test[,ptr.col],decreasing=TRUE)
 
-if( opt$all.preds ){
-    fwrite( all.preds.test, paste( opt$out.file, '_all_preds_test.dat',sep='' ))
-    if( opt$valid.data!=0 ){
-        fwrite( all.preds.valid, paste( opt$out.file, '_all_preds_valid.dat',sep=''))
-    }
+fwrite( all.preds.test, paste( opt$out.file, '_all_preds_test.dat',sep='' ))
+if( opt$valid.data!=0 ){
+    fwrite( all.preds.valid, paste( opt$out.file, '_all_preds_valid.dat',sep=''))
 }
 
 if( opt$valid.data!=0 ){
