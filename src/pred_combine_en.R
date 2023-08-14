@@ -127,7 +127,7 @@ v.target <- var(target[,opt$pheno.name])
 #         grep("_10_", colnames(pred1)) )
 #pred1 <- pred1[,ptr]
 
-nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
+nfolds <- ifelse( nrow(target)<500, nrow(target), 500 )
 
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 
