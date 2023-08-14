@@ -1,24 +1,25 @@
 ~/BridgePRS/src/BridgePRS.sh \
+    --binary 1 \
     --strand_check 1 \
     --outdir out_binary \
-    --by_chr 0 \
+    --by_chr 1 \
     --by_chr_sumstats .SCORE9_AVG.glm.linear.gz \
     --pop1 EUR \
-    --pop2 EAS \
-    --fst 0.11 \
+    --pop2 AFR \
+    --fst 0.15 \
     --pop1_sumstats ~/BridgePRS/data/sumstats/eur_chr \
     --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop1_bfile ~/BridgePRS/data/bfiles/bfile3 \
-    --pop1_test_data  ~/BridgePRS/data/SCORE9_AVG_eur_test.dat \
-    --pop1_ld_bfile  ~/BridgePRS/data/bfiles/bfile3 \
-    --pop1_ld_ids ~/BridgePRS/data/EUR_IDs.txt \
+    --pop1_bfile ~/BridgePRS/data/bfiles/chr \
+    --pop1_test_data  ~/BridgePRS/data/eur_test.dat \
+    --pop1_ld_bfile  ~/BridgePRS/data/bfiles/chr \
+    --pop1_ld_ids ~/BridgePRS/data/eur_sim_ids.txt \
     --pop2_sumstats ~/BridgePRS/data/sumstats/eas_chr \
     --pop2_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop2_bfile ~/BridgePRS/data/bfiles/bfile3 \
-    --pop2_test_data  ~/BridgePRS/data/SCORE9_AVG_eas_test.dat \
-    --pop2_valid_data  ~/BridgePRS/data/SCORE9_AVG_eas_valid.dat \
-    --pop2_ld_bfile ~/BridgePRS/data/bfiles/bfile3 \
-    --pop2_ld_ids ~/BridgePRS/data/EAS_IDs.txt \
+    --pop2_bfile ~/BridgePRS/data/bfiles/chr \
+    --pop2_test_data  ~/BridgePRS/data/afr_test.dat \
+    --pop2_valid_data  ~/BridgePRS/data/afr_valid.dat \
+    --pop2_ld_bfile ~/BridgePRS/data/bfiles/chr \
+    --pop2_ld_ids ~/BridgePRS/data/afr_sim_ids.txt \
     --sumstats_snpID ID \
     --sumstats_p P \
     --sumstats_beta BETA \
@@ -27,7 +28,7 @@
     --sumstats_n OBS_CT \
     --sumstats_se SE \
     --sumstats_frq A1_FREQ \
-    --pheno_name y \
+    --pheno_name y.binary \
     --n_cores 50 \
     --do_clump_pop1 1 \
     --do_est_beta_pop1 1 \
