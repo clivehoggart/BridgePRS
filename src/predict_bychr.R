@@ -194,7 +194,7 @@ for( k in 1:n.thresh ){
             d_full <- -2 * logLik(fit.test1)[1]
             VE.test[j,k] <- (1 - exp((d_full - d_null) / n)) / (1 - exp(-d_null / n))
             if( opt$valid.data!=0 ){
-                fit.valid1 <- summary(hlm( valid.data[,opt$pheno.name] ~
+                fit.valid1 <- summary(glm( valid.data[,opt$pheno.name] ~
                                                0 + pred.genome[[k]][ptr.valid,j] + valid.covs,
                                           family=family ))
                 n <- length(fit.valid0$y)
