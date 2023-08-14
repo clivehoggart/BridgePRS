@@ -117,12 +117,6 @@ class BridgeBase:
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 
 
-
-        
-        #r_log, r_err = open(self.io.paths['eval']+'/eval.stdout','w'), open(self.io.paths['eval']+'/eval.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
     
 
@@ -140,33 +134,47 @@ class BridgeBase:
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         
         self.make_job(rJOB) 
-        
-        
-        self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['predict']+'/predict.stdout','w'), open(self.io.paths['predict']+'/predict.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
-        return 
-    
-    
-    
-    def run_quantify(self, name = 'quantify'): 
-        self.name, pp = name, self.io.programs['quantify']  
-        X = ['--pop2',self.args.popname,'--outdir',self.io.paths['quantify'],'--n.cores',str(self.args.cores)] 
-        X.extend(['--test.data',self.F['pheno'], '--valid.data',self.F['validation']]) 
-        X.extend(['--pred1',self.P['predict'],'--eval1',self.P['eval']]) 
-        X.extend(['--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
-        
-        rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
-        
-        self.make_job(rJOB) 
         #self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['quantify']+'/quantify.stdout','w'), open(self.io.paths['quantify']+'/quantify.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
+    
+    
+    
+
+
+    def run_quantify(self, name = 'quantify'): 
+        self.name, pp = name, self.io.programs['pred_combine_en']  
+        X = ['--pop2',self.args.popname,'--outfile',self.io.paths['quantify']+'/'+self.args.popname+'_quantify','--n.cores',str(self.args.cores)] 
+        X.extend(['--test.data',self.F['pheno'], '--valid.data',self.F['validation']]) 
+        X.extend(['--pred1',self.P['predict'],'--models1',self.P['eval']]) 
+        X.extend(['--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
+        rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
+        self.make_job(rJOB) 
+        
+        return 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -186,24 +194,17 @@ class BridgeBase:
         X.extend(['--ranking','pv','--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
         # HARDCODE # 
         X.extend(['--by.chr', '0', '--strand.check', '1'])
-        
-        
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
-        
         self.make_job(rJOB) 
-        #self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['predict']+'/predict.stdout','w'), open(self.io.paths['predict']+'/predict.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
 
 
 
-    def port_quantify(self, name = 'quantify'): 
+    def port_quantify2(self, name = 'quantify'): 
         self.name, pp = name, self.io.programs['quantify']  
         #F, P = self.settings.files, self.settings.prefixes 
         X = ['--pop2',self.args.popname,'--outdir',self.io.paths['quantify'],'--n.cores',str(self.args.cores)] 
+        #X = ['--pop2',self.args.popname,'--outfile',self.io.paths['quantify']+'/'+self.args.popname+'_quantify','--n.cores',str(self.args.cores)] 
         X.extend(['--test.data',self.F['pheno'], '--valid.data',self.F['validation']]) 
         X.extend(['--pred1',self.P['predict'],'--eval1',self.model['eval']]) 
         X.extend(['--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
@@ -216,10 +217,25 @@ class BridgeBase:
         #r_log.close() 
         #r_err.close() 
         return 
+    
+    
+    def port_quantify(self, name = 'quantify'): 
+        self.name, pp = name, self.io.programs['pred_combine_en']  
+        X = ['--pop2',self.args.popname,'--outfile',self.io.paths['quantify']+'/'+self.args.popname+'_quantify','--n.cores',str(self.args.cores)] 
+        X.extend(['--test.data',self.F['pheno'], '--valid.data',self.F['validation']]) 
+        X.extend(['--pred1',self.P['predict'],'--models1',self.model['eval']]) 
+        X.extend(['--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
+        
+        rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
+        self.make_job(rJOB) 
+        return  
 
 
 
-    #### PRS BRIDGE ### 
+
+        
+
+
 
     def prior_eval(self, name = 'eval'): 
         
@@ -239,11 +255,6 @@ class BridgeBase:
         #X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 
-        #self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['eval']+'/eval.stdout','w'), open(self.io.paths['eval']+'/eval.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
 
 
@@ -254,18 +265,10 @@ class BridgeBase:
         X = ['--bfile',self.P['bfile'],'--beta.stem',self.P['eval'],'--out.file',self.io.paths['optimize']+'/'+self.args.popname+'_optimize','--n.cores',str(self.args.cores)] 
         X.extend(['--test.data',self.F['pheno'], '--valid.data','0']) 
         X.extend(['--ranking','pv','--pheno.name',self.settings.fields['pheno']['NAME'], '--cov.names',self.settings.fields['pheno']['COVARIATES']])
-        
         # HARDCODE # 
         X.extend(['--by.chr', '0', '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
-        
         self.make_job(rJOB) 
-        
-        #self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['optimize']+'/optimize.stdout','w'), open(self.io.paths['optimize']+'/optimize.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
 
 
@@ -284,12 +287,6 @@ class BridgeBase:
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         
         self.make_job(rJOB) 
-
-        #self.progress.start_rJob(rJOB) 
-        #r_log, r_err = open(self.io.paths['prior']+'/prior.stdout','w'), open(self.io.paths['prior']+'/prior.stderr','w')
-        #call(rJOB,stdout=r_log, stderr=r_err)
-        #r_log.close() 
-        #r_err.close() 
         return 
         
         

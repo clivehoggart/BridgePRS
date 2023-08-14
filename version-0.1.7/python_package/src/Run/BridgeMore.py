@@ -36,6 +36,7 @@ class BridgeMore:
         else:
             comboPath = path + '/prs-combined_'+self.pop 
             results.append(self.run_combine(results, comboPath)) 
+            
             if not self.args.skipAnalysis: 
                 if MAKEPLOT: 
                     self.io.progress.start_minor('Plotting Results') 
@@ -87,7 +88,8 @@ class BridgeCombine:
         X.extend(['--outfile',self.path+'/'+self.pop]) 
         X.extend(['--pred1',p1.paths['PREDICT']]) 
         X.extend(['--pred2',p2.paths['PREDICT']]) 
-        X.extend(['--eval1',p1.paths['EVAL'],'--eval2',p2.paths['EVAL']])
+        #X.extend(['--eval1',p1.paths['EVAL'],'--eval2',p2.paths['EVAL']])
+        X.extend(['--models1',p1.paths['EVAL'],'--models2',p2.paths['EVAL']])
         X.extend(['--ids.col','TRUE']) 
         X.extend(['--pheno.name',p1.fields['NAME'], '--cov.names',p1.fields['COVARIATES']])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
@@ -121,9 +123,9 @@ class BridgeResult:
     def read_combo(self, combo): 
         self.pop = combo.pop 
         self.method = 'prs-combine' 
-        for k,f in combo.key.items(): 
-            if k == 'weighted_combined_prs_predictions': self.read_prs_predictions(f) 
-            elif k == 'weighted_combined_var_explained': self.read_var_explained(f) 
+        for k,f in combo.key.items():
+            if k in ['weighted_combined_preds']: self.read_prs_predictions(f) 
+            elif k in ['weighted_combined_var_explained']: self.read_var_explained(f) 
             else: continue 
         return self 
 
@@ -131,9 +133,9 @@ class BridgeResult:
 
     def read_file(self, res): 
         self.key, self.paths, self.files = self.read_result(res)
-        for k,f in self.key.items(): 
-            if k == 'prs_predictions': self.read_prs_predictions(f) 
-            elif k == 'weighted_combined_var_explained': self.read_var_explained(f) 
+        for k,f in self.key.items():
+            if k in ['preds','prs_predictions']: self.read_prs_predictions(f) 
+            elif k in ['var_explained']: self.read_var_explained(f) 
             else: continue  
         return self 
     

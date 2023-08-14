@@ -39,7 +39,6 @@ class BridgePipelines:
                 self.io.paths['run'] = self.io.paths['home']+'/model_'+self.pop 
                 if self.cmd == 'run': self.commands = ['clump','eval','optimize','prior'] 
                 else:                 self.commands = [self.cmd] 
-       
             else: bridge_error('Unsupported Module') 
         
             self.progress_file = self.io.paths['run']+'/bridge.'+self.module+'.result'
@@ -132,28 +131,60 @@ class BridgePipelines:
                     a,b = 'FIELD_PHENO-'+kk, vv 
                     if a not in [x[0] for x in f_pairs]: f_pairs.append([a,b]) 
 
-        if not os.path.isdir(fp) or len(os.listdir(fp)) < 3: self.io.progress.fail('EXITED UNSUCCESSFULLY',[self.args.module,self.args.cmd,D]) 
-        for f in os.listdir(fp):
-            if d in ['clump','eval','predict','quantify','optimize','prior']: 
-                if f.split('.')[-1] != 'log' and np in f: 
-                    self.io.settings.prefixes[d] = fp+'/'+np  
-                    f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])     
-                    f_pass[D] = True 
-                    break 
-        if not f_pass[D]: self.io.progress.fail('EXITED UNSUCCESSFULLY',[self.args.module,self.args.cmd]) 
+        self.validate_path(np,fp, D) 
+        self.io.settings.prefixes[d] = fp+'/'+np  
+        f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])     
         
+
+
+        #if not os.path.isdir(fp) or len(os.listdir(fp)) < 4: self.io.progress.fail('EXITED UNSUCCESSFULLY') #,[self.args.module,self.args.cmd,D])     
+        #d_files =   [fn for fn in os.listdir(fp) if fn.split('.')[-1] != 'log'] 
+        #self.check_error_output([fn for fn in d_files if fn.split('.')[-1] == 'stderr'])
+        #res_files = [fn for fn in d_files if np in fn]
+        #self.check_error_output(fp, err_files, D) 
+        self.io.settings.prefixes[d] = fp+'/'+np  
+        f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])     
         w = open(self.progress_file,'w') 
-        
-        
         for a,b in f_pairs: 
             if a not in f_obs: w.write(a+'='+b+'\n') 
             f_obs.append(a) 
         w.close() 
         return           
+
+
+
+    def validate_path(self, np, fp, D): 
+        if not os.path.isdir(fp): self.io.progress.fail('EXITED UNSUCCESSFULLY') #,[self.args.module,self.args.cmd,D])     
+        d_files =   [fn for fn in os.listdir(fp) if fn.split('.')[-1] != 'log'] 
+        err_files, res_files = [fn for fn in d_files if fn.split('.')[-1] == 'stderr'], [fn for fn in d_files if np in fn]
+        self.check_error_output(fp, err_files, D) 
+        if len(res_files) < 1: self.io.progress.fail('EXITED UNSUCCESSFULLY; NO OUTPUT CREATED') #,[self.args.module,self.args.cmd,D])     
+        return 
+
+
+
+    def check_error_output(self, fp, err_files, D): 
         
+        if len(err_files) != 1: self.io.progress.fail('EXITED UNSUCCESSFULLY') #,[self.args.module,self.args.cmd,D])     
+        
+        fname = fp+'/'+err_files[0] 
+        f_handle = open(fname)  
+        f_lines = [lp.strip() for lp in f_handle] 
+        f_handle.close() 
+        f_errors = [] 
 
-
-
+        for lp in f_lines: 
+            ls = [x.lower() for x in lp.split()] 
+            if len(ls) < 1: continue 
+            elif ls[0][0:4] in ['warn','extr','load','usag']: continue 
+            else: 
+                if D == 'CLUMP' and " ".join(ls[-3::]) == 'see log file.': continue  
+                elif D == 'QUANTIFY': continue                  
+                if len(ls[0].split('/'))>1: ls[0] = ls[0].split('/')[-1] 
+                f_errors.append(' '.join(ls)) 
+        
+        if len(f_errors) == 0: return 
+        self.io.progress.fail('EXITED UNSUCCESSFULLY',f_errors) #,[self.args.module,self.args.cmd,D])     
 
 
 

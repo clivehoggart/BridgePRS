@@ -168,6 +168,7 @@ class BridgeProgress:
                 self.sub_blank = ''.join([' ' for x in range(len(msg))])
         else:
                     self.sub_blank = self.blank    
+        self.jblank = self.sub_blank 
         self.log.append([topic])
         self.topic, self.subtopic = topic, None 
         self.topics.append(topic) 
@@ -191,6 +192,7 @@ class BridgeProgress:
         self.block_len,self.mp,self.dots,self.numbers = block_len,block_len,0,0 
         if block_len > 100: self.mp = 100 
         self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
+        self.jblank = self.sub_blank + ''.join([' ' for x in range(6)]) 
         self.update_indent,self.update_len = self.sub_blank,0  
         
      
@@ -226,8 +228,12 @@ class BridgeProgress:
 
     def fail(self, MSG, notes = []): 
         self.active = True
-        self.write('ERROR: '+MSG+'\n') 
-        sys.exit() 
+
+        self.write('ERROR!\n') 
+        self.write(self.jblank+MSG+'\n') 
+        for n in notes:
+            self.write(self.jblank+n+'\n') 
+        sys.exit(2) 
 
                     
 

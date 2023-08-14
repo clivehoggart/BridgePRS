@@ -19,7 +19,10 @@ class BridgeIO:
         def __init__(self,args,command_line, bridgedir,rundir):
             self.args, self.bdir, self.sdir = args, bridgedir, bridgedir + '/src/Scripts'
             self.progress = BridgeProgress(args, command_line)
-            self.programs = {f.split('.')[0]: self.sdir+'/'+f for f in os.listdir(self.sdir)} 
+            
+            self.pdir = self.bdir+'/../Rscripts'  
+            self.programs = {f.split('.')[0]: self.pdir+'/'+f for f in os.listdir(self.pdir)} 
+            #self.programs = {f.split('.')[0]: self.sdir+'/'+f for f in os.listdir(self.sdir)} 
             if self.args.platform == 'mac': self.programs['plink'] = self.programs['plink_mac'] 
             self.paths = {'home': os.path.abspath(self.args.outpath), 'logs': os.path.abspath(self.args.outpath)+'/logs'} 
             
