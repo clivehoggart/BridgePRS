@@ -114,7 +114,7 @@ if( opt$by.chr.sumstats==0 ){
     }
 }
 
-ld.ids <- as.character(read.table(opt$ld.ids)[,1])
+ld.ids <- as.character(read.table(opt$ld.ids)[,2])
 
 if( opt$by.chr==0 ){
     ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
