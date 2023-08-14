@@ -358,7 +358,6 @@ then
 	    --n.cores $n_cores \
 	    --cov.names $cov_names \
 	    --pheno.name $pheno_name \
-	    --all.preds TRUE \
 	    --ranking $ranking \
 	    --strand.check $strand_check \
 	    --binary $binary \
@@ -434,7 +433,6 @@ then
 	    --n.cores $n_cores \
 	    --cov.names $cov_names \
 	    --pheno.name $pheno_name \
-	    --all.preds TRUE \
 	    --ranking "pv" \
 	    --strand.check $strand_check \
 	    --binary $binary \
