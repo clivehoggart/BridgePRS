@@ -1,0 +1,69 @@
+$fpath
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R"
+
+$clump.stem
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/clump/AFR_clump"
+
+$sumstats
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr"
+
+$thinned.snplist
+[1] "0"
+
+$n.max.locus
+[1] 0
+
+$ld.ids
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt"
+
+$beta.stem
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/eval/AFR_eval"
+
+$lambda
+[1] "0.2,0.5,1,2,5,10,20,50"
+
+$S
+[1] "0,0.25,0.5,0.75,1"
+
+$precision
+[1] FALSE
+
+$n.cores
+[1] 7
+
+$bfile
+[1] "/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3"
+
+$sumstats.snpID
+[1] "ID"
+
+$sumstats.betaID
+[1] "BETA"
+
+$sumstats.allele0ID
+[1] "AX"
+
+$sumstats.allele1ID
+[1] "A1"
+
+$sumstats.nID
+[1] "OBS_CT"
+
+$sumstats.seID
+[1] "SE"
+
+$sumstats.frqID
+[1] "A1_FREQ"
+
+$strand.check
+[1] 1
+
+$by.chr
+[1] 0
+
+$by.chr.sumstats
+[1] ".Phenotype.glm.linear.gz"
+
+$help
+[1] FALSE
+

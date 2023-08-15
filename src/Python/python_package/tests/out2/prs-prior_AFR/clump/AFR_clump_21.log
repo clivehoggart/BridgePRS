@@ -1,0 +1,80 @@
+PLINK v1.90b6.21 64-bit (19 Oct 2020)
+Options in effect:
+  --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+  --clump /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr21.Phenotype.glm.linear.gz
+  --clump-field P
+  --clump-kb 1000
+  --clump-p1 1e-2
+  --clump-p2 1e-1
+  --clump-r2 0.01
+  --clump-snp-field ID
+  --extract /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/snps.txt
+  --keep /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+  --out /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/clump/AFR_clump_21
+
+Hostname: tade-notebook
+Working directory: /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests
+Start time: Tue Aug 15 10:13:41 2023
+
+Random number seed: 1692105221
+19980 MB RAM detected; reserving 9990 MB for main workspace.
+Allocated 1777 MB successfully, after larger attempt(s) failed.
+69996 variants loaded from .bim file.
+1164 people (0 males, 0 females, 1164 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/clump/AFR_clump_21.nosex
+.
+--extract: 69996 variants remaining.
+--keep: 661 people remaining.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 661 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+69996 variants and 661 people pass filters and QC.
+Note: No phenotypes present.
+Warning: 'rs75226764' is missing from the main dataset, and is a top variant.
+Warning: 'rs2828161' is missing from the main dataset, and is a top variant.
+Warning: 'rs2827133' is missing from the main dataset, and is a top variant.
+Warning: 'rs535457' is missing from the main dataset, and is a top variant.
+Warning: 'rs11701226' is missing from the main dataset, and is a top variant.
+Warning: 'rs2839195' is missing from the main dataset, and is a top variant.
+Warning: 'rs75701928' is missing from the main dataset, and is a top variant.
+Warning: 'rs9984502' is missing from the main dataset, and is a top variant.
+Warning: 'rs9975012' is missing from the main dataset, and is a top variant.
+Warning: 'rs2268225' is missing from the main dataset, and is a top variant.
+Warning: 'rs36023233' is missing from the main dataset, and is a top variant.
+Warning: 'rs2828665' is missing from the main dataset, and is a top variant.
+Warning: 'rs762147' is missing from the main dataset, and is a top variant.
+Warning: 'rs1475591' is missing from the main dataset, and is a top variant.
+Warning: 'rs73903452' is missing from the main dataset, and is a top variant.
+Warning: 'rs9982383' is missing from the main dataset, and is a top variant.
+Warning: 'rs75744194' is missing from the main dataset, and is a top variant.
+Warning: 'rs62213357' is missing from the main dataset, and is a top variant.
+Warning: 'Affx-17837797' is missing from the main dataset, and is a top
+variant.
+Warning: 'rs2834914' is missing from the main dataset, and is a top variant.
+Warning: 'rs2839190' is missing from the main dataset, and is a top variant.
+Warning: 'rs13049184' is missing from the main dataset, and is a top variant.
+Warning: 'rs154745' is missing from the main dataset, and is a top variant.
+Warning: 'rs73228905' is missing from the main dataset, and is a top variant.
+Warning: 'rs2828878' is missing from the main dataset, and is a top variant.
+Warning: 'rs73206070' is missing from the main dataset, and is a top variant.
+Warning: 'rs7276975' is missing from the main dataset, and is a top variant.
+Warning: 'rs9983017' is missing from the main dataset, and is a top variant.
+Warning: 'rs61227736' is missing from the main dataset, and is a top variant.
+Warning: 'rs2266562' is missing from the main dataset, and is a top variant.
+Warning: 'rs2178971' is missing from the main dataset, and is a top variant.
+Warning: 'rs7284047' is missing from the main dataset, and is a top variant.
+Warning: 'rs17600315' is missing from the main dataset, and is a top variant.
+Warning: 'rs7280622' is missing from the main dataset, and is a top variant.
+Warning: 'rs2837974' is missing from the main dataset, and is a top variant.
+Warning: 'rs2834313' is missing from the main dataset, and is a top variant.
+Warning: 'rs1474823' is missing from the main dataset, and is a top variant.
+Warning: 'rs2830229' is missing from the main dataset, and is a top variant.
+Warning: 'rs235282' is missing from the main dataset, and is a top variant.
+Warning: 'rs406398' is missing from the main dataset, and is a top variant.
+--clump: 10 clumps formed from 10 top variants.
+Results written to
+/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/clump/AFR_clump_21.clumped
+.
+
+End time: Tue Aug 15 10:13:41 2023

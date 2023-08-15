@@ -1,0 +1,15 @@
+fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+out.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize
+p.thresh 1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8
+bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/phenos.dat
+valid.data 0
+n.cores 7
+cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+pheno.name y
+ranking pv
+by.chr 0
+strand.check 1
+binary 0
+help FALSE

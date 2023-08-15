@@ -1,0 +1,13 @@
+POP_NAME=EUR
+MODULE_NAME=build-model
+PHENO_FILE=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/phenos.dat
+FIELD_PHENO-NAME=y
+FIELD_PHENO-COVARIATES=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+EUR_CLUMP_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/clump/EUR_clump
+EUR_CLUMP_FIN=TRUE
+EUR_EVAL_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+EUR_EVAL_FIN=TRUE
+EUR_OPTIMIZE_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize
+EUR_OPTIMIZE_FIN=TRUE
+EUR_PRIOR_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/prior/EUR_prior
+EUR_PRIOR_FIN=TRUE

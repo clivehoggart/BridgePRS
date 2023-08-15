@@ -1,0 +1,208 @@
+<html>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Tade Souaiaia"> 
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <!link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  <link href="../css/details.css" rel="stylesheet" />
+  <script>
+    // Current page data
+    var mkdocs_page_name = "BridgePRS";
+    var mkdocs_page_input_path = "bridgePRS.md";
+    var mkdocs_page_url = null;
+  </script>
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script> 
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-145068952-1', 'auto');
+      ga('send', 'pageview');
+  </script>
+</head>
+<body class="wy-body-for-nav" role="document">
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Background Information on Polygenic Risk Score analysis</a>
+  </form>
+</div>
+</div>
+
+<div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../base/">1. QC of Base Data</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../target/">2. QC of Target Data</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../cal_prs/">3. Calculating and analysing PRS</a>
+                    </li>
+                </ul>
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+<div role="main">
+<div class="section">
+<h1 style="font-size: 3rem; color: #2ecc71">BridgePRS</h1>
+<!-- <h1 id="background">Background<a class="headerlink" href="#background" title="Permanent link"></a></h1> --> 
+<p>
+<span style="display:block; margin-top:-30px; margin-bottom:-10px;">
+BridgePRS is a multi-ancestry PRS software which merges (bridges) the results of ridge regression to improve prediction in smaller sample size diverse populations.
+</span> </p> 
+
+
+<h2 id="obtaining-bridge">Obtaining BridgePRS<a class="headerlink" href="#obtaining-bridge" title="Permanent link"></a></h2>
+
+<p> <span style="display:block; margin-top:-15px;">
+<code>BridgePRS</code> can be downloaded from Github: LINK <br>
+In this tutorial, we describe a diverse African Ancestry (Target) Population and a large European Ancestry (Model) Population </span> </p> 
+
+
+<h2 id="required-data">Required Data<a class="headerlink" href="#required-data" title="Permanent link"></a></h2>
+
+
+<p> <span style="display:block; margin-top:-15px;">
+<code>BridgePRS</code> This analysis assumes you have access to the following files (included with BridgePRS) </span> </p> 
+
+<table>
+<thead>
+<tr>
+<th align="center">File Name</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><strong>bfile.bed</strong></td>
+<td align="center">A file containing genotype data (used by plink)</td>
+</tr>
+<tr>
+<td align="center"><strong>bfile.bim</strong></td>
+<td align="center">A file containing SNPs (used by plink)</td>
+</tr>
+<tr>
+<td align="center"><strong>bfile.fam</strong></td>
+<td align="center">File containing samples (used by plink)</td>
+</tr>
+<tr>
+<td align="center"><strong>sumstats files</strong></td>
+<td align="center">Per chromosome files of gwas summary stats</td>
+</tr>
+<tr>
+<tr>
+<td align="center"><strong>ids.txt</strong></td>
+<td align="center">This file contains the phenotype data of the samples</td>
+</tr>
+<tr>
+<td align="center"><strong>snps.txt</strong></td>
+<td align="center">This file containing snp ids for each population</td>
+</tr>
+<tr>
+<td align="center"><strong>phenos.test.dat</strong></td>
+<td align="center">Phenotype file for model/target population</td>
+</tr>
+<tr>
+<td align="center"><strong>phenos.valid.dat</strong></td>
+<td align="center">Phenotype file for target population</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+<h2 id="running-prs-analysis">Running BridgePRS  <a class="headerlink" href="#running-prs-analysis" title="Permanent link"></a></h2>
+<p>To run BridgePRS using a single command from the directory tests we can type the following command: </p>
+<div class="tabbed-set" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">single command</label><div class="tabbed-content">
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span>
+<code>../bridgePRS<span style="color: #0000FF"> easyrun</span> <span style="color: #BA2121"> go</span> -o out<span style="color: #008000">                                                                    (out directory)
+</span>                         --pop_names AFR EUR                                                   <span style="color: #008000">    (target and model population names)
+</span>                         --pop_configs ../test_data/afr.pop.config ../test_data/eur.pop.config <span style="color: #008000">    (population config files)
+</span>                         --config ../test_data/options.config                                  <span style="color: #008000">    (file specifications)
+</span>                         --verbose                                                             <span style="color: #008000">    (verbose mode)
+</span>                          <span> 
+</code></pre></div>
+
+<p> to run the following commands sequentially:<p> 
+
+</div>
+<input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">multiple commands</label><div class="tabbed-content">
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><code>
+bridgePRS<span style="color: #0000FF"> prs-single  </span> <span style="color: #BA2121">run     </span> -o out -p afr --pop_config afr.pop.config --config options.config                                                      <span style="color: #008000"> (run prs on the target population) </span>
+bridgePRS<span style="color: #0000FF"> build-model </span> <span style="color: #BA2121">run     </span> -o out -p pop --pop_config eur.pop.config --config options.config                                                      <span style="color: #008000"> (build a model using european population) </span>
+bridgePRS<span style="color: #0000FF"> prs-port    </span> <span style="color: #BA2121">run     </span> -o out -p afr --pop_config afr.pop.config --config options.config --model_file out/model_EUR/bridge.build-model.result <span style="color: #008000"> (prs porting model snp weights)   </span>
+bridgePRS<span style="color: #0000FF"> prs-prior   </span> <span style="color: #BA2121">run     </span> -o out -p afr --pop_config afr.pop.config --config options.config --model_file out/model_EUR/bridge.build-model.result <span style="color: #008000"> (prs using model prior snp distributions) </span> 
+bridgePRS<span style="color: #0000FF"> analyze     </span> <span style="color: #BA2121">combine </span> -o out -p afr --results out/prs*/*result <span style="color: #008000">                                                                            (merge and combine results) </span> 
+</span>                          <span> 
+</code></pre></div>
+
+
+
+</div>
+</div>
+<p>This will generate the following result files in <strong>out/prs-bridge_AFR</strong>.</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">File Name</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><strong>AFR_bridge_prs_predictions.out</strong></td>
+<td align="center">A file containing predictions</td>
+</tr>
+<tr>
+<td align="center"><strong>AFR_bridge_snp_weights.dat</strong></td>
+<td align="center">A file containing snp weights</td>
+</tr>
+<tr>
+<td align="center"><strong>AFR_bridge_var_explained.txt</strong></td>
+<td align="center">A file summarizing performance</td>
+</tr>
+<tr>
+<td align="center"><strong>AFR_bridge_result.png</strong></td>
+<td align="center">A plot to visualize results</td>
+</tr>
+</tbody>
+</table>
+
+<p> </p> 
+</details>
+<details class="note"><summary>Which method is most predictive?</summary><p>0.161237</p>
+</details>
+  
+</div>
+</div>
+<footer>
+<div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->  
+</div>
+</body>
+</html>

@@ -1,0 +1,352 @@
+BridgePRS Begins at Tue Aug 15 10:10:45 2023 
+
+Bridge Command-Line: ../bridgePRS easyrun go -o out2 --pop_configs ../../test_data/afr.pop.config ../../test_data/eur.pop.config --pop_names AFR EUR --config ../../test_data/options.config --verbose
+
+
+Module: easyrun
+        Command: go
+        Settings:
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=AFR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     
+
+
+Module: prs-single
+        Command: run
+        Settings:
+                 Files:      id_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                             pheno_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                             snp_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/snps.txt
+                             validation_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+
+                 Prefixes:   bfile_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                             sumstats_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=AFR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT,  sumstats_suffix=.Phenotype.glm.linear.gz
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     
+
+                 JOB1: Clumping Population Data.......(Parallelizing Across 7 Cores)....................Complete
+                       Data Generated:       
+                             Prefixes:      clump_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/clump/AFR_clump
+
+                 JOB2: Evaluating SNP Data....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/est_beta_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --ld.ids /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                          --sumstats /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+                          --clump.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/clump/AFR_clump
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/eval/AFR_eval
+                          --by.chr.sumstats .Phenotype.glm.linear.gz
+                          --n.cores 7
+                          --sumstats.allele0ID AX
+                          --sumstats.allele1ID A1
+                          --sumstats.betaID BETA
+                          --sumstats.frqID A1_FREQ
+                          --sumstats.nID OBS_CT
+                          --sumstats.seID SE
+                          --sumstats.snpID ID
+                          --S 0,0.25,0.5,0.75,1
+                          --n.max.locus 0
+                          --thinned.snplist 0
+                          --by.chr 0
+                          --strand.check 1
+                          --lambda 0.2,0.5,1,2,5,10,20,50
+                          .....................................Complete
+                       Data Generated:       
+                             Prefixes:      eval_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/eval/AFR_eval
+
+                 JOB3: Generating Polygenic Predictions....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/predict_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/eval/AFR_eval
+                          --out.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/predict/AFR_predict
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --ranking pv
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+                       Data Generated:       
+                             Prefixes:      predict_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/predict/AFR_predict
+
+                 JOB4: Quantifying PRS Result....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/pred_combine_en.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --pop2 AFR
+                          --outfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/quantify/AFR_quantify
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --pred1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/predict/AFR_predict
+                          --models1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/eval/AFR_eval
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          .....................................Complete
+                 JOB5: Plotting Results...Complete
+
+
+Module: build-model
+        Command: run
+        Settings:
+                 Files:      id_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/ids.txt
+                             pheno_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/phenos.dat
+                             snp_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/snps.txt
+
+                 Prefixes:   bfile_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                             sumstats_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/sumstats/EUR.chr
+
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=EUR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT,  sumstats_suffix=.Phenotype.glm.linear.gz
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     
+
+                 JOB1: Clumping Population Data.......(Parallelizing Across 7 Cores)....................Complete
+                 JOB2: Evaluating SNP Data....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/est_beta_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --ld.ids /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/ids.txt
+                          --sumstats /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/sumstats/EUR.chr
+                          --clump.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/clump/EUR_clump
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+                          --by.chr.sumstats .Phenotype.glm.linear.gz
+                          --n.cores 7
+                          --sumstats.allele0ID AX
+                          --sumstats.allele1ID A1
+                          --sumstats.betaID BETA
+                          --sumstats.frqID A1_FREQ
+                          --sumstats.nID OBS_CT
+                          --sumstats.seID SE
+                          --sumstats.snpID ID
+                          --S 0,0.25,0.5,0.75,1
+                          --n.max.locus 0
+                          --thinned.snplist 0
+                          --by.chr 0
+                          --strand.check 1
+                          --lambda 0.1,0.2,0.5,1,2,5,10,20
+                          .....................................Complete
+                 JOB3: Optimizing Prior PRS Model....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/predict_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+                          --out.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/phenos.dat
+                          --valid.data 0
+                          --ranking pv
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+                       Data Generated:       
+                             Prefixes:      optimize_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize
+
+                 JOB4: Saving SNP Priors....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/est_beta_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --ld.ids /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/ids.txt
+                          --sumstats /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop2_europe/sumstats/EUR.chr
+                          --clump.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/clump/EUR_clump
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/prior/EUR_prior
+                          --n.cores 7
+                          --precision TRUE
+                          --param.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize_best_model_params.dat
+                          --by.chr.sumstats .Phenotype.glm.linear.gz
+                          --S 1
+                          --lambda 1
+                          --help FALSE
+                          --sumstats.allele0ID AX
+                          --sumstats.allele1ID A1
+                          --sumstats.betaID BETA
+                          --sumstats.frqID A1_FREQ
+                          --sumstats.nID OBS_CT
+                          --sumstats.seID SE
+                          --sumstats.snpID ID
+                          --n.max.locus 0
+                          --thinned.snplist 0
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+
+
+Module: prs-port
+        Command: run
+        Settings:
+                 Files:      id_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                             model_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/bridge.build-model.result
+                             pheno_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                             snp_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/snps.txt
+                             validation_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+
+                 Prefixes:   bfile_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                             sumstats_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=AFR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT,  sumstats_suffix=.Phenotype.glm.linear.gz
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     
+
+                 JOB1: Generating Polygenic Predictions....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/predict_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+                          --out.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-port_AFR/predict/AFR_predict
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --ranking pv
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+                 JOB2: Quantifying PRS Result....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/pred_combine_en.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --pop2 AFR
+                          --outfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-port_AFR/quantify/AFR_quantify
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --pred1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-port_AFR/predict/AFR_predict
+                          --models1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/eval/EUR_eval
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          .....................................Complete
+                 JOB3: Plotting Results...Complete
+
+
+Module: prs-prior
+        Command: run
+        Settings:
+                 Files:      id_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                             model_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/bridge.build-model.result
+                             pheno_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                             snp_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/snps.txt
+                             validation_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+
+                 Prefixes:   bfile_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                             sumstats_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=AFR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT,  sumstats_suffix=.Phenotype.glm.linear.gz
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     
+
+                 JOB1: Clumping Population Data.......(Parallelizing Across 7 Cores)....................Complete
+                 JOB2: Evaluating SNP Data....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/est_beta_InformPrior_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --ld.ids /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                          --sumstats /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+                          --clump.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/clump/AFR_clump
+                          --n.cores 7
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/eval/AFR_eval
+                          --by.chr.sumstats .Phenotype.glm.linear.gz
+                          --param.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/optimize/EUR_optimize_best_model_params.dat
+                          --prior /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/prior/EUR_prior
+                          --ranking f.stat
+                          --fst 0.15
+                          --sumstats.allele0ID AX
+                          --sumstats.allele1ID A1
+                          --sumstats.betaID BETA
+                          --sumstats.frqID A1_FREQ
+                          --sumstats.nID OBS_CT
+                          --sumstats.seID SE
+                          --sumstats.snpID ID
+                          --sumstats.P P
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+                 JOB3: Generating Polygenic Predictions....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/predict_bychr.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --bfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                          --beta.stem /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/eval/AFR_eval
+                          --out.file /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/predict/AFR_predict
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --ranking pv
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          --by.chr 0
+                          --strand.check 1
+                          .....................................Complete
+                 JOB4: Quantifying PRS Result....
+                 Running Rscript:
+                          Rscript --vanilla /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/pred_combine_en.R
+                          --fpath /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/../Rscripts/functions.R
+                          --pop2 AFR
+                          --outfile /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/quantify/AFR_quantify
+                          --n.cores 7
+                          --test.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                          --valid.data /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+                          --pred1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/predict/AFR_predict
+                          --models1 /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/eval/AFR_eval
+                          --pheno.name y
+                          --cov.names PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+                          .....................................Complete
+                 JOB5: Plotting Results...Complete
+
+
+Module: analyze
+        Command: combine
+        Settings:
+                 Files:      id_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/ids.txt
+                             model_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/model_EUR/bridge.build-model.result
+                             pheno_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+                             snp_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/snps.txt
+                             validation_file=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+
+                 Prefixes:   bfile_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/plink_files/bfile3
+                             sumstats_prefix=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/sumstats/AFR.chr
+
+                 Options:   cores=7,  fst=0.15,  outpath=out2,  pf-covariates=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10,  pf-name=y,  platform=linux
+                            popname=AFR,  ssf-alt=A1,  ssf-beta=BETA,  ssf-maf=A1_FREQ,  ssf-p=P,  ssf-ref=AX
+                            ssf-se=SE,  ssf-snpid=ID,  ssf-ss=OBS_CT,  sumstats_suffix=.Phenotype.glm.linear.gz
+                 Flags:     verbose=True
+                 pop_configs:     ../../test_data/afr.pop.config,  ../../test_data/eur.pop.config
+                 pop_names:     AFR,  EUR
+                 results:     /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-single_AFR/bridge.prs-single.result,  /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-port_AFR/bridge.prs-port.result,  /home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out2/prs-prior_AFR/bridge.prs-prior.result
+
+                 JOB1: Combining Results...Complete
+                 JOB2: Plotting Results...Complete

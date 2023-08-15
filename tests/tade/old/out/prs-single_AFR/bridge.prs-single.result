@@ -1,0 +1,14 @@
+POP_NAME=AFR
+MODULE_NAME=prs-single
+PHENO_FILE=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.test.dat
+FIELD_PHENO-NAME=y
+FIELD_PHENO-COVARIATES=PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10
+VALIDATION_FILE=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/test_data/pop1_africa/phenos.valid.dat
+AFR_CLUMP_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out/prs-single_AFR/clump/AFR_clump
+AFR_CLUMP_FIN=TRUE
+AFR_EVAL_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out/prs-single_AFR/eval/AFR_eval
+AFR_EVAL_FIN=TRUE
+AFR_PREDICT_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out/prs-single_AFR/predict/AFR_predict
+AFR_PREDICT_FIN=TRUE
+AFR_QUANTIFY_PREFIX=/home/tade/Current/bridgePRS/repo/BridgePRS/version-0.1.7/python_package/tests/out/prs-single_AFR/quantify/AFR_quantify
+AFR_QUANTIFY_FIN=TRUE
