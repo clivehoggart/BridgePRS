@@ -2,80 +2,90 @@
 
 ########################################################################################################################################################################
 
-if __name__ == '__main__':
-    import sys, os, argparse, platform, multiprocessing             
-    from   src.Util.BridgeHelp import BridgeHelp
-    bridgeHelp = BridgeHelp()
-    class MyParser(argparse.ArgumentParser):
-        def error(self, detail=None): #values=None,choice=None): #,settings = None):
-            if bridgeHelp.evaluate_error(detail, sys.argv): sys.stderr.write(detail+'\n')  
-            self.print_help() 
-            sys.exit(2) 
+import sys, os, argparse, platform, multiprocessing             
+from   src.Python.Util.BridgeHelp import BridgeHelp
+bridgeHelp = BridgeHelp()
+HELP_FORMAT="%-50s %80s"
+SUB_HELP_FORMAT="%-80s %10s"
+class MyParser(argparse.ArgumentParser):
+    def error(self, detail=None): #values=None,choice=None): #,settings = None):
+        if bridgeHelp.evaluate_error(detail, sys.argv): sys.stderr.write(detail+'\n')  
+        self.print_help() 
+        sys.exit(2) 
 
-        def dir_path(self,path):
-            if not os.path.isdir(path): os.makedirs(path) 
-            if not os.path.isdir(path+'/logs'): os.makedirs(path+'/logs') 
-            return path 
+    def dir_path(self,path):
+        if not os.path.isdir(path): os.makedirs(path) 
+        if not os.path.isdir(path+'/logs'): os.makedirs(path+'/logs') 
+        return path 
+
+    def make_abs(self, path): 
+        print(path)
+        print(os.path.abspath(path)) 
+        sys.exit() 
+
+
+    def find_platform(self, p = 'NA'):
+        if p == 'NA': 
+            P1,P2 = platform.system().upper(), platform.platform().upper() 
+            if P1[0:3] in ['MAC','DAR'] or P2[0:3] in ['MAC','DAR']: return 'mac' 
+            if P1[0:3] in ['LIN','SER'] or P2[0:3] in ['LIN','SER']: return 'linux' 
+            return p 
+        else: 
+            P = p.upper() 
+            if P[0:3] in ['MAC','DAR']: return 'mac' 
+            if P[0:3] in ['LIN','UNI','SER']: return 'linux' 
+            return p  
         
-        def find_platform(self, p = 'NA'):
-            if p == 'NA': 
-                P1,P2 = platform.system().upper(), platform.platform().upper() 
-                if P1[0:3] in ['MAC','DAR'] or P2[0:3] in ['MAC','DAR']: return 'mac' 
-                if P1[0:3] in ['LIN','SER'] or P2[0:3] in ['LIN','SER']: return 'linux' 
-                return p 
-            else: 
-                P = p.upper() 
-                if P[0:3] in ['MAC','DAR']: return 'mac' 
-                if P[0:3] in ['LIN','UNI','SER']: return 'linux' 
-                return p  
-            
-        def force_caps(self,x): 
-            return x.upper()
+    def force_caps(self,x): 
+        return x.upper()
 
-        def help_str(self,module):
-            if module == 'prs':           return (HELP_FORMAT % ('Single Population PRS (Ridge Regression)',    './bridgePRS prs-single  run -o out --popname africa --pop_config afro_pop.config')) 
-            if module == 'build':         return (HELP_FORMAT % ('Build large pop model to allow (port/bridge)','./bridgePRS build-model run -o out --popname euro   --pop_config euro_pop.config'))
-            if module == 'prs-port':      return (HELP_FORMAT % ('Port PRS snp-weights from large to small pop','./bridgePRS prs-port    run -o out --popname afr    --model_file euro.model')) 
-            if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors from large to small pop',   './bridgePRS prs-prior   run -o out --popname afr    --model_file euro.model'))
-            if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','./bridgePRS analyze result -o out --results out/afr.result')) 
-            if module == 'easyrun':       return (HELP_FORMAT  % ('run','Run All Five Modules Consecutively (for advanced users)')) 
+    def help_str(self,module):
+        if module == 'prs':           return (HELP_FORMAT % ('Single Population PRS (Ridge Regression)',    './bridgePRS prs-single  run -o out --popname africa --pop_config afro_pop.config')) 
+        if module == 'build':         return (HELP_FORMAT % ('Build large pop model to allow (port/bridge)','./bridgePRS build-model run -o out --popname euro   --pop_config euro_pop.config'))
+        if module == 'prs-port':      return (HELP_FORMAT % ('Port PRS snp-weights from large to small pop','./bridgePRS prs-port    run -o out --popname afr    --model_file euro.model')) 
+        if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors from large to small pop',   './bridgePRS prs-prior   run -o out --popname afr    --model_file euro.model'))
+        if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','./bridgePRS analyze result -o out --results out/afr.result')) 
+        if module == 'easyrun':       return (HELP_FORMAT  % ('run','Run All Five Modules Consecutively (for advanced users)')) 
 
-        def sub_help_str(self, cmd, module=None):
-            SUB_HELP_FORMAT="%-80s %10s"
-            HS = ('INFO','INFO') 
-            if cmd == 'run': HS =   ('Run The Following Module Commands:','') 
-            if cmd == 'clump': HS = ('Load Sumstats Data, Produce SNP Clumps','') 
-            if cmd == 'eval': HS =  ('Evaluate SNP Clumps, Produce SNP Weights','') 
-            if cmd == 'predict': HS =  ('Apply SNP Weights, Produce Polygenic Predictions','') 
-            if cmd == 'quantify': HS =  ('Test Predictions, Produce Quantifiable Results','') 
-            if cmd == 'optimize': HS = ('Optimize SNP Weights,Produce Generalizable Predictions','') 
-            if cmd == 'prior': HS = ('Test Predictions,Produce SNP Prior Proability Matrix','') 
-            if cmd == 'result': HS = ('Analyze PRS Results','') 
-            if cmd == 'combine': HS = ('Combine And Analyze PRS Results','') 
-            return(SUB_HELP_FORMAT % HS) 
+    def sub_help_str(self, cmd, module=None):
+        SUB_HELP_FORMAT="%-80s %10s"
+        HS = ('INFO','INFO') 
+        if cmd == 'run': HS =   ('Run The Following Module Commands:','') 
+        if cmd == 'clump': HS = ('Load Sumstats Data, Produce SNP Clumps','') 
+        if cmd == 'eval': HS =  ('Evaluate SNP Clumps, Produce SNP Weights','') 
+        if cmd == 'predict': HS =  ('Apply SNP Weights, Produce Polygenic Predictions','') 
+        if cmd == 'quantify': HS =  ('Test Predictions, Produce Quantifiable Results','') 
+        if cmd == 'optimize': HS = ('Optimize SNP Weights,Produce Generalizable Predictions','') 
+        if cmd == 'prior': HS = ('Test Predictions,Produce SNP Prior Proability Matrix','') 
+        if cmd == 'result': HS = ('Analyze PRS Results','') 
+        if cmd == 'combine': HS = ('Combine And Analyze PRS Results','') 
+        return(SUB_HELP_FORMAT % HS) 
 
 
 
 
-########################################################################################################################################################################
+
+
+
+
+
+
+
+
+
+###############################################################################################################################################
+
 
 if __name__ == '__main__':
-
-    import sys, os, argparse, platform, multiprocessing             
-    from   src.Util.BridgeHelp import BridgeHelp
-    HELP_FORMAT="%-50s %80s"
-    SUB_HELP_FORMAT="%-80s %10s"
+    #import sys, os, argparse, platform, multiprocessing             
+    #from   src.Util.BridgeHelp import BridgeHelp
     parser=MyParser(formatter_class=argparse.RawTextHelpFormatter)
     subs = parser.add_subparsers(help=(HELP_FORMAT % ('Description','Example')),dest='module',title='Modules') 
     subs.required = True
     subs.formatter_class = argparse.RawTextHelpFormatter
     sub_help = (str(SUB_HELP_FORMAT % ('Description','')))
-
-########################################################################################################################################################################
-########################################################################################################################################################################
-# GLOBAL PARENT OPTIONS ###############################################################################################################################################
     
-    # OPTIONS PARSERS # 
+    # OPTIONS PARSERS # SUPPRESS
 
     Global =           MyParser(formatter_class=argparse.RawTextHelpFormatter,add_help=False)
     Global.formatter_class = argparse.RawTextHelpFormatter
@@ -87,8 +97,10 @@ if __name__ == '__main__':
     Global.add_argument('--repeatSteps',  dest='repeatSteps',  action='store_true', default=False, help='Toggle Repeat Pipeline Steps On') 
     Global.add_argument('--skipAnalysis', dest='skipAnalysis', action='store_true', default=False,help='Skip Post-Pipeline Analysis') 
     Global.add_argument('--config',       dest='config',       nargs = '+',         type=str,default=[],help='Axillary configuration/specification files') 
-    Global.add_argument('--pop_config',   dest='pop_config',       nargs = 1,         type=str,default=[],help='Population configuration file') 
+    Global.add_argument('--pop_config',   dest='pop_config',   nargs = 1,           type=str,default=[],help='Population configuration file') 
     Global.add_argument('--platform',     dest='platform',     action='store',      type=parser.find_platform,  default=parser.find_platform("NA"), help='Force platform (Linux or MacOS)') 
+    Global.add_argument('--rPath',        dest='rpath',        action='store',      type=str,  default='src/Rscripts', help=argparse.SUPPRESS) 
+    Global.add_argument('--plinkPath',    dest='plinkpath',    action='store',      type=str,  default='src/Python/Xtra', help=argparse.SUPPRESS) 
     
     
     
@@ -206,7 +218,8 @@ if __name__ == '__main__':
     
     
     cwd, mydir = os.getcwd(), "/".join(os.path.abspath(sys.argv[0]).split('/')[0:-1])
-    from src.BridgePRS import BridgePRS
+    
+    from src.Python.BridgePRS import BridgePRS
     bridgePRS = BridgePRS(args,mydir,cwd,sys.argv)
     sys.exit() 
 

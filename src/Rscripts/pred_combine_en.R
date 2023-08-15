@@ -315,8 +315,7 @@ for( chr in 1:22 ){
     beta.bar1 <- beta.list(beta.bar1)
 
     if( !is.null(opt$models2) ){
-        beta.bar2 <- fread(paste0(opt$models2,"_beta_bar_chr",chr,".txt.gz"),
-                           data.table=FALSE)
+        beta.bar2 <- fread(paste0(opt$models2,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
         beta.bar2 <- beta.list(beta.bar2)
 
         kl <- fread(paste0(opt$models2,"_KLdist_chr",chr,".txt.gz"),
@@ -330,8 +329,7 @@ for( chr in 1:22 ){
 
         tmp <- strsplit( names(w.ridge22), '_' )
         w.thresh <- sapply(tmp,getElement,3)
-        w.beta.bar <- paste( sapply(tmp,getElement,1),
-                            sapply(tmp,getElement,2), sep='_' )
+        w.beta.bar <- paste( sapply(tmp,getElement,1),sapply(tmp,getElement,2), sep='_' )
         u.w.thresh <- unique(w.thresh)
         beta.bar22 <- as.data.frame(matrix( nrow=0, ncol=4 ))
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3 
 
-import sys, os 
-from src.Util.BridgeProgress import BridgeProgress
-from src.Util.BridgeIO import BridgeIO
+import sys  
+#from ..Util.BridgeProgress import BridgeProgress
+#from ..Util.BridgeIO import BridgeIO
 
 
 

@@ -179,7 +179,6 @@ class BridgePipelines:
             elif ls[0][0:4] in ['warn','extr','load','usag']: continue 
             else: 
                 if D == 'CLUMP' and " ".join(ls[-3::]) == 'see log file.': continue  
-                elif D == 'QUANTIFY': continue                  
                 if len(ls[0].split('/'))>1: ls[0] = ls[0].split('/')[-1] 
                 f_errors.append(' '.join(ls)) 
         

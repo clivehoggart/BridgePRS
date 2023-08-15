@@ -16,16 +16,27 @@ def bridge_error(eString):
     sys.exit(2) 
 
 class BridgeIO:
-        def __init__(self,args,command_line, bridgedir,rundir):
-            self.args, self.bdir, self.sdir = args, bridgedir, bridgedir + '/src/Scripts'
-            self.progress = BridgeProgress(args, command_line)
+        def __init__(self,args,bridgedir,rundir, command_line):
             
-            self.pdir = self.bdir+'/../Rscripts'  
-            self.programs = {f.split('.')[0]: self.pdir+'/'+f for f in os.listdir(self.pdir)} 
-            #self.programs = {f.split('.')[0]: self.sdir+'/'+f for f in os.listdir(self.sdir)} 
-            if self.args.platform == 'mac': self.programs['plink'] = self.programs['plink_mac'] 
+            self.args, self.bridgedir, self.rundir = args, bridgedir, rundir 
+            self.progress = BridgeProgress(args, command_line) 
+            self.set_programs() 
             self.paths = {'home': os.path.abspath(self.args.outpath), 'logs': os.path.abspath(self.args.outpath)+'/logs'} 
+
             
+            
+        
+        def set_programs(self): 
+            self.programs = {} 
+            for i,(p,pn) in enumerate([[self.args.rpath,'--rPath'],[self.args.plinkpath,'--plinkPath']]): 
+                if os.path.exists(p):                      mp = os.path.abspath(p) 
+                elif os.path.exists(self.bridgedir+'/'+p): mp = os.path.abspath(self.bridgedir+'/'+p) 
+                else:                                      bridge_error([pn+' '+p+' Does not exist']) 
+                for f in os.listdir(mp): self.programs[f.split('.')[0]] = mp+'/'+f 
+
+            if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
+            return 
+
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 

@@ -23,7 +23,7 @@ def parse_error(eString):
 class BridgeSettings: 
     def __init__(self,io):
         self.args, self.io, self.module, self.cmd = io.args, io, io.args.module, io.args.cmd
-        self.config   = LOAD_CONFIGS(self.args.pop_config+self.args.config, io.bdir)
+        self.config   = LOAD_CONFIGS(self.args.pop_config+self.args.config, io.bridgedir)
 
     def verify(self): 
         self.files, self.prefixes, self.maps, self.fields, self.errors, self.warnings = BridgeParse(self).load_input(self.io.pipeline.input_key, self.config)

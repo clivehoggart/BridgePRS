@@ -93,6 +93,7 @@ class BridgeCombine:
         X.extend(['--ids.col','TRUE']) 
         X.extend(['--pheno.name',p1.fields['NAME'], '--cov.names',p1.fields['COVARIATES']])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
+        self.progress.start_rJob(rJOB)
         out_file, err_file = self.path+'/combine.stdout', self.path+'/combine.stderr' 
         my_job = " ".join(rJOB + ['>',out_file,'2>', err_file]) 
         os.system(my_job) 

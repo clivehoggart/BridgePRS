@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-from src.Util.BridgeIO       import BridgeIO
-from src.Run.BridgeBase      import BridgeBase
-from src.Run.BridgeMore      import BridgeMore
-from src.Run.BridgeJobs      import BridgeJobs
-from src.Util.BridgeProgress import BridgeProgress
+from .Util.BridgeIO       import BridgeIO
+from .Run.BridgeBase      import BridgeBase
+from .Run.BridgeMore      import BridgeMore
+from .Run.BridgeJobs      import BridgeJobs
+from .Util.BridgeProgress import BridgeProgress
 
 
 
@@ -23,7 +23,7 @@ def bridge_error(eString):
 class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
-            self.io       =   BridgeIO(args, command_line, bridgedir, rundir) 
+            self.io       =   BridgeIO(args, bridgedir, rundir, command_line) 
             
             self.io.initialize(self.args.module, self.args.cmd) 
             self.io.start_progress() 
