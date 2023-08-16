@@ -142,7 +142,7 @@ v.target <- var(target[,opt$pheno.name])
 #         grep("_10_", colnames(pred1)) )
 #pred1 <- pred1[,ptr]
 
-nfolds <- ifelse( nrow(target)<2000, nrow(target), 50 )
+nfolds <- ifelse( nrow(target)<500, nrow(target), 500 )
 
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 
@@ -391,3 +391,8 @@ for( chr in 1:22 ){
 }
 colnames(beta.bar.genome) <- c('snp','effect.allele','ref.allele','effect')
 write.table( beta.bar.genome,wtfile,col.names=TRUE, row.names=FALSE, quote=FALSE )
+
+if( !is.null(warnings() ){
+    print(warnings())
+}
+
