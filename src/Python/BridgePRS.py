@@ -79,14 +79,14 @@ class BridgePRS:
         
         def easyrun(self): 
             modules = ['prs-single','build-model','prs-port','prs-prior'] 
-            self.config = self.args.config 
+            self.spec = self.args.spec 
             pop1, pop2 = self.args.pop_names 
             res_files = [] 
             
             for i,m in enumerate(modules): 
                 self.args.module, self.args.cmd =  m, 'run' 
-                if i == 1: self.args.popname, self.args.config = pop2, [self.args.pop_configs[1]] + self.config
-                else:      self.args.popname, self.args.config = pop1, [self.args.pop_configs[0]] + self.config
+                if i == 1: self.args.popname, self.args.spec = pop2, [self.args.pop_configs[1]] + self.spec
+                else:      self.args.popname, self.args.spec = pop1, [self.args.pop_configs[0]] + self.spec
                 self.io.initialize(self.args.module, self.args.cmd) 
                 self.io.start_progress() 
                 self.execute(self.io.pipeline) 

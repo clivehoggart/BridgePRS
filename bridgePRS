@@ -96,7 +96,7 @@ if __name__ == '__main__':
     Global.add_argument('--cores',        dest='cores',        action='store',      type=int,default=0,metavar='',help='By default bridgePRS is parralelized across (n-1) cores.') 
     Global.add_argument('--repeatSteps',  dest='repeatSteps',  action='store_true', default=False, help='Toggle Repeat Pipeline Steps On') 
     Global.add_argument('--skipAnalysis', dest='skipAnalysis', action='store_true', default=False,help='Skip Post-Pipeline Analysis') 
-    Global.add_argument('--config',       dest='config',       nargs = '+',         type=str,default=[],help='Axillary configuration/specification files') 
+    Global.add_argument('--spec', '--specifications',       dest='spec',       nargs = '+',         type=str,default=[],help='Axillary configuration/specification files') 
     Global.add_argument('--pop_config',   dest='pop_config',   nargs = 1,           type=str,default=[],help='Population configuration file') 
     Global.add_argument('--platform',     dest='platform',     action='store',      type=parser.find_platform,  default=parser.find_platform("NA"), help='Force platform (Linux or MacOS)') 
     Global.add_argument('--rPath',        dest='rpath',        action='store',      type=str,  default='src/Rscripts', help=argparse.SUPPRESS) 

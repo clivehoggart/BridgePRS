@@ -1,13 +1,16 @@
 # Run 5 Steps: 
 
-../../bridgePRS prs-single run -o out -p afr --pop_config ../../data/afr.pop.config --config ../../data/options.config --verbose
+../../bridgePRS prs-single run -o out -p afr --pop_config ../../data/afr.pop.config --specifications ../../data/options.specifications --verbose
 
 
-../../bridgePRS build-model run -o out -p eur --pop_config ../../data/eur.pop.config --config ../../data/options.config --verbose
-../../bridgePRS prs-port run -o out -p afr --pop_config ../../data/afr.pop.config --config ../../data/options.config --model_file out/model_EUR/bridge.build-model.result --verbose 
-../../bridgePRS prs-prior run -o out -p afr --pop_config ../../data/afr.pop.config --config ../../data/options.config --model_file out/model_EUR/bridge.build-model.result --verbose 
+../../bridgePRS build-model run -o out -p eur --pop_config ../../data/eur.pop.config --spec ../../data/options.specifications --verbose
+../../bridgePRS prs-port run -o out -p afr --pop_config ../../data/afr.pop.config --spec ../../data/options.specifications --model_file out/model_EUR/bridge.build-model.result --verbose 
+../../bridgePRS prs-prior run -o out -p afr --pop_config ../../data/afr.pop.config --spec ../../data/options.specifications --model_file out/model_EUR/bridge.build-model.result --verbose 
 ../../bridgePRS analyze combine -o out -p afr --results out/prs-single_AFR/bridge.prs-single.result out/prs-port_AFR/bridge.prs-port.result out/prs-prior_AFR/bridge.prs-prior.result
 
 # Run Full Pipeline:
+
+Bridge Command-Line: ../../bridgePRS easyrun go -o out3 --pop_configs ../../data/afr.pop.config ../../data/eur.pop.config --pop_names EAS EUR --spec ../../data/options.specifications --verbose
+
 
 ../../bridgePRS easyrun go -o out2 --pop_configs ../../data/afr.pop.config ../../data/eur.pop.config --pop_names AFR EUR --config ../../data/options.config --verbose 
