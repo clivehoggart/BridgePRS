@@ -35,7 +35,7 @@ pop2_bfile=0
 cov_names="000"
 binary=0
 
-RSCRIPTS=~/BridgePRS/src
+RSCRIPTS=~/BridgePRS/src/Rscripts
 FPATH=$RSCRIPTS"/functions.R"
 
 
