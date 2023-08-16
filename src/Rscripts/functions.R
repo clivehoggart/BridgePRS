@@ -304,6 +304,10 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
     }
 
     af <- apply(X,2,mean,na.rm=TRUE)/2
+    if( min(af)==0 ){
+        print("Inclusion of monomorphic variants in clump in data used to estimate LD.")
+        print("Has clumping been run independently of the Bridge package?")
+    }
     ld <- cov(X,use='pairwise.complete')
 
     if( n.eff ){
