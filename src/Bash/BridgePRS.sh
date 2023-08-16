@@ -234,6 +234,7 @@ then
 	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
+	      --maf 0.001 \
 	      --out $outdir/clump/$pop1\_$chr
 	rm -f $outdir/clump/$pop1\_$chr.clumped.gz
 	gzip $outdir/clump/$pop1\_$chr.clumped
@@ -383,6 +384,7 @@ then
 	      --clump-p1 1e-2 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
+	      --maf 0.001 \
 	      --out $outdir/clump/$pop2\_$chr
 	rm -f $outdir/clump/$pop2\_$chr.clumped.gz
 	gzip $outdir/clump/$pop2\_$chr.clumped
