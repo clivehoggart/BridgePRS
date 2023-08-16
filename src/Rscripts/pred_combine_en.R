@@ -392,6 +392,6 @@ for( chr in 1:22 ){
 colnames(beta.bar.genome) <- c('snp','effect.allele','ref.allele','effect')
 write.table( beta.bar.genome,wtfile,col.names=TRUE, row.names=FALSE, quote=FALSE )
 
-if( !is.null(warnings() ){
+if( !is.null(warnings()) ){
     print(warnings())
 }
