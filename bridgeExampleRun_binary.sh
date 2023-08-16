@@ -1,4 +1,5 @@
 ~/BridgePRS/src/Bash/BridgePRS.sh \
+    --binary 1 \
     --strand_check 1 \
     --outdir out_binary \
     --by_chr 1 \
@@ -27,7 +28,7 @@
     --sumstats_n OBS_CT \
     --sumstats_se SE \
     --sumstats_frq A1_FREQ \
-    --pheno_name y \
+    --pheno_name y.binary \
     --n_cores 20 \
     --do_clump_pop1 1 \
     --do_est_beta_pop1 1 \
