@@ -253,3 +253,6 @@ if( length(tmp)==2 ){
 #ptr <- match(test.data$IID,prsice$IID)
 #fit.test1 <- summary(lm( test.data[,opt$pheno.name] ~ prsice$PRS[ptr] +
 #                              as.matrix(test.data[,cov.names]) ))
+if( !is.null(warnings()) ){
+    print(warnings())
+}

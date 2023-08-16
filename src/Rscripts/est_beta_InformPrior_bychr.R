@@ -198,3 +198,6 @@ for( chr in 1:22 ){
         fwrite( kl.out, outfile )
     }
 }
+if( !is.null(warnings()) ){
+    print(warnings())
+}

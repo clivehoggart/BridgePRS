@@ -11,7 +11,7 @@ calc_ve <- function(prs, myfit) {
               stype = "i", R = 10000, parallel = "multicore",
               ncpus = opt$n.cores)
     ci <- boot.ci(b, type = "norm")
-    
+
     cvm <- 1
     cvsd <- 1
     if( !is.null(myfit) ){
@@ -103,18 +103,18 @@ tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
 
 
-# TADE EDIT - Renaming LogFile For Pred1/2 
+# TADE EDIT - Renaming LogFile For Pred1/2
 
 #logfile <- paste0(opt$outfile,"_weighted_combined_var_explained.log")
 if( is.null(opt$pred2) ){
     logfile <- paste0(opt$outfile,"_var_explained.log")
     wtfile  <- paste0(opt$outfile,"_snp_weights.dat")
 
-}else{                   
+}else{
     logfile <- paste0(opt$outfile,"_weighted_combined_var_explained.log")
-    wtfile <- paste0(opt$outfile,"_weighted_combined_snp_weights.dat") 
-} 
-       
+    wtfile <- paste0(opt$outfile,"_weighted_combined_snp_weights.dat")
+}
+
 
 
 
@@ -184,7 +184,7 @@ if( !is.null(opt$pred2) ){
     probM.ridge <- exp(logL) / sum(exp(logL))
 }
 
-# alpha 
+# alpha
 
 #### Validation ####
 if( opt$valid.data!=0 ){
@@ -223,13 +223,13 @@ if( opt$valid.data!=0 ){
         prs.weighted <- apply( cbind( prs.ridge, prs.ridge1, prs.ridge2 ) %*% diag(probM.ridge), 1, sum )
         VE.ridge.w <- calc_ve(prs.weighted, NULL)
 
-        # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #  
+        # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #
         out <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge, prs.ridge1, prs.ridge2, prs.weighted )
         colnames(out) <- c('---','pheno','prs','ridge1','ridge2','weighted')
 
-        # TADE - NEED THE COLUMN NAMES FOR DOWNSTREAM  
+        # TADE - NEED THE COLUMN NAMES FOR DOWNSTREAM
         #write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),col.names=FALSE, row.names=FALSE, quote=FALSE )
-        
+
         #my_data <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1)
         write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),row.names=FALSE, quote=FALSE )
 
@@ -246,13 +246,13 @@ if( opt$valid.data!=0 ){
         rownames(out) <- c('Ridge')
         print(out)
 
-        # TADE - Renaming Again (not weighted/combined) 
+        # TADE - Renaming Again (not weighted/combined)
         write.csv( out, paste0(opt$outfile,"_var_explained.txt"), row.names=TRUE )
 
-        # TADE - Adding Single Stage Preds for single stage # 
-        data <- data.frame( target[  ,opt$pheno.name], prs.ridge1, covs )      
+        # TADE - Adding Single Stage Preds for single stage #
+        data <- data.frame( target[  ,opt$pheno.name], prs.ridge1, covs )
         my_data <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1)
-        colnames(my_data) <- c('---','pheno','prs')                                       
+        colnames(my_data) <- c('---','pheno','prs')
         write.table( my_data, paste0(opt$outfile,"_preds.dat"), row.names = FALSE, quote=FALSE)
 
     }
@@ -306,7 +306,7 @@ if( !is.null(opt$pred2) ){
 }
 
 
-#print('hello') 
+#print('hello')
 #match
 beta.bar.genome <- as.data.frame(matrix( nrow=0, ncol=4 ))
 for( chr in 1:22 ){
@@ -351,16 +351,16 @@ for( chr in 1:22 ){
             }
         }
     }
-     
+
     tmp <- strsplit( names(w.ridge11), '_' )
-    
-    ## NOTE - THIS CAUSES AN ERROR WHEN RAN WITH SINGLE PRIOR RESULT - tmp, getElement4 ##  
+
+    ## NOTE - THIS CAUSES AN ERROR WHEN RAN WITH SINGLE PRIOR RESULT - tmp, getElement4 ##
     w.thresh <- as.numeric(sapply(tmp,getElement,4))
     w.beta.bar <- paste( sapply(tmp,getElement,1),sapply(tmp,getElement,2),sapply(tmp,getElement,3), sep='_' )
     u.w.thresh <- unique(w.thresh)
     p.clump <- sapply(sapply(beta.bar1,getElement,'p.value'),getElement,1)
     beta.bar11 <- as.data.frame(matrix( nrow=0, ncol=4 ))
-    
+
     for( i in 1:length(beta.bar1) ){
         j <- 1
         beta.bar <- as.data.frame(matrix( nrow=nrow(beta.bar1[[i]]), ncol=4 ))
@@ -377,7 +377,7 @@ for( chr in 1:22 ){
             beta.bar11 <- rbind( beta.bar11, beta.bar )
         }
     }
-    
+
     if( !is.null(opt$pred2) ){
         i.snps <- intersect(beta.bar11$V1,beta.bar22$V1)
         ptr1 <- match( i.snps, beta.bar11$V1 )
@@ -395,4 +395,3 @@ write.table( beta.bar.genome,wtfile,col.names=TRUE, row.names=FALSE, quote=FALSE
 if( !is.null(warnings() ){
     print(warnings())
 }
-
