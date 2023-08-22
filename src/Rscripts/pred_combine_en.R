@@ -284,9 +284,9 @@ if( !is.null(opt$pred2) ){
     alpha.weights1 <- tapply( w.ridge[l==4], alpha[l==4], sum )
     lambda.weights1 <- tapply( w.ridge[l==4], lambda[l==4], sum )
 
-    tau.weights <- tau.weights2 * probM.ridge[2] + tau.weights1 * probM.ridge[1]
-    alpha.weights <- alpha.weights2 * probM.ridge[3] + alpha.weights1 * probM.ridge[1]
-    lambda.weights <- lambda.weights2 * probM.ridge[3] + lambda.weights1 * probM.ridge[1]
+    tau.weights <- tau.weights2 * probM.ridge[3] + tau.weights1 * probM.ridge[1]
+    alpha.weights <- alpha.weights2 * probM.ridge[2] + alpha.weights1 * probM.ridge[1]
+    lambda.weights <- lambda.weights2 * probM.ridge[2] + lambda.weights1 * probM.ridge[1]
 
     tau.weights <- cbind( tau.weights1, tau.weights2, tau.weights )
     alpha.weights <- cbind( alpha.weights1, alpha.weights2, alpha.weights )
