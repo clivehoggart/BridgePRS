@@ -147,7 +147,7 @@ nfolds <- ifelse( nrow(target)<500, nrow(target), 500 )
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
-                        family=family,
+                        family=family, lower.limits=0,
                         alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 #w.ridge1 <- getGlmnetFit( fit.ridge1, as.matrix(pred1), s='lambda.min', sparse=FALSE )[-1]
 w.ridge1 <- as.vector(coef( fit.ridge1, s='lambda.min' ))[-1]
@@ -159,10 +159,10 @@ if( !is.null(opt$pred2) ){
         pred2 <- pred2[,-1]
     }
     X <- as.matrix(cbind( pred1, pred2 ))
-    fit.ridge <- cv.glmnet( y=target[,opt$pheno.name], x=X, family=family,
+    fit.ridge <- cv.glmnet( y=target[,opt$pheno.name], x=X, family=family, lower.limits=0,
                            alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
     fit.ridge2 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred2),
-                            family=family,
+                            family=family, lower.limits=0,
                             alpha=0, parallel=TRUE, nfolds=nfolds, grouped=FALSE )
 
 #    w.ridge <- getGlmnetFit( fit.ridge, X, s='lambda.min', sparse=FALSE )[-1]
