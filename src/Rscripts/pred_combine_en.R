@@ -261,9 +261,9 @@ if( opt$valid.data!=0 ){
 tmp <- strsplit( names(w.ridge1), "_" )
 lambda <- as.numeric(sapply(tmp,getElement,2))
 alpha <- as.numeric(sapply(tmp,getElement,3))
-s <- apply( w.ridge1, 2, sd )
-lambda.weights2 <- tapply( w.ridge1/s, lambda, sum )
-alpha.weights2 <- tapply( w.ridge1/s, alpha, sum )
+s1 <- apply( pred1, 2, sd )
+lambda.weights2 <- tapply( w.ridge1/s1, lambda, sum )
+alpha.weights2 <- tapply( w.ridge1/s1, alpha, sum )
 if( is.null(opt$pred2) ){
     #write.table( alpha.weights2,  paste0(opt$outdir,"_alpha_weights.dat"), row.names=TRUE )
     #write.table( lambda.weights2, paste0(opt$outdir,"_lambda_weights.dat"), row.names=TRUE )
@@ -274,18 +274,17 @@ if( is.null(opt$pred2) ){
 if( !is.null(opt$pred2) ){
     tmp <- strsplit( names(w.ridge2), "_" )
     tau <- as.numeric(sapply(tmp,getElement,2))
-    s <- apply( w.ridge2, 2, sd )
-    tau.weights2 <- tapply( w.ridge2/s, tau, sum )
+    s2 <- apply( pred2, 2, sd )
+    tau.weights2 <- tapply( w.ridge2/s2, tau, sum )
 
     tmp <- strsplit( names(w.ridge), "_" )
     l <- sapply(tmp,length)
     lambda <- as.numeric(sapply(tmp,getElement,2))
     alpha <- as.numeric(sapply(tmp,getElement,3))
     tau <- as.numeric(sapply(tmp,getElement,2))
-    s <- apply( w.ridge, 2, sd )
-    tau.weights1 <- tapply( w.ridge[l==3]/s, tau[l==3], sum )
-    alpha.weights1 <- tapply( w.ridge[l==4]/s, alpha[l==4], sum )
-    lambda.weights1 <- tapply( w.ridge[l==4]/s, lambda[l==4], sum )
+    tau.weights1 <- tapply( w.ridge[l==3]/c(s1,s2), tau[l==3], sum )
+    alpha.weights1 <- tapply( w.ridge[l==4]/c(s1,s2), alpha[l==4], sum )
+    lambda.weights1 <- tapply( w.ridge[l==4]/c(s1,s2), lambda[l==4], sum )
 
     tau.weights <- tau.weights2 * probM.ridge[3] + tau.weights1 * probM.ridge[1]
     alpha.weights <- alpha.weights2 * probM.ridge[2] + alpha.weights1 * probM.ridge[1]
