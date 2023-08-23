@@ -282,9 +282,9 @@ if( !is.null(opt$pred2) ){
     lambda <- as.numeric(sapply(tmp,getElement,2))
     alpha <- as.numeric(sapply(tmp,getElement,3))
     tau <- as.numeric(sapply(tmp,getElement,2))
-    tau.weights1 <- tapply( w.ridge[l==3]/c(s1,s2), tau[l==3], sum )
-    alpha.weights1 <- tapply( w.ridge[l==4]/c(s1,s2), alpha[l==4], sum )
-    lambda.weights1 <- tapply( w.ridge[l==4]/c(s1,s2), lambda[l==4], sum )
+    tau.weights1 <- tapply( (w.ridge/c(s1,s2))[l==3], tau[l==3], sum )
+    alpha.weights1 <- tapply( (w.ridge/c(s1,s2))[l==4], alpha[l==4], sum )
+    lambda.weights1 <- tapply( (w.ridge/c(s1,s2))[l==4], lambda[l==4], sum )
 
     tau.weights <- tau.weights2 * probM.ridge[3] + tau.weights1 * probM.ridge[1]
     alpha.weights <- alpha.weights2 * probM.ridge[2] + alpha.weights1 * probM.ridge[1]
