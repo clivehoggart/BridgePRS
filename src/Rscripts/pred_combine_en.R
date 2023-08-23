@@ -224,21 +224,24 @@ if( opt$valid.data!=0 ){
         VE.ridge.w <- calc_ve(prs.weighted, NULL)
 
         # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #
-        out <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge, prs.ridge1, prs.ridge2, prs.weighted )
-        colnames(out) <- c('---','pheno','prs','ridge1','ridge2','weighted')
+        out <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1, prs.ridge2,
+                          prs.ridge, prs.weighted )
+        colnames(out) <- c('---','pheno','prs.Stage1','prs.Stage2',
+                           'prs.Stages1+2','prs.weighted')
 
         # TADE - NEED THE COLUMN NAMES FOR DOWNSTREAM
         #write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),col.names=FALSE, row.names=FALSE, quote=FALSE )
 
         #my_data <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1)
-        write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),row.names=FALSE, quote=FALSE )
+        write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),
+                    row.names=FALSE, quote=FALSE )
 
-        out <- rbind( VE.ridge, VE.ridge1, VE.ridge2, VE.ridge.w )
-        out <- cbind( c(probM.ridge,1), out )
-        colnames(out) <- c('Prob','Est','2.5%','97.5%','cv.dev','cv.dev.sd')
-        rownames(out) <- c('Ridge','Ridge1','Ridge2','Ridge.w')
+        out <- rbind(  VE.ridge1, VE.ridge2, VE.ridge, VE.ridge.w )
+        out <- data.frame( c('Stage1','Stage2','Stage1+2','Weighted'), c(probM.ridge,1), out )
+        colnames(out) <- c('---','Prob','Est','2.5%','97.5%','cv.dev','cv.dev.sd')
         print(out)
-        write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"), row.names=TRUE )
+        write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"),
+                  row.names=FALSE, quote=FALSE )
     }
     if( is.null(opt$pred2) ){
         out <- rbind( VE.ridge1 )
