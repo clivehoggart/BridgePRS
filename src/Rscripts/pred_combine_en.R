@@ -307,9 +307,12 @@ if( !is.null(opt$pred2) ){
     alpha.weights <- data.frame( rownames(alpha.weights), alpha.weights )
     colnames(alpha.weights) <- c('alpha', 'Stage1', 'Stages1+2', 'Weighted' )
 
-    write.table( tau.weights, paste0(opt$outfile,"_tau_weights.dat"), row.names=FALSE )
-    write.table( alpha.weights, paste0(opt$outfile,"_alpha_weights.dat"), row.names=FALSE )
-    write.table( lambda.weights, paste0(opt$outfile,"_lambda_weights.dat"), row.names=FALSE )
+    write.table( tau.weights, paste0(opt$outfile,"_tau_weights.dat"),
+                row.names=FALSE, quote=FALSE )
+    write.table( alpha.weights, paste0(opt$outfile,"_alpha_weights.dat"),
+                row.names=FALSE, quote=FALSE )
+    write.table( lambda.weights, paste0(opt$outfile,"_lambda_weights.dat"),
+                row.names=FALSE, quote=FALSE )
 }
 
 w.ridge11 <- w.ridge1
