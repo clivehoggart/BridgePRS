@@ -176,7 +176,7 @@ if( !is.null(opt$pred2) ){
     ptr.min <- which(fit.ridge$lambda==fit.ridge$lambda.min)
     ptr.min1 <- which(fit.ridge1$lambda==fit.ridge1$lambda.min)
     ptr.min2 <- which(fit.ridge2$lambda==fit.ridge2$lambda.min)
-    mse <- c( fit.ridge$cvm[ptr.min], fit.ridge1$cvm[ptr.min1], fit.ridge2$cvm[ptr.min2] )
+    mse <- c( fit.ridge1$cvm[ptr.min1], fit.ridge2$cvm[ptr.min2], fit.ridge$cvm[ptr.min] )
 #logL2 <- -n*( mse - as.numeric(mse[1]) ) / (2*v.target)
 #probM2 <- exp(logL2) / sum(exp(logL2))
     logL <- -n*log(mse) / 2
@@ -220,7 +220,7 @@ if( opt$valid.data!=0 ){
         VE.ridge <- calc_ve(prs.ridge, fit.ridge)
         VE.ridge2 <- calc_ve(prs.ridge2, fit.ridge2)
 
-        prs.weighted <- apply( cbind( prs.ridge, prs.ridge1, prs.ridge2 ) %*% diag(probM.ridge), 1, sum )
+        prs.weighted <- apply( cbind( prs.ridge1, prs.ridge2, prs.ridge ) %*% diag(probM.ridge), 1, sum )
         VE.ridge.w <- calc_ve(prs.weighted, NULL)
 
         # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #
