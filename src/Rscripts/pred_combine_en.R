@@ -242,6 +242,14 @@ if( opt$valid.data!=0 ){
         print(out)
         write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"),
                   row.names=FALSE, quote=FALSE )
+
+        png( paste0(opt$outfile,"_weighted_combined_var_explained.png"), 500, 500 )
+        cc <- hsv(1, seq(0,1,length.out = 10) , 1)
+        b <- barplot( out$Est,ylim=c(0,max(out[,'97.5%'])), ylab='R2',
+                     col=c( cc[ceiling(out$Prob[1:3]*10)], 'grey') )
+        arrows( x0=b, x1=b, y0=out[,'2.5%'], y1=out[,'97.5%'], code=3, angle=90 )
+        axis( side=1, at=b, labels=out[,1] )
+        dev.off()
     }
     if( is.null(opt$pred2) ){
         out <- rbind( VE.ridge1 )
