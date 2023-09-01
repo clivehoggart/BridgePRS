@@ -1,10 +1,8 @@
-#!/usr/bin/env python2.7
-
 import sys,os 
-import os
 from .BridgeProgress  import BridgeProgress
 from .BridgeSettings  import BridgeSettings
 from .BridgePipelines import BridgePipelines
+from collections import defaultdict as dd 
 
 
 
@@ -15,37 +13,102 @@ def bridge_error(eString):
     else: sys.stderr.write('\nBridgeIOError: '+eString+'\n')
     sys.exit(2) 
 
+
 class BridgeIO:
         def __init__(self,args,bridgedir,rundir, command_line):
-            
             self.args, self.bridgedir, self.rundir = args, bridgedir, rundir 
-            self.progress = BridgeProgress(args, command_line) 
+            self.homepath = os.path.abspath(self.args.outpath) 
+            self.paths = {'home': self.homepath, 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'} 
+            self.progress = BridgeProgress(args, command_line).initialize(self.paths['home'])  
             self.set_programs() 
-            self.paths = {'home': os.path.abspath(self.args.outpath), 'logs': os.path.abspath(self.args.outpath)+'/logs'} 
-
-            
             
         
         def set_programs(self): 
+            try:    import matplotlib, matplotlib.pyplot
+            except: self.args.noPlots = True 
             self.programs = {} 
             for i,(p,pn) in enumerate([[self.args.rpath,'--rPath'],[self.args.plinkpath,'--plinkPath']]): 
-                if os.path.exists(p):                      mp = os.path.abspath(p) 
-                elif os.path.exists(self.bridgedir+'/'+p): mp = os.path.abspath(self.bridgedir+'/'+p) 
-                else:                                      bridge_error([pn+' '+p+' Does not exist']) 
+                if   os.path.exists(p):                      mp = os.path.abspath(p) 
+                elif os.path.exists(self.bridgedir+'/'+p):   mp = os.path.abspath(self.bridgedir+'/'+p) 
+                else:                                        bridge_error([pn+' '+p+' Does not exist']) 
                 for f in os.listdir(mp): self.programs[f.split('.')[0]] = mp+'/'+f 
-
             if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
             return 
+
+        
+        def start_progress(self): 
+            self.progress.begin_module(self.module, self.cmd, self.paths['home']) 
+            self.progress.start_major(self.cmd)  
+            self.progress.show_settings(self.settings)
+            return
+        
 
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
-            self.pipeline = BridgePipelines(self).verify() 
-            self.settings = BridgeSettings(self).verify()
+            self.settings = BridgeSettings(self) 
+            if self.module != 'check':  
+                if self.module == 'easyrun' and len(self.args.pop) < 2:  bridge_error('Two population names are required for easyrun (command line or config file) --pop') 
+                elif len(self.args.pop) == 0:                            bridge_error('A population name is required on (command line or config file) --pop') 
+                self.pipeline = BridgePipelines(self).verify() 
+                if self.module != 'easyrun': self.settings.verify(self.pipeline.input_key) 
+            else: 
+                self.start_progress()
+                self.check_requirements() 
+                if self.cmd[0:3] != 'req': 
+                    self.progress.start_minor('Checking Population Data', FIN = False) 
+                    self.settings.check() 
+                sys.exit() 
             return self 
         
-        def start_progress(self): 
-            self.progress.begin_module(self.module, self.cmd, self.paths['logs']) 
-            self.progress.start_major(self.cmd)  
-            self.progress.show_settings(self.settings)
-            return 
+
+        def check_requirements(self): 
+            self.progress.start_minor('Checking Requirements',SKIP=True) 
+            check_log = self.paths['tmp']+'/bridge.validation.out' 
+            check_err = self.paths['tmp']+'/bridge.validation.err' 
+            pp = self.programs['check_availability'] 
+            os.system('echo -n \"plink_loc \"  > '+check_log+' 2> '+check_err) 
+            os.system('which plinki >> '+check_log+' 2>> '+check_err) 
+            os.system('echo \"\" >> '+check_log+' 2>> '+check_err) 
+            os.system('echo -n \"python_loc \"  >> '+check_log+' 2>> '+check_err) 
+            os.system('which python3 >> '+check_log+' 2>> '+check_err) 
+            os.system('echo \"\" >> '+check_log+' 2>> '+check_err) 
+            os.system('echo -n \"R_loc \"  >> '+check_log+' 2>> '+check_err) 
+            os.system('which R >> '+check_log+' 2>> '+check_err) 
+            os.system('echo \"*****\" >> '+check_log+' 2>> '+check_err) 
+            os.system('R --version >> '+check_log+' 2>> '+check_err) 
+            os.system('echo \"*****\" >> '+check_log+' 2>> '+check_err) 
+            os.system('Rscript --vanilla '+pp+' CHECK '+check_log+' >> '+check_err+' 2>> '+check_err) 
+            RK = self.read_requirement_log(check_log)       
+            ans = self.progress.show_requirements(RK) 
+            if ans.lower()[0] == 'y': 
+                self.progress.start_minor('Installing R Packages', FIN=False) 
+                os.system('Rscript --vanilla '+pp+' INSTALL '+check_log) 
+            
+
+        
+        def read_requirement_log(self, check_log): 
+            MAKEPLOT = True 
+            try:    import matplotlib, matplotlib.pyplot
+            except: MAKEPLOT = False 
+
+            K, M, stars, f = dd(bool), [], 0, open(check_log) 
+            K['matplotlib'] = MAKEPLOT 
+            for line in f: 
+                if len(line) < 2: continue 
+                lp, i, LOC = line.split(), 0, 'NA'
+                if lp[0] == '*****': 
+                    stars +=1 
+                    continue
+                if stars == 0:
+                    if len(lp) == 2: K[lp[0]] = lp[1] 
+                    else:            K[lp[0]] = 'NA' 
+                elif stars == 1: 
+                    if len(lp) > 2 and lp[0] == 'R' and lp[1] == 'version': K['R_version'] = lp[2] 
+                else: 
+                    M.append(lp[0]) 
+            K['R_missing'] = M 
+            return K 
+        
+        
+

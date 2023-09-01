@@ -336,8 +336,13 @@ if( !is.null(opt$pred2) ){
 #match
 beta.bar.genome <- as.data.frame(matrix( nrow=0, ncol=4 ))
 for( chr in 1:22 ){
-    beta.bar1 <- fread(paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz"),
-                       data.table=FALSE)
+
+    beta_file <- paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz")
+    
+    if(!file.exists(beta_file)) next 
+    
+    
+    beta.bar1 <- fread(paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
     beta.bar1 <- beta.list(beta.bar1)
 
     if( !is.null(opt$models2) ){

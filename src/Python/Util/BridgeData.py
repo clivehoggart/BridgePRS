@@ -316,7 +316,7 @@ class BridgeData:
         if self.type == 'binary': self.X_fields.extend(['--binary','1']) 
         return self 
         #if self.args.verify:      self.ph_verify_fields() 
-            
+        # print   
 
     def ph_verify_fields(self): 
         p_types = []
@@ -344,7 +344,6 @@ class BridgeData:
         for x,y in self.fields.items(): 
             if x == 'NAME' and y not in cands: bridge_error(b_error+['--pf-name '+y,'Available Fields: '+",".join(cands)]) 
             elif x[0:3] == 'COV': 
-                print(y) 
                 my_cov    = [c.strip() for c in y.split(',')] 
                 fail_covs = [c for c in my_cov if c not in cands] 
                 if len(fail_covs) > 0: bridge_error(b_error+['--pf-covariates '+y,'Available Fields: '+",".join(cands)]) 

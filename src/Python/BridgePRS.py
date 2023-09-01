@@ -23,11 +23,12 @@ def bridge_error(eString):
 class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
-            self.io       =   BridgeIO(args, bridgedir, rundir, command_line) 
             
+
+            
+            self.io   = BridgeIO(args, bridgedir, rundir, command_line) 
             self.io.initialize(self.args.module, self.args.cmd) 
             self.io.start_progress() 
-            
             if self.args.module == 'easyrun':   self.easyrun() 
             elif self.args.module == 'analyze': self.analyze(self.args.cmd, self.args.results, PATH = self.io.paths['home']) 
             else:                               self.execute(self.io.pipeline) 
@@ -36,14 +37,14 @@ class BridgePRS:
 
 
         def execute(self,pl):
-            self.jobs, self.base = BridgeJobs(self), BridgeBase(self) 
+            self.jobs, self.base = BridgeJobs(self), BridgeBase(self, pl.pop) 
             for i,command in enumerate(pl.commands): 
                 self.io.progress.start_minor(pl.command_strings[i], REVEAL=[self.io.settings]) 
                 if pl.FIN[command.upper()] and not self.args.repeatSteps: 
                     self.io.progress.update_minor('SKIPPING-JOB')
                     continue 
                 elif command == 'clump':     self.jobs.run(self.base.run_clump, [[['chromosome'],[k]] for k in self.io.settings.chromosomes])
-                elif command == 'eval':      self.jobs.run(self.base.run_eval, [[[],[]]]) 
+                elif command == 'beta':      self.jobs.run(self.base.run_beta, [[[],[]]]) 
                 elif command == 'predict':   self.jobs.run(self.base.run_predict,  [[[],[]]]) 
                 elif command == 'quantify':  self.jobs.run(self.base.run_quantify,  [[[],[]]])       
                 elif command == 'optimize':  self.jobs.run(self.base.run_optimize,  [[[],[]]]) 
@@ -59,19 +60,18 @@ class BridgePRS:
 
         def collate(self, cmd): 
             self.base.close_all() 
-            if cmd == 'quantify' and not self.args.skipAnalysis: 
-                self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
+            if cmd == 'quantify' and not self.args.noPlots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
             return 
 
 
         def analyze(self, cmd, prs_results, PATH):
             self.more     =   BridgeMore(self) 
             if cmd == 'result':
-                self.io.progress.start_minor('Plotting Results') 
+                self.io.progress.start_minor('Plotting Results (analyze result)') 
                 self.more.run(cmd, prs_results, PATH) 
                 self.io.progress.end() 
             else:
-                self.io.progress.start_minor('Combining Results') 
+                self.io.progress.start_minor('Combining Results (analyze combine)') 
                 self.more.run(cmd, prs_results, PATH) 
                 self.io.progress.end() 
             return 
@@ -79,14 +79,17 @@ class BridgePRS:
         
         def easyrun(self): 
             modules = ['prs-single','build-model','prs-port','prs-prior'] 
-            self.spec = self.args.spec 
-            pop1, pop2 = self.args.pop_names 
+            #self.spec = self.args.spec 
+            #pop1, pop2 = self.args.popnames 
+
+            pc1, pc2 = self.args.pop_config
             res_files = [] 
-            
             for i,m in enumerate(modules): 
-                self.args.module, self.args.cmd =  m, 'run' 
-                if i == 1: self.args.popname, self.args.spec = pop2, [self.args.pop_configs[1]] + self.spec
-                else:      self.args.popname, self.args.spec = pop1, [self.args.pop_configs[0]] + self.spec
+                self.args.module, self.args.cmd =  m, 'run'
+
+                if i == 1: self.args.pop_config = [pc2] 
+                else:      self.args.pop_config = [pc1] 
+                
                 self.io.initialize(self.args.module, self.args.cmd) 
                 self.io.start_progress() 
                 self.execute(self.io.pipeline) 

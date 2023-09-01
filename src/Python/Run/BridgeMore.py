@@ -4,11 +4,10 @@ import os, sys
 from collections import defaultdict as dd
 
 try: 
-    import matplotlib
-    import matplotlib.pyplot as plt
-    MAKEPLOT=True 
-except: 
-    MAKEPLOT=False 
+    MAKE_PLOTS = True 
+    import matplotlib 
+    import matplotlib.pyplot as plt 
+except: MAKE_PLOTS = False 
 
 
 def combine_error(eString):
@@ -37,11 +36,10 @@ class BridgeMore:
             comboPath = path + '/prs-combined_'+self.pop 
             results.append(self.run_combine(results, comboPath)) 
             
-            if not self.args.skipAnalysis: 
-                if MAKEPLOT: 
-                    self.io.progress.start_minor('Plotting Results') 
-                    self.run_plotter(results, comboPath, cols = 5) 
-                else: sys.stderr.write('\nWarning: Module matplotlib not found (plots not created)!\n') 
+            if not self.args.noPlots: 
+                self.io.progress.start_minor('Plotting Results') 
+                self.run_plotter(results, comboPath, cols = 5) 
+            else: sys.stderr.write('\nSkipping Plotting Step!\n') 
             return  
                 
         
@@ -84,16 +82,24 @@ class BridgeCombine:
 
     def run(self, p1, p2): 
         pp = self.io.programs['pred_combine_en']
-        X = ['--pop2',self.pop, '--test.data', p1.files['PHENO'], '--valid.data', p1.files['VALIDATION'], '--n.cores',str(self.args.cores)] 
+        #X = ['--pop2',self.pop, '--test.data', p1.files['PHENO'], '--valid.data', p1.files['VALIDATION'], '--n.cores',str(self.args.cores)] 
+        X = ['--pop2',self.pop,'--n.cores',str(self.args.cores)] 
+        
+
+
+        X.extend(['--test.data',p1.lists['PHENO'][0],'--valid.data',p1.lists['PHENO'][1]])
+
+
         X.extend(['--outfile',self.path+'/'+self.pop]) 
-        X.extend(['--pred1',p1.paths['PREDICT']]) 
-        X.extend(['--pred2',p2.paths['PREDICT']]) 
+        X.extend(['--models1',p1.paths['BETA'],'--models2',p2.paths['BETA']])
+        X.extend(['--pred1',p1.paths['PREDICT'],'--pred2',p2.paths['PREDICT']]) 
+        #X.extend(['--pred2',p2.paths['PREDICT']]) 
         #X.extend(['--eval1',p1.paths['EVAL'],'--eval2',p2.paths['EVAL']])
-        X.extend(['--models1',p1.paths['EVAL'],'--models2',p2.paths['EVAL']])
         X.extend(['--ids.col','TRUE']) 
-        X.extend(['--pheno.name',p1.fields['NAME'], '--cov.names',p1.fields['COVARIATES']])
+        X.extend(['--pheno.name',p1.fields['NAME']]) 
+        if 'COVARIATES' in p1.fields: X.extend(['--cov.names',p1.fields['COVARIATES']]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
-        self.progress.start_rJob(rJOB)
+        self.progress.start_rJob(rJOB, 'combine')
         out_file, err_file = self.path+'/combine.stdout', self.path+'/combine.stderr' 
         my_job = " ".join(rJOB + ['>',out_file,'2>', err_file]) 
         os.system(my_job) 
@@ -104,7 +110,7 @@ class BridgeCombine:
     def finish(self): 
         self.key = {} 
         for f in os.listdir(self.path): 
-            if self.pop in f and f.split('.')[-1] != 'log': 
+            if self.pop in f and f.split('.')[-1] not in ['log','png','pdf']: 
                 pn = f.split('.')[0].split(self.pop+"_")[-1].strip('_') 
                 self.key[pn]  = self.path+'/'+f 
         if len(self.key) > 5: self.FIN = True 
@@ -124,7 +130,9 @@ class BridgeResult:
     def read_combo(self, combo): 
         self.pop = combo.pop 
         self.method = 'prs-combine' 
+        
         for k,f in combo.key.items():
+
             if k in ['weighted_combined_preds']: self.read_prs_predictions(f) 
             elif k in ['weighted_combined_var_explained']: self.read_var_explained(f) 
             else: continue 
@@ -133,7 +141,7 @@ class BridgeResult:
 
 
     def read_file(self, res): 
-        self.key, self.paths, self.files = self.read_result(res)
+        self.key, self.lists, self.paths, self.files = self.read_result(res)
         for k,f in self.key.items():
             if k in ['preds','prs_predictions']: self.read_prs_predictions(f) 
             elif k in ['var_explained']: self.read_var_explained(f) 
@@ -142,30 +150,39 @@ class BridgeResult:
     
     
     def read_result(self, res): 
-        K, P, F = {} , dd(bool), dd(bool) 
+        K, L, P, F = {} , dd(bool), dd(bool), dd(bool) 
         self.model = None 
         f = open(res) 
         for line in f: 
             a,b = line.strip().split('=') 
             if a == 'POP_NAME':      self.pop = b 
             elif a == 'MODULE_NAME': self.method = b
-            elif a.split('_')[-1] == 'FILE': F[a.split('_')[0]] = b 
+            elif a.split('_')[-1] == 'FILES':  L[a.split('_')[0]] = b.split(',')  
             elif a.split('_')[-1] == 'PREFIX': P[a.split('_')[1]] = b 
+            elif a.split('_')[-1] == 'FILE':   F[a.split('_')[0]] = b 
             elif a.split('_')[0] == 'FIELD' and a.split('_')[1].split('-')[0] == 'PHENO':  self.fields[a.split('-')[-1]] = b 
             else: continue 
         f.close()
         q_path, qn =  "/".join(P['QUANTIFY'].split('/')[0:-1]), P['QUANTIFY'].split('/')[-1] 
         for f in os.listdir(q_path): 
-            if qn in f and f.split('.')[-1] != 'log': 
+            if qn in f and f.split('.')[-1] not in ['log','png','pdf']: 
                 pn = f.split('.')[0].split(qn)[-1].strip('_') 
                 K[pn] = q_path+'/'+f 
-        return K, P, F  
+        return K, L, P, F  
 
 
 
     def read_var_explained(self,res): 
         f = open(res)
         self.var_key = dd(lambda: {}) 
+        
+        #print(res) 
+        #h_init = f.readline()
+        #print(h_init) 
+        #h_line = h_init.strip().split(',')[1::] 
+        #header = [x.strip('\"') for x in h_line] 
+        #print(h_line) 
+        #sys.exit() 
         header = [x.strip("\"") for x in f.readline().strip().split(',')][1::] 
         for i,line in enumerate(f): 
             line = line.strip().split(',') 
@@ -234,7 +251,9 @@ class BridgePlot:
         self.ax_index += 1
         X = self.R.preds['pheno'] 
         Y = self.R.preds[k]
-        ax.scatter(X,Y)
+        
+        if len(X) == len(Y): 
+            ax.scatter(X,Y)
         ax.set_xticks([]) 
         ax.set_yticks([]) 
         ax.set_xlabel('Phenotypes', fontsize = self.fs2) 
@@ -291,8 +310,10 @@ class DataTable:
         data_key = {rk: [round(R.var_key[rk][v],4) for v in vk] for rk in R.var_key.keys()} 
         header = ['variance\nexplained','95\%\nConfidence\nInterval', 'CV\ndeviations', 'CV\ndeviation\nstd'] 
         self.add_row(header, COLORS=['whitesmoke' for h in header], X = (0,100), Y = (50,100), FS = fs2, WIDTHS = [22,34,22,22])         
-        my_data = data_key[key] 
-        self.add_row(data_key[key], COLORS=['snow' for k in data_key[key]], X = (0,100), Y = (20,50), FS = fs2, WIDTHS = [22,17,17,22,22])         
+        
+        if 'Ridge' in data_key: 
+            my_data = data_key[key] 
+            self.add_row(data_key[key], COLORS=['snow' for k in data_key[key]], X = (0,100), Y = (20,50), FS = fs2, WIDTHS = [22,17,17,22,22])         
         self.ax.axis('off') 
         return 
 

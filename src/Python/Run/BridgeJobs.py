@@ -29,10 +29,10 @@ class BridgeJobs:
             if len(job_args) == 0:                                   bridge_error(['No jobs found for '+self.args.module+': '+self.args.cmd+'\n']) 
             elif len(job_args) == 1 or self.args.platform == 'mac':  self.q_serial(job_target, job_args, job_comment, job_marker) 
             elif self.args.cores > 1: 
-                self.progress.update_minor('(Parallelizing Across '+str(self.args.cores)+' Cores)') 
+                self.progress.update_minor('....(Parallelizing Across '+str(self.args.cores)+' Cores)........') 
                 self.q_parralel(job_target, job_args, job_comment, job_marker) 
             else: 
-                self.progress.update_minor('(Serialized Across Single Core)') 
+                self.progress.update_minor('....(Serialized Across Single Core).........') 
                 self.q_serial(job_target, job_args, job_comment, job_marker) 
             return 
 

@@ -91,7 +91,15 @@ for( chr in 1:22 ){
         ids.use <- intersect( ids.use, attributes(ptr.bed)[[3]][[1]] )
     }
 #    beta.bar <- dget(paste(opt$beta.file,chr,'.Robj',sep=''))
-    beta.bar <- fread(paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
+    
+    beta_bar_file <- paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz") 
+
+    if (!file.exists(beta_bar_file)) next 
+    beta.bar <- fread(beta_bar_file,data.table=FALSE)
+    #beta.bar <- fread(paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
+    
+    
+    
     clump.ids <- unique(beta.bar$clump.id)
     beta.bar <- beta.list(beta.bar)
     names(beta.bar) <- clump.ids
