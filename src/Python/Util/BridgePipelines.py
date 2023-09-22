@@ -27,6 +27,8 @@ class BridgePipelines:
     def create(self): 
         
         self.commands, self.pop = [self.cmd], self.args.pop 
+        
+        
         if self.module != 'easyrun':
             self.pop = self.args.pop[0]  
             if self.module.split('-')[0] == 'prs': 

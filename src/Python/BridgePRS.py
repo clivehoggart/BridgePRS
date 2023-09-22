@@ -83,19 +83,21 @@ class BridgePRS:
             #pop1, pop2 = self.args.popnames 
 
             pc1, pc2 = self.args.pop_config
+            pop1, pop2 = self.args.pop 
+
+
             res_files = [] 
             for i,m in enumerate(modules): 
                 self.args.module, self.args.cmd =  m, 'run'
 
-                if i == 1: self.args.pop_config = [pc2] 
-                else:      self.args.pop_config = [pc1] 
+                if i == 1: self.args.pop, self.args.pop_config = [pop2], [pc2] 
+                else:      self.args.pop, self.args.pop_config = [pop1], [pc1] 
                 
                 self.io.initialize(self.args.module, self.args.cmd) 
                 self.io.start_progress() 
                 self.execute(self.io.pipeline) 
                 if i == 1:  self.args.model_file = str(self.io.pipeline.progress_file) 
                 else:       res_files.append(str(self.io.pipeline.progress_file)) 
-            
             self.args.results = res_files 
             self.args.module, self.args.cmd = 'analyze','combine' 
             self.io.initialize(self.args.module, self.args.cmd) 

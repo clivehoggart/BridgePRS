@@ -27,7 +27,7 @@ def parse_warning(eString, eRule):
     if eRule == 'inferred': sys.stderr.write('BridgeWarning: --'+eString+' not supplied by command line or config file (inferring argument from process of elimination)\n') 
     else:                   sys.stderr.write('BridgeWarning: '+eString+'\n') 
     
-
+    # tgpath pheno_files 
 
 
 
@@ -41,12 +41,18 @@ class BridgeSettings:
     def __init__(self,io):
         self.args, self.io, self.module, self.cmd = io.args, io, io.args.module, io.args.cmd
         self.config = self.load_configs(self.args.pop_config, self.io.bridgedir) 
-        if len(self.args.pop) == 0: self.args.pop = self.config['name'] 
-         
+        if len(self.args.pop) == 0: self.args.pop = self.config['pop'] 
+        for p in self.args.pop:
+            if p not in self.io.ld_ref.keys(): 
+                 bridge_error('Invalid Population Name: '+p) 
+
+
 
     def load_configs(self, configs, bp):
         K = dd(lambda: 'NA')  
-        K['name'] = [] 
+        K['pop'] = [] 
+        
+        
         if len(configs) == 0: return K
         for config_file in configs: 
             lp = "/".join(config_file.split('/')[0:-1]) 
@@ -56,7 +62,9 @@ class BridgeSettings:
                 ln = ln.split('#')[0].strip().split('=') 
                 if len(ln) != 2: continue 
                 k_opt, k1, k2, k_val, k_data = ln[0].lower(), ln[0].lower().split('_')[0], ln[0].lower().split('_')[-1], ln[1], [] 
-                if k_opt == 'name': K[k_opt].append(k_val) 
+                
+                if k_opt not in self.args: bridge_error('Invalid Argument in Configuration File: '+k_opt) 
+                elif k_opt == 'pop': K[k_opt].append(k_val) 
                 elif k2 not in ['file','files','prefix']: K[k_opt] = k_val 
                 else:
                     for kf in k_val.split(','): 
@@ -71,28 +79,24 @@ class BridgeSettings:
                     elif len(k_data) == 1:  K[k_opt] = k_data[0] 
                     else:                   bridge_error('TWO MANY FILES SUPPLIED (MAX 1): '+k_opt+': '+k_val)  
             f_handle.close() 
+        
         return K 
             
 
 
 
     def check(self):
-        self.verify(dd(lambda: dd(bool)), True)  
         ss, bd, pf = self.input.sumstats, self.input.bdata, self.input.phenotypes
-        if len(self.args.pop) == 0: bridge_error('A population name is required --pop') 
         pop_name = self.args.pop[0] 
-        pf_name = pf.fields['NAME'] 
-        config_name = self.io.paths['tmp']+'/'+pop_name+'.'+pf_name+'.config.txt'
+        config_name = self.io.paths['tmp']+'/'+pop_name+'.config.txt'
         w = open(config_name, 'w') 
-        w.write('NAME='+pop_name+'\n')
+        w.write('POP='+pop_name+'\n')
         w.write('SUMSTATS_PREFIX='+ss.prefix+'\n') 
         w.write('SUMSTATS_SUFFIX='+ss.suffix+'\n') 
         w.write('SNP_FILE='+ss.snp_file+'\n') 
         for n,v in ss.fields.items(): w.write('SSF-'+n.upper()+'='+v+'\n')
-        w.write('BFILE_PREFIX='+bd.prefix+'\n') 
-        w.write('ID_FILE='+bd.id_file+'\n') 
-        pheno_files = pf.names 
-        w.write('PHENO_FILES='+pf.names+'\n') 
+        phenotype_files = pf.names 
+        w.write('PHENOTYPE_FILES='+pf.names+'\n') 
         for n,v in pf.fields.items(): 
             if n == 'NAME': w.write('PF-NAME='+v+'\n')
             elif n == 'COVARIATES': w.write('PF_COVARIATES='+v+'\n') 
@@ -101,13 +105,20 @@ class BridgeSettings:
         return 
 
 
-    def verify(self, pipeline_key, CHECK = False):
-        self.input = BridgeParser(self, CHECK).load_inputs(self.config, pipeline_key) 
+    def verify(self, pipeline_key = None):
+        if len(self.args.pop) == 0: bridge_error('A population name is required --pop') 
+        self.pop1, self.pop2 = self.args.pop[0], self.args.pop[-1] 
+        if pipeline_key is None: pipeline_key = dd(lambda: dd(bool))
+        self.input = BridgeInputs(self).load_inputs(self.config, pipeline_key) 
         if len(self.input.warnings) > 0: self.report_warnings(self.input.warnings['invalid'], self.input.warnings['recovered'], self.input.warnings['missing']) 
         self.files, self.prefixes = self.input.f_key['file'], self.input.f_key['prefix']
         self.chromosomes = self.input.sumstats.chromosomes 
         return self 
         
+
+
+
+
     def report_warnings(self, invalids, recovered, missing): 
         for k,k_type,k_found in invalids:
             if k_type == 'prefix':   sys.stderr.write('BridgeWarning: ---'+k+' '+k_found+' is an invalid file prefix (Prefix not required for this job and will be ignored)\n') 
@@ -153,10 +164,11 @@ class BridgeSettings:
 
 
 
-class BridgeParser:
-    def __init__(self, settings, CHECK):
-        self.args, self.module, self.cmd, self.paths, self.CHECK = settings.args, settings.module, settings.cmd, settings.io.paths, CHECK
+class BridgeInputs:
+    def __init__(self, settings):
+        self.args, self.module, self.cmd, self.io, self.paths = settings.args, settings.module, settings.cmd, settings.io, settings.io.paths 
         self.defaults, self.recommended, self.required = self.load_requirements() 
+        
         #self.required = LOAD_REQUIREMENTS(settings.module, settings.cmd) 
         #self.defaults, self.recommended, self.required = LOAD_REQUIREMENTS(settings.module, settings.cmd) 
         self.f_key = dd(lambda: dd(lambda: None))  
@@ -168,13 +180,13 @@ class BridgeParser:
         DEFAULTS['fst'] = 0.15 
         m1, m2 = self.module.split('-')[0], self.module.split('-')[-1] 
         if m1 in ['prs','build','easyrun']: 
-            if m1 == 'prs': REQ =   ['bfile','sumstats','id','snp','pheno','validation'] 
-            else:           REQ =   ['bfile','sumstats','id','snp','pheno'] 
+            if m1 == 'prs': REQ =   ['bfile','sumstats','id','snp','phenotype','validation'] 
+            else:           REQ =   ['bfile','sumstats','id','snp','phenotype'] 
             if m2 in ['port','prior']: REQ.append('model') 
             if self.cmd in ['predict','quantify']: REQ.append('beta') 
             if self.cmd in ['quantify']:           REQ.append('predict') 
         else: 
-            if m1 == 'check' and self.cmd[0:3] != 'req': REQ = ['bfile', 'sumstats','pheno'] 
+            if m1 == 'check' and self.cmd[0:3] != 'req': REQ = ['bfile', 'sumstats','phenotype'] 
         return DEFAULTS, REC, REQ 
         
     
@@ -182,14 +194,23 @@ class BridgeParser:
         
         FK = self.parse_triple(config_key, pipeline_key)
         self.sumstats, self.bdata, self.phenotypes = BridgeData(self,'sumstats'), BridgeData(self, 'bdata'), BridgeData(self, 'phenotypes') 
-
-
         if   'sumstats' in self.required and FK['prefix']['sumstats'] is not None: self.sumstats.ss_fill(FK['prefix'].pop('sumstats'), FK['file'].pop('snp'))
         elif 'sumstats' in self.required:                                          bridge_error('Sumstats Prefix Required --sumstats_prefix (or in config file)')  
-        if   'bfile' in self.required and FK['prefix']['bfile'] is not None:       self.bdata.bf_fill(self.f_key['prefix'].pop('bfile'), self.f_key['file'].pop('id'), CHRS = self.sumstats.chromosomes) 
-        elif 'sumstats' in self.required:                                          bridge_error('Bfile Prefix Required --bfile_prefix (or in config file)')  
-        if   'pheno' in self.required and FK['files']['pheno'] is not None and len(FK['files']['pheno']) > 0: self.phenotypes.ph_fill(self.f_key['files'].pop('pheno'))
-        elif 'sumstats' in self.required:                                                                     bridge_error('Phenotype File(s) Required --pheno_files (or in config file)')  
+        
+        if   'phenotype' in self.required and FK['files']['phenotype'] is not None and len(FK['files']['phenotype']) > 0: self.phenotypes.ph_fill(self.f_key['files'].pop('phenotype'))
+        elif 'sumstats' in self.required:                                                                     bridge_error('Phenotype File(s) Required --phenotype_files (or in config file)')   
+        if 'bfile' in self.required: self.bdata.bf_load(self.sumstats.chromosomes, self.io.ld_ref, self.args.pop[0]) 
+        
+        
+        #print(self.args.tgpath)  
+        #print(self.sumstats, self.sumstats.name, self.sumstats.names, self.sumstats.prefix)      
+        #print(self.args.pop)
+        #print(self.bdata)   Invalid 
+        #print(self.args.tgpath) 
+        #print(self.required) 
+        #sys.exit() pheno
+        #if   'bfile' in self.required and FK['prefix']['bfile'] is not None:       self.bdata.bf_fill(self.f_key['prefix'].pop('bfile'), self.f_key['file'].pop('id'), CHRS = self.sumstats.chromosomes) 
+        #elif 'sumstats' in self.required:                                          bridge_error('Bfile Prefix Required --bfile_prefix (or in config file)')  
         return self  
         
         
@@ -247,78 +268,4 @@ class BridgeParser:
 
 
 
-
-
-
-
-def LOAD_REQUIREMENTS99(module, cmd):
-    DEFAULTS = dd(lambda: None) 
-    DEFAULTS['fst'] = 0.15 
-    REC, REQ = [], [] 
-    if module == 'prs-single': 
-        if   cmd == 'clump':    REQ =   ['bfile','sumstats','id','snp'] 
-        elif cmd == 'beta':     REQ =   ['bfile','sumstats','id','clump'] 
-        elif cmd == 'predict':  REQ =   ['bfile','beta','pheno','validation']
-        elif cmd == 'quantify': REQ =   ['bfile','beta','predict','pheno','validation']
-        else:                   REQ =   ['bfile','sumstats','id','snp','pheno','validation'] 
-    elif module == 'prs-port': 
-        if cmd == 'predict':    REQ =    ['bfile','beta','pheno','validation','model']
-        elif cmd == 'quantify': REQ =   ['bfile','beta','predict','pheno','validation','model']
-        else:                   REQ =   ['bfile','sumstats','id','snp','pheno','validation','model'] 
-    elif module == 'prs-prior': 
-        if   cmd == 'clump':    REQ =   ['bfile','sumstats','id','snp'] 
-        elif cmd == 'beta':     REQ =  ['bfile','sumstats','id','clump','model'] 
-        elif cmd == 'predict':  REQ =   ['bfile','beta','pheno','validation','model']
-        elif cmd == 'quantify': REQ =   ['bfile','beta','predict','pheno','validation','model']
-        else:                   REQ =   ['bfile','sumstats','id','snp','pheno','validation','model'] 
-    
-    elif module == 'build-model': 
-        if   cmd == 'clump':     REQ =    ['bfile','sumstats','id','snp','clump-field','clump-snp-field'] 
-        elif cmd == 'beta':      REQ =    ['bfile','sumstats','id','clump'] 
-        elif cmd == 'optimize':  REQ =    ['bfile','beta','pheno']
-        elif cmd == 'prior':     REQ =    ['bfile','beta','optimize','pheno']
-        else:                    REQ =   ['bfile','sumstats','id','snp','pheno','clump-field','clump-snp-field'] 
-    return DEFAULTS, REC, REQ 
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-def LOAD_CONFIGS99(configs, bp, X='NA'):
-    K = dd(lambda: 'NA')  
-    K['name'] = [] 
-    if len(configs) == 0: return K
-    for config_file in configs: 
-        lp = "/".join(config_file.split('/')[0:-1]) 
-        try:     f_handle = open(config_file) 
-        except:  bridge_error('Invalid filepath supplied: '+config_file) 
-        for ln in f_handle: 
-            ln = ln.split('#')[0].strip().split('=') 
-            if len(ln) != 2: continue 
-            k_opt, k1, k2, k_val, k_data = ln[0].lower(), ln[0].lower().split('_')[0], ln[0].lower().split('_')[-1], ln[1], [] 
-            if k_opt == 'name': K[k_opt].append(k_val) 
-            elif k2 not in ['file','files','prefix']: K[k_opt] = k_val 
-            else:
-                for kf in k_val.split(','): 
-                    for kd in kf.split(): 
-                        kp, kn = "/".join(kd.split('/')[0:-1]), kd.split('/')[-1] 
-                        if os.path.exists(kp):          fn = os.path.abspath(kp)+'/'+kn 
-                        elif os.path.exists(lp+'/'+kp): fn = os.path.abspath(lp+'/'+kp)+'/'+kn 
-                        elif os.path.exists(bp+'/'+kp): fn = os.path.abspath(bp+'/'+kp)+'/'+kn 
-                        else:                           bridge_error('INVALID PATH SUPPLIED IN CONFIG FILE: '+k_opt+': '+kd)  
-                        k_data.append(fn) 
-                if k2 == 'files':       K[k_opt] = k_data 
-                elif len(k_data) == 1:  K[k_opt] = k_data[0] 
-                else:                   bridge_error('TWO MANY FILES SUPPLIED (MAX 1): '+k_opt+': '+k_val)  
-        f_handle.close() 
-    return K 
-        
 

@@ -33,12 +33,13 @@ class BridgeMore:
         else:                  self.pop = pop_names[0] 
         if cmd == 'result':  self.run_plotter(results, path, cols = len(results)) 
         else:
+             
             comboPath = path + '/prs-combined_'+self.pop 
             results.append(self.run_combine(results, comboPath)) 
             
             if not self.args.noPlots: 
                 self.io.progress.start_minor('Plotting Results') 
-                self.run_plotter(results, comboPath, cols = 5) 
+                self.run_plotter(results, comboPath, path, cols = 5) 
             else: sys.stderr.write('\nSkipping Plotting Step!\n') 
             return  
                 
@@ -56,15 +57,22 @@ class BridgeMore:
         return br 
 
     
-    def run_plotter(self, BR, path, cols =1): 
-        self.bPlot = BridgePlot(self.args, self.pop, prefix = path).setup(cols) 
+    def run_plotter(self, BR, path, summaryPath = None, cols =1): 
+        self.bPlot = BridgePlot(self.args, self.pop, prefix = path, summaryPath = summaryPath).setup(cols) 
+        
         for i,br in enumerate(BR): 
             self.bPlot.set_result(br,i) 
-            self.bPlot.add_prs() 
-            self.bPlot.add_table(my_key = 'Ridge') 
-            if i == 3: 
-                self.bPlot.add_prs('weighted', my_title = 'prs-weighted') 
-                self.bPlot.add_table(my_key = 'Ridge.w') 
+            if i < 3: 
+                self.bPlot.add_prs() 
+                self.bPlot.add_table(my_key = 'Ridge') 
+            else: 
+                z=3
+                #JOB2: Plotting Results...1000 0 dict_keys(['names', 'pheno', 'prs.Stage1', 'prs.Stage2', 'prs.Stages1+2', 'prs.weighted', 'prs']) prs
+                self.bPlot.add_prs('prs.Stages1+2', my_title = 'prs-combined') 
+                self.bPlot.add_table(my_key = 'Stage1+2') 
+                
+                self.bPlot.add_prs('prs.weighted', my_title = 'prs-weighted') 
+                self.bPlot.add_table(my_key = 'Weighted') 
         self.bPlot.finish_plot() 
         return 
 
@@ -211,10 +219,11 @@ class BridgeResult:
 
 
 class BridgePlot: 
-    def __init__(self, args, pop, prefix):  
+    def __init__(self, args, pop, prefix, summaryPath = None ):  
+        
         self.args, self.pop, self.prefix, self.methods  = args, pop, prefix+'/plot_'+pop, []  
-        
-        
+        if summaryPath != None: self.summaryPath = summaryPath + '/'+pop+'_summary'
+        else:                   self.summaryPath = None 
         
 
 
@@ -241,6 +250,9 @@ class BridgePlot:
         else:                                   self.p_name = self.prefix+'_prs_combined_runs.png'
         plt.subplots_adjust(left=0.04, bottom=0.01, right=0.96, top=0.93,wspace=0.20,hspace=0.20) 
         plt.savefig(self.p_name,dpi=200) 
+        
+        if self.summaryPath != None: plt.savefig(self.summaryPath+'.png') 
+        
         plt.clf() 
         plt.close() 
         return
@@ -251,9 +263,12 @@ class BridgePlot:
         self.ax_index += 1
         X = self.R.preds['pheno'] 
         Y = self.R.preds[k]
-        
-        if len(X) == len(Y): 
-            ax.scatter(X,Y)
+         
+        if len(X) == len(Y): ax.scatter(X,Y)
+
+        else: 
+            print(len(X), len(Y), self.R.preds.keys(), k) 
+
         ax.set_xticks([]) 
         ax.set_yticks([]) 
         ax.set_xlabel('Phenotypes', fontsize = self.fs2) 
@@ -263,7 +278,7 @@ class BridgePlot:
         return
 
     def add_table(self, my_key = None): 
-
+        
         ax = self.axes[self.ax_index] 
         self.ax_index += 1 
         dt = DataTable(self, ax) 
@@ -308,12 +323,17 @@ class DataTable:
     def add_prs_result(self, R, fs1=18, fs2=14, fs3 = 12, key = None): 
         vk = ['Est', '2.5%', '97.5%', 'cv.dev', 'cv.dev.sd']
         data_key = {rk: [round(R.var_key[rk][v],4) for v in vk] for rk in R.var_key.keys()} 
-        header = ['variance\nexplained','95\%\nConfidence\nInterval', 'CV\ndeviations', 'CV\ndeviation\nstd'] 
+        header = ['variance\nexplained','95%\nConfidence\nInterval', 'CV\ndeviations', 'CV\ndeviation\nstd'] 
         self.add_row(header, COLORS=['whitesmoke' for h in header], X = (0,100), Y = (50,100), FS = fs2, WIDTHS = [22,34,22,22])         
         
         if 'Ridge' in data_key: 
             my_data = data_key[key] 
             self.add_row(data_key[key], COLORS=['snow' for k in data_key[key]], X = (0,100), Y = (20,50), FS = fs2, WIDTHS = [22,17,17,22,22])         
+        else: 
+            self.add_row(data_key[key], COLORS=['snow' for k in data_key[key]], X = (0,100), Y = (20,50), FS = fs2, WIDTHS = [22,17,17,22,22])         
+        
+
+
         self.ax.axis('off') 
         return 
 

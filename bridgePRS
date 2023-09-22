@@ -41,12 +41,13 @@ class MyParser(argparse.ArgumentParser):
         return x.upper()
 
     def help_str(self,module):
-        if module == 'prs':           return (HELP_FORMAT % ('Single Population PRS (Ridge Regression)',    './bridgePRS prs-single  run -o out --popname africa --pop_config afro_pop.config')) 
+        if module == 'prs-single':    return (HELP_FORMAT % ('Single Population PRS (Ridge Regression)',    './bridgePRS prs-single  run -o out --popname africa --pop_config afro_pop.config')) 
         if module == 'build':         return (HELP_FORMAT % ('Build large pop model to allow (port/bridge)','./bridgePRS build-model run -o out --popname euro   --pop_config euro_pop.config'))
         if module == 'prs-port':      return (HELP_FORMAT % ('Port PRS snp-weights from large to small pop','./bridgePRS prs-port    run -o out --popname afr    --model_file euro.model')) 
         if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors from large to small pop',   './bridgePRS prs-prior   run -o out --popname afr    --model_file euro.model'))
         if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','./bridgePRS analyze result -o out --results out/afr.result')) 
-        if module == 'easyrun':       return (HELP_FORMAT  % ('run','Run All Five Modules Consecutively (for advanced users)')) 
+        if module == 'easyrun':       return (HELP_FORMAT  % ('Run Following Five Modules Consecutively:','./bridgePRS easyrun go -o out --pop_config afro_pop.config eur_pop.config')) 
+        if module == 'check':       return (HELP_FORMAT  % ('Check system requirements or input data','./bridgePRS check data --pop_config afro_pop.config')) 
 
     def sub_help_str(self, cmd, module=None):
         SUB_HELP_FORMAT="%-80s %10s"
@@ -61,6 +62,8 @@ class MyParser(argparse.ArgumentParser):
         elif cmd == 'prior': HS = ('Test Predictions,Produce SNP Prior Proability Matrix','') 
         elif cmd == 'result': HS = ('Analyze PRS Results','') 
         elif cmd == 'combine': HS = ('Combine And Analyze PRS Results','') 
+        elif cmd == 'requirements': HS = ('Check System Requirements','') 
+        elif cmd == 'data':         HS = ('Check Input Data','') 
         return(SUB_HELP_FORMAT % HS) 
 
 
@@ -69,7 +72,7 @@ class MyParser(argparse.ArgumentParser):
 
 
 
-
+# large 
 
 
 
@@ -92,7 +95,7 @@ if __name__ == '__main__':
     Global =           MyParser(formatter_class=argparse.RawTextHelpFormatter,add_help=False)
     Global.formatter_class = argparse.RawTextHelpFormatter
     Global.add_argument('-o',             dest='outpath',      action='store',      type=parser.dir_path,default='out',help='Output path for bridgePRS') 
-    Global.add_argument('-p', '--pop','--pops',    dest='pop',      nargs='+',      metavar='', type=parser.force_caps,default=[],required=False,help='Population Name(s)') 
+    Global.add_argument('--pop','--pops',    dest='pop',      nargs='+',      metavar='', type=parser.force_caps,default=[],required=False,help='Population Name(s)') 
     Global.add_argument('--cores',        dest='cores',        action='store',      type=int,default=0,metavar='',help='By default bridgePRS parralelized across (n-1) cores.') 
     Global.add_argument('--verbose',      dest='verbose',      action='store_true', default=False,  help='Toggle Verbose Mode On')
     Global.add_argument('--verify',       dest='verify',        action='store_true',   default=False,  help='Toggle Verify Mode On')
@@ -100,37 +103,54 @@ if __name__ == '__main__':
     Global.add_argument('--noPlots',      dest='noPlots',      action='store_true', default=False,  help='Skip Post-Pipeline Plotting Analysis') 
     Global.add_argument('--silent',       dest='silent',       action='store_true', default=False,  help=argparse.SUPPRESS) 
     #Global.add_argument('--spec', '--specifications',       dest='spec',       nargs = '+',         type=str,default=[],help='Axillary configuration/specification files') 
-    Global.add_argument('--pop_config',   dest='pop_config',   nargs = '+',           metavar='', type=str,default=[],help='Population configuration file(s)') 
+    Global.add_argument('--pop_config','--pop_configs',   dest='pop_config',   nargs = '+',           metavar='', type=str,default=[],help='Population configuration file(s)') 
     Global.add_argument('--platform',     dest='platform',     action='store',      type=parser.find_platform,  default=parser.find_platform("NA"), help='Force platform (Linux or MacOS)') 
     Global.add_argument('--rPath',        dest='rpath',        action='store',      type=str,  default='src/Rscripts', help=argparse.SUPPRESS) 
     Global.add_argument('--plinkPath',    dest='plinkpath',    action='store',      type=str,  default='src/Python/Xtra', help=argparse.SUPPRESS) 
-    Global.add_argument('--tgpath',       dest='tgpath',       action='store',      type=str,  default='src/1kgData/', help=argparse.SUPPRESS) 
+    Global.add_argument('--ldPath',       dest='ldpath',       nargs='+',      type=str,   metavar = '', default=[], help=argparse.SUPPRESS) 
+    #Global.add_argument('--ldPath',       dest='ldpath',       action='store',      type=str,  default='data/kg_sample/', help=argparse.SUPPRESS) 
     
     
     
     Single = MyParser(add_help=False)
     Single.formatter_class = argparse.RawTextHelpFormatter
     
-    Single.add_argument('--bfile_prefix',   dest = 'bfile_prefix',   action='store',type=str,default=None,metavar='',help='path to bfile prefix') 
+    #Single.add_argument('--bfile_prefix',   dest = 'bfile_prefix',   action='store',type=str,default=None,metavar='',help='path to bfile prefix') 
+    #Single.add_argument('--id_file',        dest = 'id_file',        action='store',type=str,metavar='',default=None,  help='sample id file') 
     Single.add_argument('--sumstats_prefix', dest = 'sumstats_prefix',action='store',type=str,default=None,metavar='',help='path to sumstats file prefixes') 
     Single.add_argument('--snp_file',       dest = 'snp_file',       action='store',type=str,metavar='',default=None,help='snp file') 
-    Single.add_argument('--id_file',        dest = 'id_file',        action='store',type=str,metavar='',default=None,  help='sample id file') 
-    Single.add_argument('--pheno_files',    dest = 'pheno_files',    nargs = '+', action = 'store', metavar='',type=str, default=[], help = 'phenotype test/validation data') 
-    
+    Single.add_argument('--phenotype_files',    dest = 'phenotype_files',    nargs = '+', action = 'store', metavar='',type=str, default=[], help = 'phenotype test/validation data') 
+   
+
+    #SUMSTATS_PREFIX=pop_africa/sumstats/afr.chr
+    #SNP_FILE=pop_africa/snps.txt
+    #PHENO_FILES=pop_africa/phenotypes/afr_test.dat,pop_africa/phenotypes/afr_validation.dat
+    #SSF-P=P
+    #SSF-SNPID=ID
+    #SSF-SE=SE
+    #SSF-SS=OBS_CT
+    #SSF-BETA=BETA
+    #SSF-REF=REF
+    #SSF-ALT=A1
+    #SSF-MAF=A1_FREQ
+    #PF-NAME=y.binary
+
+
+
     Single.add_argument('--clump_prefix',    dest ='clump_prefix',    action = 'store', type=str, metavar='', default=None, help = 'prefix for files generated by clump step') 
     Single.add_argument('--beta_prefix',     dest ='beta_prefix',     action = 'store', type=str, metavar='', default=None, help = 'prefix for files generated by beta step') 
     Single.add_argument('--predict_prefix',  dest ='predict_prefix',  action = 'store', type=str, metavar='', default=None, help = 'prefix for files generated by predict step') 
     Single.add_argument('--sumstats_suffix', dest ='sumstats_suffix', action = 'store', type=str, metavar='', default=None, help = 'Sumstats Suffix') 
-    Single.add_argument('--ssf-p',           dest='ssf-p'     ,action='store',type=str,metavar='',   default=None,          help='Sumstats field: P-value') 
-    Single.add_argument('--ssf-snpid',       dest='ssf-snpid', action='store',type=str,metavar='',   default=None,          help='Sumstats field: snpID') 
-    Single.add_argument('--ssf-se',          dest='ssf-se',    action='store',type=str,metavar='',   default=None,          help='Sumstats field: standard error') 
-    Single.add_argument('--ssf-ss',          dest='ssf-ss',    action='store',type=str,metavar='',   default=None,          help='Sumstats Field: Sample Size') 
-    Single.add_argument('--ssf-beta',        dest='ssf-beta',  action='store',type=str,metavar='',   default=None,          help='Sumstats Field: beta') 
-    Single.add_argument('--ssf-ref',         dest='ssf-ref',   action='store',type=str,metavar='',   default=None,          help='Sumstats Field: reference allele') 
-    Single.add_argument('--ssf-alt',         dest='ssf-alt',   action='store',type=str,metavar='',   default=None,          help='Sumstats Field: alt allele') 
-    Single.add_argument('--ssf-maf',         dest='ssf-maf',   action='store',type=str,metavar='',   default=None,          help='Sumstats Field: MAF') 
-    Single.add_argument('--pf-name',        dest='pf-name',                action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: name') 
-    Single.add_argument('--pf-covariates',  dest='pf-covariates',   action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: covariates') 
+    Single.add_argument('--ssf-p',           dest='ssf-p'     ,action='store',type=str,metavar='',   default='P',          help='Sumstats field: P-value') 
+    Single.add_argument('--ssf-snpid',       dest='ssf-snpid', action='store',type=str,metavar='',   default='ID',          help='Sumstats field: snpID') 
+    Single.add_argument('--ssf-se',          dest='ssf-se',    action='store',type=str,metavar='',   default='SE',          help='Sumstats field: standard error') 
+    Single.add_argument('--ssf-ss',          dest='ssf-ss',    action='store',type=str,metavar='',   default='OBS_CT',          help='Sumstats Field: Sample Size') 
+    Single.add_argument('--ssf-beta',        dest='ssf-beta',  action='store',type=str,metavar='',   default='BETA',          help='Sumstats Field: beta') 
+    Single.add_argument('--ssf-ref',         dest='ssf-ref',   action='store',type=str,metavar='',   default='REF',          help='Sumstats Field: reference allele') 
+    Single.add_argument('--ssf-alt',         dest='ssf-alt',   action='store',type=str,metavar='',   default='A1',          help='Sumstats Field: alt allele') 
+    Single.add_argument('--ssf-maf',         dest='ssf-maf',   action='store',type=str,metavar='',   default='A1_FREQ',          help='Sumstats Field: MAF') 
+    Single.add_argument('--phenotype',        dest='phenotype',                action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: name') 
+    Single.add_argument('--covariates',  dest='covariates',   action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: covariates') 
     Single.add_argument('--max_clump_size',  dest='max_clump_size',   action='store',type=int , default =  '0', metavar='',  help='Max Size for Clumping') 
     #Single.add_argument('--min_maf',  dest='min_maf',   action='store',type=float , default = 0.001, metavar='',  help='Clump minumum MAF') 
     Single.add_argument('--thinned_snplist', dest='thinned_snplist', action='store', type = str, default = '0', metavar = '', help = 'Thinned snp list for large clumps') 
@@ -145,6 +165,33 @@ if __name__ == '__main__':
     Bridge.formatter_class = argparse.RawTextHelpFormatter
     Bridge.add_argument('--model_file', dest = 'model_file', action = 'store', type=str, default=None, metavar='',help = 'large population model file') 
     Bridge.add_argument('--fst', dest='fst',action='store',type=str,metavar='',default=0.15,help='fst value') 
+    
+    Easyrun = MyParser(add_help=False, formatter_class = argparse.RawTextHelpFormatter)
+    #Easyrun.add_argument('--pop_configs',  nargs=2,dest='pop_configs',  type=str,required=True,  help='Population Files')  
+    #Easyrun.add_argument('--pops',  nargs=2,   dest='popnames',      type=parser.force_caps,required=True,   help='Population Names')  
+    Easyrun.add_argument('--results',  nargs='+',   dest='results',      type=str, default=[],   help='One or More PRS Result Files')  
+    
+    
+    # optimize 
+    #Check = MyParser(add_help=False, formatter_class = argparse.RawTextHelpFormatter)
+    #Check.add_argument('--pop_configs',  nargs=2,dest='pop_configs',  type=str,required=True,  help='Population Files')  
+    #Check.add_argument('--pops',  nargs=2,   dest='popnames',      type=parser.force_caps,required=True,   help='Population Names')  
+    #Check.add_argument('--results',  nargs='+',   dest='results',      type=str, default=[],   help='One or More PRS Result Files')  
+    check             = subs.add_parser('check', help=parser.help_str('check')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    check.required    = True
+    requirements                  = check.add_parser('requirements',      parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('requirements'))
+    pop                           = check.add_parser('data',              parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('data'))
+    
+
+    
+    
+    
+    
+    easyrun             = subs.add_parser('easyrun', help=parser.help_str('easyrun')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    easyrun.required    = True
+    go                  = easyrun.add_parser('go',      parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('go'))
+    
+    
 
         
     # Option 1 - Single Pop, Ridge Regression # 
@@ -200,24 +247,10 @@ if __name__ == '__main__':
     result            = analyze.add_parser('result',       parents=[Global,Analyze],     help=parser.sub_help_str('result'))
     combine            = analyze.add_parser('combine',     parents=[Global,Analyze],     help=parser.sub_help_str('combine'))
 
-    Easyrun = MyParser(add_help=False, formatter_class = argparse.RawTextHelpFormatter)
-    #Easyrun.add_argument('--pop_configs',  nargs=2,dest='pop_configs',  type=str,required=True,  help='Population Files')  
-    #Easyrun.add_argument('--pops',  nargs=2,   dest='popnames',      type=parser.force_caps,required=True,   help='Population Names')  
-    Easyrun.add_argument('--results',  nargs='+',   dest='results',      type=str, default=[],   help='One or More PRS Result Files')  
-    easyrun             = subs.add_parser('easyrun', help=parser.help_str('easyrun')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    easyrun.required    = True
-    go                  = easyrun.add_parser('go',      parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('go'))
-    
-    
-    Check = MyParser(add_help=False, formatter_class = argparse.RawTextHelpFormatter)
-    #Check.add_argument('--pop_configs',  nargs=2,dest='pop_configs',  type=str,required=True,  help='Population Files')  
-    Check.add_argument('--pops',  nargs=2,   dest='popnames',      type=parser.force_caps,required=True,   help='Population Names')  
-    Check.add_argument('--results',  nargs='+',   dest='results',      type=str, default=[],   help='One or More PRS Result Files')  
-    check             = subs.add_parser('check', help=parser.help_str('easyrun')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    check.required    = True
-    requirements                  = check.add_parser('requirements',      parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('requirements'))
-    pop                           = check.add_parser('pop',      parents=[Global,Single,Build,Bridge,Easyrun], help=parser.sub_help_str('pop'))
-    
+
+
+
+
 
 ########################################################################################################################################################################
 

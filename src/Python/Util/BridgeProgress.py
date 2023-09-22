@@ -33,8 +33,8 @@ class BridgeProgress:
         self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         self.loghandle = open(self.logfile,'w') 
         self.FILE, self.log = True, [[]] 
-        self.write('\nBridgePRS Begins at '+LOCALTIME+' \n') 
-        if self.command_line != None:  self.write('Bridge Command-Line: '+' '.join(self.command_line)+'\n\n')
+        self.write('BridgePRS Begins at '+LOCALTIME+' \n') 
+        if self.command_line != None:  self.write('Bridge Command-Line: '+' '.join(self.command_line)+'\n')
         return self 
     
 
@@ -48,7 +48,7 @@ class BridgeProgress:
             self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
             self.loghandle = open(self.logfile,'w') 
             self.FILE, self.log = True, [[]] 
-            self.write('BridgePRS Begins at '+LOCALTIME+' \n\n') 
+            self.write('BridgePRS Begins at '+LOCALTIME+'\n') 
             if self.command_line != None:  self.write('Bridge Command-Line: '+' '.join(self.command_line)+'\n')
             self.INIT = False  
         self.update_indent, self.update_len = '', 0 
@@ -96,7 +96,7 @@ class BridgeProgress:
 
     def show_settings(self,settings):
         blank2 = self.h_blank+'  ' 
-        kFiles, kPrefixes, kSkip = [], [], ['config','prefix','file','module','cmd','dataset','ssf','pf','sumstats_suffix','pheno_files'] 
+        kFiles, kPrefixes, kSkip = [], [], ['config','prefix','file','module','cmd','dataset','ssf','pf','sumstats_suffix','phenotype_files'] 
         if 'files' in vars(settings):
             kFiles     = [[a,b] for a,b in settings.files.items() if b is not None and a not in ['clumpz']] 
             kPrefixes  = [[a,b] for a,b in settings.prefixes.items() if b is not None and a not in ['clumpz']]
@@ -253,12 +253,12 @@ class BridgeProgress:
 
         self.new_bk = self.sub_blank+'      ' 
         self.write('\n'+self.new_bk+'Complete: Population Data Successfully Validated'+'\n') 
-        self.write(self.new_bk+'Config File Location: '+CONFIG_FILE+'\n') 
+        self.write(self.new_bk+'Temporary Config File Location: '+CONFIG_FILE+'\n') 
         sys.exit() 
 
 
 
-    def show_requirements(self, RK): 
+    def show_requirements(self, RK):
         self.new_bk = self.sub_blank+'      ' 
         self.write('..................................................\n')  
         #if not RK['python_loc']: req_error('Python not found, Please Install Python')  
@@ -387,7 +387,7 @@ class BridgeProgress:
                         
     
 
-    def fail99(self, MSG, notes = []): 
+    def fail(self, MSG, notes = []): 
         self.active = True
         self.write('ERROR!\n') 
         self.write(self.jblank+MSG+'\n') 

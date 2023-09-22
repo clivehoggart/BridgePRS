@@ -18,8 +18,8 @@ def parse_error(eString, SAVE=False):
     return  
             
 def parse_warning(eString, eRule): 
-    if eRule == 'inferred': sys.stderr.write('                         BridgeWarning: --'+eString+' not supplied by command line or config file (inferring argument from process of elimination)\n') 
-    else:                   sys.stderr.write('                         BridgeWarning: '+eString+'\n') 
+    if eRule == 'inferred': sys.stderr.write('                       BridgeWarning: --'+eString+' not supplied by command line or config file (inferring argument from process of elimination)\n') 
+    else:                   sys.stderr.write('                       BridgeWarning: '+eString+'\n') 
     
 
 
@@ -39,7 +39,7 @@ def parse_warning(eString, eRule):
 
 class BridgeData: 
     def __init__(self, bp, name):
-        self.check, self.paths, self.args, self.name = bp.CHECK, bp.paths, bp.args, name
+        self.paths, self.args, self.name = bp.paths, bp.args, name
         self.names, self.chromosomes, self.fields, self.map = 'NA', [], {}, dd(list) 
         self.VALID, self.BYCHR = False, False 
         
@@ -59,7 +59,6 @@ class BridgeData:
         return suffix_key 
     
 
-
     def stream_file_cols(self, fp, COLS = [0], HEADER = False): 
         s_data = [] 
         if fp.split('/')[-1] == 'gz': gf = gzip.open(fp, 'rt') 
@@ -72,26 +71,17 @@ class BridgeData:
 
 
 
-    def get_file_info(self, fp, RULE = 'NA', KEY = 'NA', GZ=False): 
-        if GZ:           gf = gzip.open(fp, 'rt') 
-        else:            gf = open(fp, 'rt') 
-        header = gf.readline().split() 
-        if RULE.upper() == 'HEADER': RT = list(set(header)) 
-        else: 
-            K  = {i: [h] for i,h in enumerate(header)}  
-            for line in gf: 
-                for j,x in enumerate(line.split()): K[j].append(x) 
-            if RULE.upper() == 'SUMSNPS': RT =  K[header.index(KEY)] 
-            elif RULE.upper() ==   'BIM': RT = K[1] 
-            elif RULE.upper() ==   'FAM': RT = K[0] 
-            else:                         parse_error('fileGET') 
-        gf.close() 
-        return(RT) 
     
 
 
+
+
+
+
+
+
     
-    def confirm_helper_file(self, fp, fd, fstr, RULE = 'NA'): 
+    def confirm_helper_file99(self, fp, fd, fstr, RULE = 'NA'): 
         if fp is not None: return fp 
         w = open(self.paths['tmp']+'/'+fstr,'w') 
         for i,n in enumerate(fd): 
@@ -99,15 +89,32 @@ class BridgeData:
         w.close() 
         return self.paths['tmp']+'/'+fstr 
 
-                
+    
+    #################################### BF STUFF   #######################################
+    
+    
+    
+    def bf_load(self, chromosomes, ld_ref, pop_name): 
+        
+        
+        self.BYCHR = True 
+        
+        self.id_file, self.prefix, b_key = ld_ref[pop_name] 
+        
+        for c in b_key: 
+            if c in chromosomes: self.map[c] = b_key[c] 
+        
+        self.X_fields = ['--clump-field',vars(self.args)['ssf-p'], '--clump-snp-field',vars(self.args)['ssf-snpid']] 
 
-    def bf_fill(self, prefix, id_file, CHRS = []):  
+        return  
+        
+
+    def bf_fill99(self, prefix, id_file, CHRS = []):  
         self.prefix, self.id_file, self.VALID, suffix_list = prefix, id_file, True, ['.bed','.bim','.fam'] 
         self.validate_and_collect_prefix_files(prefix) 
         suffix_pairs     = self.find_suffix_matches(suffix_list) 
         for sf in suffix_list: 
             for f_chr, fp in suffix_pairs[sf]: self.map[f_chr].append(fp) 
-         
         for k,ft in self.map.items(): 
             k_ext = [fx.split('.')[-1] for fx in ft] 
             k_path = list(set([".".join(fx.split('.')[0:-1]) for fx in ft]))
@@ -123,18 +130,6 @@ class BridgeData:
 
 
 
-
-    def bf_get_id_file(self): 
-        parse_warning('--id_file not supplied, attempting to use all ids','missing') 
-        id_names = [] 
-        for k,ft in self.map.items(): 
-            id_names = list(set(id_names + self.stream_file_cols(ft+'.fam', [0,1]))) 
-        id_names = sorted([id_names[i] for i in range(0,len(id_names),2)]) 
-        id_file = self.paths['tmp']+'/ids.txt'
-        w = open(id_file,'w') 
-        for x in id_names:  w.write(x.split(',')[0]+' '+x.split(',')[1]+'\n') 
-        w.close()
-        return id_file 
         
         
 
@@ -176,7 +171,7 @@ class BridgeData:
     def ss_get_snpfile(self): 
         parse_warning('--snp_file not supplied, attempting to use all snps','missing') 
         snp_names = [] 
-        for f_chr, fp in self.map.items():  snp_names.extend(self.get_file_info(fp, RULE = 'SUMSNPS', KEY = self.fields['SNPID'], GZ = True)[1::])
+        for f_chr, fp in self.map.items():  snp_names.extend(self.ss_get_file_info(fp, RULE = 'SUMSNPS', KEY = self.fields['SNPID'], GZ = True)[1::])
         snp_file = self.paths['tmp']+'/snps.txt' 
         w = open(snp_file,'w') 
         for snp in snp_names:  w.write(snp+'\n') 
@@ -184,6 +179,21 @@ class BridgeData:
         return snp_file 
   
 
+    def ss_get_file_info(self, fp, RULE = 'NA', KEY = 'NA', GZ=False): 
+        if GZ:           gf = gzip.open(fp, 'rt') 
+        else:            gf = open(fp, 'rt') 
+        header = gf.readline().split() 
+        if RULE.upper() == 'HEADER': RT = list(set(header)) 
+        else: 
+            K  = {i: [h] for i,h in enumerate(header)}  
+            for line in gf: 
+                for j,x in enumerate(line.split()): K[j].append(x) 
+            if RULE.upper() == 'SUMSNPS': RT =  K[header.index(KEY)] 
+            elif RULE.upper() ==   'BIM': RT = K[1] 
+            elif RULE.upper() ==   'FAM': RT = K[0] 
+            else:                         parse_error('fileGET') 
+        gf.close() 
+        return(RT) 
 
 
     #def split_suffix_matches(self, sumstat_file): 
@@ -292,31 +302,50 @@ class BridgeData:
     
     
     
-    def ph_fill(self, pheno_files):
+    def ph_fill(self, phenotype_files):
         self.VALID = True
-        self.files = pheno_files  
-        self.X_fields = ['--test.data',pheno_files[0]] 
-        if pheno_files[0] == pheno_files[-1]: 
-            self.names = pheno_files[0] 
+        self.type = 'binary'  
+        self.files, self.cols = phenotype_files, dd(list) 
+        self.X_fields = ['--test.data',phenotype_files[0]] 
+        if phenotype_files[0] == phenotype_files[-1]: 
+            self.names = phenotype_files[0] 
             self.X_fields.extend(['--valid.data','0']) 
         else:                                 
-            self.names = pheno_files[0]+','+pheno_files[1] 
-            self.X_fields.extend(['--valid.data',pheno_files[1]]) 
+            self.names = phenotype_files[0]+','+phenotype_files[1] 
+            self.X_fields.extend(['--valid.data',phenotype_files[1]]) 
+      
        
-        for v in vars(self.args): 
-            if v.split('-')[0] in ['pf']: 
-                nv, kV = v.split('-')[-1].upper(), vars(self.args)[v] 
-                if kV is not None: 
-                    self.fields[nv] = kV 
-                    if nv == 'NAME':         self.X_fields.extend(['--pheno.name',kV])
-                    elif nv == 'COVARIATES': self.X_fields.extend(['--cov.names',kV]) 
+        if self.args.module != 'check' and self.args.phenotype is None: bridge_error('Phenotype field required (--phenotype)') 
+        for i,fn in enumerate(self.files): 
+            f = open(fn, 'rt') 
+            lp = f.readline().split() 
+            if i == 0: self.header, lz = [x for x in lp] , ",".join(lp) 
+            elif ",".join(lp) != lz: bridge_error('Phenotype File Headers Do Not Match: '+lz+' AND '+",".join(lp))
+            for k,line in enumerate(f):
+                line = line.split() 
+                for j,c in enumerate(self.header): self.cols[c].append(line[j]) 
+                if k > 100: break 
+
+
+        if self.args.phenotype is not None: 
+            self.fields['NAME'] = self.args.phenotype 
+            self.X_fields.extend(['--pheno.name',self.args.phenotype]) 
+            if self.args.phenotype not in self.header: bridge_error('Invalid phenotype field name(s) supplied '+self.args.phenotype+', Available Fields: '+','.join(self.header)) 
+            if len((list(set(self.cols[self.args.phenotype])))) > 2:  self.type = 'continuous' 
+            else:                                                     self.X_fields.extend(['--binary','1']) 
+
+
+        if self.args.covariates is not None: 
+            self.fields['COVARIATES'] = self.args.covariates
+            self.X_fields.extend(['--cov.names',self.args.covariates]) 
+            for c in self.args.covariates.split(','): 
+                if c not in self.header:  bridge_error('Invalid covariate field name(s) supplied '+self.args.covariates+', Available Fields: '+','.join(self.header)) 
         
-        if 'NAME' not in self.fields: bridge_error('Phenotype field required (--pf-name)') 
-        self.ph_verify_fields() 
-        if self.type == 'binary': self.X_fields.extend(['--binary','1']) 
+        
+        
         return self 
-        #if self.args.verify:      self.ph_verify_fields() 
-        # print   
+
+
 
     def ph_verify_fields(self): 
         p_types = []
@@ -325,6 +354,8 @@ class BridgeData:
             lp = f.readline().split() 
             if i == 0: cands = [x for x in lp] 
             else:      cands = [x for x in lp if x in cands]
+
+            print(cands) 
             for j,c in enumerate(lp):
                 if c == self.fields['NAME']: 
                     nf = j 
