@@ -262,7 +262,11 @@ class BridgeProgress:
         self.new_bk = self.sub_blank+'      ' 
         self.write('..................................................\n')  
         #if not RK['python_loc']: req_error('Python not found, Please Install Python')  
-        self.write(self.new_bk+'Python Found: '+RK['python_loc']+'\n') 
+        
+        if RK['python_loc']: self.write(self.new_bk+'Python Found: '+RK['python_loc']+'\n') 
+        else:                self.write(self.new_bk+'Python: Not Found, (Install Python to use wrapper)\n') 
+
+
         if RK['matplotlib']: self.write(self.new_bk+'Matplotlib: Found\n') 
         else:                self.write(self.new_bk+'Matplotlib: Not Found, (Install Matplotlib to produce plots)\n') 
         if not RK['R_loc']: req_error('R not found, Please Install R')  

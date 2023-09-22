@@ -104,17 +104,18 @@ class BridgeIO:
             check_log = self.paths['tmp']+'/bridge.validation.out' 
             check_err = self.paths['tmp']+'/bridge.validation.err' 
             pp = self.programs['check_availability'] 
-            os.system('echo -n \"plink_loc \"  > '+check_log+' 2> '+check_err) 
-            os.system('which plinki >> '+check_log+' 2>> '+check_err) 
-            os.system('echo \"\" >> '+check_log+' 2>> '+check_err) 
-            os.system('echo -n \"python_loc \"  >> '+check_log+' 2>> '+check_err) 
+            os.system('echo plink_loc   > '+check_log+' 2> '+check_err) 
+            os.system('which plink >> '+check_log+' 2>> '+check_err) 
+            os.system('echo   >> '+check_log+' 2>> '+check_err) 
+            os.system('echo python_loc   >> '+check_log+' 2>> '+check_err) 
             os.system('which python3 >> '+check_log+' 2>> '+check_err) 
-            os.system('echo \"\" >> '+check_log+' 2>> '+check_err) 
-            os.system('echo -n \"R_loc \"  >> '+check_log+' 2>> '+check_err) 
+            os.system('echo  >> '+check_log+' 2>> '+check_err) 
+            os.system('echo R_loc   >> '+check_log+' 2>> '+check_err) 
             os.system('which R >> '+check_log+' 2>> '+check_err) 
-            os.system('echo \"*****\" >> '+check_log+' 2>> '+check_err) 
+            os.system('echo  >> '+check_log+' 2>> '+check_err) 
+            os.system('echo STAR >> '+check_log+' 2>> '+check_err) 
             os.system('R --version >> '+check_log+' 2>> '+check_err) 
-            os.system('echo \"*****\" >> '+check_log+' 2>> '+check_err) 
+            os.system('echo STAR >> '+check_log+' 2>> '+check_err) 
             os.system('Rscript --vanilla '+pp+' CHECK '+check_log+' >> '+check_err+' 2>> '+check_err) 
             RK = self.read_requirement_log(check_log)       
             ans = self.progress.show_requirements(RK) 
@@ -129,20 +130,34 @@ class BridgeIO:
             try:    import matplotlib, matplotlib.pyplot
             except: MAKEPLOT = False 
             K, M, stars, f = dd(bool), [], 0, open(check_log) 
+            STATUS = 'NA' 
             K['matplotlib'] = MAKEPLOT 
             for line in f: 
-                if len(line) < 2: continue 
+                if len(line) < 2: 
+                    STATUS = 'NA' 
+                    continue 
+                
                 lp, i, LOC = line.split(), 0, 'NA'
-                if lp[0] == '*****': 
-                    stars +=1 
+                if stars == 0: 
+                    if lp[0] == 'STAR': 
+                        stars += 1 
+                        continue 
+                    elif lp[0].split('_')[-1] == 'loc': 
+                        STATUS = lp[0] 
+                    else: 
+                        if STATUS != 'NA': K[STATUS] = lp[0] 
+                        STATUS = 'NA' 
                     continue
-                if stars == 0:
-                    if len(lp) == 2: K[lp[0]] = lp[1] 
-                    else:            K[lp[0]] = 'NA' 
-                elif stars == 1: 
-                    if len(lp) > 2 and lp[0] == 'R' and lp[1] == 'version': K['R_version'] = lp[2] 
+                
                 else: 
-                    M.append(lp[0]) 
+                    if lp[0] == 'STAR': 
+                        stars+=1 
+                        continue 
+                    if stars == 1:  
+                        if len(lp) > 2 and lp[0] == 'R' and lp[1] == 'version': K['R_version'] = lp[2] 
+                    else: 
+                        M.append(lp[0]) 
+                
             K['R_missing'] = M 
             return K 
         
