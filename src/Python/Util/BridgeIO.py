@@ -33,9 +33,8 @@ class BridgeIO:
                 elif os.path.exists(self.bridgedir+'/'+p):   mp = os.path.abspath(self.bridgedir+'/'+p) 
                 else:                                        bridge_error([pn+' '+p+' Does not exist']) 
                 for f in os.listdir(mp): self.programs[f.split('.')[0]] = mp+'/'+f 
-                #if pn == '--tgPath': self.args.tgpath = mp   
-                #else: 
             
+
             if '1000G_ref' in os.listdir(self.bridgedir+'/data'): self.load_ld(self.bridgedir+'/data/1000G_ref') 
             elif '1000G_sample' in os.listdir(self.bridgedir+'/data'): self.load_ld(self.bridgedir+'/data/1000G_sample') 
             for p in self.args.ldpath: 
@@ -44,7 +43,19 @@ class BridgeIO:
                 else:                                      bridge_error(['--ldPath '+p+' Does not exist']) 
                 self.load_ld(mp) 
             
-            if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
+            self.load_plink()  
+            return 
+
+        def load_plink(self): 
+            plink_log, plink_err = self.paths['tmp']+'/bridge.ploc.out', self.paths['tmp']+'/bridge.ploc.out' 
+            os.system('which plink > '+plink_log+' 2> '+plink_err) 
+            f = open(plink_log, 'rt') 
+            try: 
+                plink_loc = f.readline().split()[0] 
+                self.programs['plink'] = plink_loc
+            except IndexError: 
+                if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
+            f.close() 
             return 
 
 
