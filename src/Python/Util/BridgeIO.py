@@ -53,8 +53,10 @@ class BridgeIO:
             try: 
                 plink_loc = f.readline().split()[0] 
                 self.programs['plink'] = plink_loc
+                self.args.plinkpath = plink_loc 
             except IndexError: 
                 if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
+            
             f.close() 
             return 
 
