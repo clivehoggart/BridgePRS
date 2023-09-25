@@ -24,9 +24,10 @@ class BridgeIO:
             
         
         def set_programs_and_defaults(self):
+            self.FOUND, self.LOC = dd(bool), dd(lambda: 'NA') 
+            
 
-            try:    import matplotlib, matplotlib.pyplot
-            except: self.args.noPlots = True 
+
             self.ld_ref, self.programs = {}, {} 
             for i,(p,pn) in enumerate([[self.args.rpath,'--rPath'],[self.args.plinkpath,'--plinkPath']]): #[self.args.ldpath,'--ldPath']]): 
                 if   os.path.exists(p):                      mp = os.path.abspath(p) 
@@ -43,22 +44,36 @@ class BridgeIO:
                 else:                                      bridge_error(['--ldPath '+p+' Does not exist']) 
                 self.load_ld(mp) 
             
-            self.load_plink()  
+
+            try:    
+                import matplotlib, matplotlib.pyplot
+                self.FOUND['matplotlib'] = True 
+            except: 
+                self.args.noPlots = True 
+            
+            self.find_which('plink') 
+            if self.FOUND['plink']: 
+                self.programs['plink'] = self.LOC['plink'] 
+                self.args.plinkpath    = self.LOC['plink'] 
+            elif self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': 
+                self.programs['plink'] = self.programs['plink_mac']
+            self.LOC['plink'] = self.programs['plink']  
+            
             return 
 
-        def load_plink(self): 
-            plink_log, plink_err = self.paths['tmp']+'/bridge.ploc.out', self.paths['tmp']+'/bridge.ploc.out' 
-            os.system('which plink > '+plink_log+' 2> '+plink_err) 
-            f = open(plink_log, 'rt') 
-            try: 
-                plink_loc = f.readline().split()[0] 
-                self.programs['plink'] = plink_loc
-                self.args.plinkpath = plink_loc 
-            except IndexError: 
-                if self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac'] 
-            
+
+        def find_which(self, name): 
+            p_log, p_err = self.paths['tmp']+'/tmp.'+name+'.out', self.paths['tmp']+'/tmp.'+name+'.err' 
+            os.system('which '+name+' > '+p_log+' 2> '+p_err) 
+            f = open(p_log, 'rt') 
+            p_path = f.readline().split() 
             f.close() 
-            return 
+            if len(p_path) == 1 and p_path[0].split('/')[-1] == name: 
+                self.FOUND[name], self.LOC[name] = True, p_path[0] 
+            return             
+            
+
+
 
 
 
@@ -114,65 +129,31 @@ class BridgeIO:
 
         def check_requirements(self): 
             self.progress.start_minor('Checking Requirements',SKIP=True) 
-            check_log = self.paths['tmp']+'/bridge.validation.out' 
-            check_err = self.paths['tmp']+'/bridge.validation.err' 
             pp = self.programs['check_availability'] 
-            os.system('echo plink_loc   > '+check_log+' 2> '+check_err) 
-            os.system('which plink >> '+check_log+' 2>> '+check_err) 
-            os.system('echo   >> '+check_log+' 2>> '+check_err) 
-            os.system('echo python_loc   >> '+check_log+' 2>> '+check_err) 
-            os.system('which python3 >> '+check_log+' 2>> '+check_err) 
-            os.system('echo  >> '+check_log+' 2>> '+check_err) 
-            os.system('echo R_loc   >> '+check_log+' 2>> '+check_err) 
-            os.system('which R >> '+check_log+' 2>> '+check_err) 
-            os.system('echo  >> '+check_log+' 2>> '+check_err) 
-            os.system('echo STAR >> '+check_log+' 2>> '+check_err) 
-            os.system('R --version >> '+check_log+' 2>> '+check_err) 
-            os.system('echo STAR >> '+check_log+' 2>> '+check_err) 
-            os.system('Rscript --vanilla '+pp+' CHECK '+check_log+' >> '+check_err+' 2>> '+check_err) 
-            RK = self.read_requirement_log(check_log)       
-            ans = self.progress.show_requirements(RK) 
-            if ans.lower()[0] == 'y': 
-                self.progress.start_minor('Installing R Packages', FIN=False) 
-                os.system('Rscript --vanilla '+pp+' INSTALL '+check_log) 
-             
             
-        
-        def read_requirement_log(self, check_log): 
-            MAKEPLOT = True 
-            try:    import matplotlib, matplotlib.pyplot
-            except: MAKEPLOT = False 
-            K, M, stars, f = dd(bool), [], 0, open(check_log) 
-            STATUS = 'NA' 
-            K['matplotlib'] = MAKEPLOT 
-            for line in f: 
-                if len(line) < 2: 
-                    STATUS = 'NA' 
-                    continue 
-                
-                lp, i, LOC = line.split(), 0, 'NA'
-                if stars == 0: 
-                    if lp[0] == 'STAR': 
-                        stars += 1 
-                        continue 
-                    elif lp[0].split('_')[-1] == 'loc': 
-                        STATUS = lp[0] 
-                    else: 
-                        if STATUS != 'NA': K[STATUS] = lp[0] 
-                        STATUS = 'NA' 
-                    continue
-                
-                else: 
-                    if lp[0] == 'STAR': 
-                        stars+=1 
-                        continue 
-                    if stars == 1:  
-                        if len(lp) > 2 and lp[0] == 'R' and lp[1] == 'version': K['R_version'] = lp[2] 
-                    else: 
-                        M.append(lp[0]) 
-                
-            K['R_missing'] = M 
-            return K 
-        
+            
+
+            self.find_which('python3') 
+            self.find_which('R') 
+            R_data = [] 
+            if self.FOUND['R']: 
+                RV_log, RV_err = self.paths['tmp']+'/tmp.RV.out', self.paths['tmp']+'/tmp.RV.err' 
+                RP_log, RP_err = self.paths['tmp']+'/tmp.RP.out', self.paths['tmp']+'/tmp.RP.err' 
+                os.system('R --version > '+RV_log+' 2> '+RV_err) 
+                os.system('Rscript --vanilla '+pp+' CHECK '+RP_log+' > '+RP_log+' 2> '+RP_err) 
+                f = open(RV_log)
+                lp = f.readline().split() 
+                if len(lp) > 2 and lp[0] == 'R' and lp[1] == 'version': R_data = [lp[2]] 
+                else:                                                   R_data = ['unknown'] 
+                f.close() 
+                f = open(RP_log)
+                R_data.append([x.strip() for x in f.readlines() if len(x) > 1]) 
+                f.close() 
+            
+            ans = self.progress.show_requirements(self.FOUND, self.LOC, R_data) 
+            if ans.lower()[0] == 'y':   
+                self.progress.start_minor('Installing R Packages', FIN=False) 
+                os.system('Rscript --vanilla '+pp+' INSTALL '+RP_log) 
+            
         
 

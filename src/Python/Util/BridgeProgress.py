@@ -258,28 +258,28 @@ class BridgeProgress:
 
 
 
-    def show_requirements(self, RK):
+
+    
+    def show_requirements(self, RK, LOC, R_DATA):
         self.new_bk = self.sub_blank+'      ' 
         self.write('..................................................\n')  
-        #if not RK['python_loc']: req_error('Python not found, Please Install Python')  
-        
-        if RK['python_loc']: self.write(self.new_bk+'Python Found: '+RK['python_loc']+'\n') 
+        if RK['plink']: self.write(self.new_bk+'Plink Found: '+LOC['plink']+'\n') 
+        else:           self.write(self.new_bk+'Plink: Not Found, (Using included version: '+LOC['plink']+')\n') 
+        if RK['python3']: self.write(self.new_bk+'Python Found: '+LOC['python3']+'\n') 
         else:                self.write(self.new_bk+'Python: Not Found, (Install Python to use wrapper)\n') 
-
-
         if RK['matplotlib']: self.write(self.new_bk+'Matplotlib: Found\n') 
         else:                self.write(self.new_bk+'Matplotlib: Not Found, (Install Matplotlib to produce plots)\n') 
-        if not RK['R_loc']: req_error('R not found, Please Install R')  
-        else:               
-            self.write(self.new_bk+'R Found: '+RK['R_loc']+'\n') 
-            self.write(self.new_bk+'R Version: '+RK['R_version']+'\n') 
-        ANS = 'n' 
-        if len(RK['R_missing']) == 0 : self.write(self.new_bk+'R packages: Up To Date\n') 
-        else:                          
-            self.write(self.new_bk+'R Packages -Missing: '+",".join(RK['R_missing'])+'\n') 
+        if RK['R']: self.write(self.new_bk+'R Found: '+LOC['R']+'\n') 
+        else:       req_error('R not found, Please Install R')
+        self.write(self.new_bk+'R Version: '+R_DATA[0]+'\n') 
+        ANS = 'n'  
+        if len(R_DATA[1]) == 0: self.write(self.new_bk+'R packages: Up To Date\n') 
+        else:                   
+            self.write(self.new_bk+'R Packages: Missing '+str(len(R_DATA[1]))+' (Install: '+", ".join(R_DATA[1])+')\n') 
             self.write(self.new_bk+'Would you like to attempt to install these packages (y/n)?: ') 
             ANS = input() 
-        return ANS            
+        
+        return ANS 
 
 
 
