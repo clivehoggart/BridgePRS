@@ -226,8 +226,7 @@ if( opt$valid.data!=0 ){
         # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #
         out <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1, prs.ridge2,
                           prs.ridge, prs.weighted )
-        colnames(out) <- c('---','pheno','prs.Stage1','prs.Stage2',
-                           'prs.Stages1+2','prs.weighted')
+        colnames(out) <- c('---','pheno','Stage1','Stage2','Stages1+2','Weighted')
 
         # TADE - NEED THE COLUMN NAMES FOR DOWNSTREAM
         #write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),col.names=FALSE, row.names=FALSE, quote=FALSE )
@@ -338,10 +337,10 @@ beta.bar.genome <- as.data.frame(matrix( nrow=0, ncol=4 ))
 for( chr in 1:22 ){
 
     beta_file <- paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz")
-    
-    if(!file.exists(beta_file)) next 
-    
-    
+
+    if(!file.exists(beta_file)) next
+
+
     beta.bar1 <- fread(paste0(opt$models1,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
     beta.bar1 <- beta.list(beta.bar1)
 
