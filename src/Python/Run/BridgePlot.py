@@ -42,7 +42,7 @@ def S_CORR(x,y):
 
 class BridgePlot: 
     def __init__(self, args, BR, pop, fig_names):  
-        self.args, self.pop, self.fig_names  = args, pop, fig_names + ['foo.png'] 
+        self.args, self.pop, self.fig_names  = args, pop, fig_names 
         self.fig, self.axes, self.ax_index, self.fs1, self.fs2 = matplotlib.pyplot.gcf(), [], 0, 25, 22 
         self.names = [bR.name.split('-')[-1] for bR in BR] 
         self.data  = {bR.name.split('-')[-1]: bR for bR in BR}                                                                                                                                                                                                                           
@@ -83,7 +83,7 @@ class BridgePlot:
         else:                   plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
         for fn in self.fig_names: plt.savefig(fn,dpi=200) 
         plt.clf() 
-        plt.close() 
+        plt.close()
         return
 
 
@@ -103,7 +103,7 @@ class BridgePlot:
         #self.colors = ['y','tab:gray','tab:blue','tab:green','tab:green']  
         self.colors = ['y','tab:gray','cornflowerblue','tab:green','tab:green']  
         self.colors = ['yellow','tab:gray','cyan','lime','tab:green']  
-        self.colors = ['yellow','orange','cyan','lime','tab:green']  
+        self.colors = ['yellow','tab:pink','cyan','lime','tab:green']  
         cands       = ['single', 'port', 'prior', 'combine', 'weighted'] 
         color_key   = {m: c for m,c in zip(cands, self.colors)}
        
@@ -122,7 +122,7 @@ class BridgePlot:
             
 
             if n != 'weighted':  
-                ax.bar(i,ht, color = self.colors[i], alpha = 0.85, zorder = 2) 
+                ax.bar(i,ht, color = self.colors[i], edgecolor='k', alpha = 0.85, zorder = 2) 
             else:
                 ax.bar(i,ht, color = 'white', edgecolor='k', alpha = 0.5, zorder = 1) 
                 btm, FK = 0, [[c,br.varexp.frac[c], color_key[c]] for c in cands]
@@ -173,30 +173,52 @@ class BridgePlot:
         base_scores, base_key, self.DATA_KEY['LEN']['target'] = self.load_base_scores(self.data[method].SS['PREFIX'], self.data[method].SS['SUFFIX']) 
         snp_weights, model_scores  = self.data[method2].snp_weights, None
         self.draw_manhattan(base_scores, 'Target GWAS')
-        if self.MODEL: model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
-        self.draw_manhattan(model_scores, 'Model GWAS') 
-        if method != method2: 
-            w_bb =  self.merge_snp_scores(base_key, model_key, snp_weights) 
+        
+        if self.MODEL: 
+            model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
+            w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
             w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
             self.DATA_KEY['LEN']['weight'] = len(w) 
             self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
+        
+        else: 
+
+            w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
+            w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
+            self.DATA_KEY['LEN']['weight'] = len(w) 
+            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
+            
+
+
+        self.draw_manhattan(model_scores, 'Model GWAS') 
+       
+
+        #self.merge_snp_scores(base_key, snp_weights) 
+        
+        
+        
+            #w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
             
  
 
-    def merge_snp_scores(self, base, model, weights): 
-        chromosomes = sorted(base.keys())
+    def merge_snp_scores(self, base, weights, model_key = 'NA'): 
+        
         ssw_flat = [] 
-        for ci,c in enumerate(chromosomes): 
-            KN, bk, mk = [], base[c], model[c]  
-            for k in bk:
-                if k in mk:
-                    p1, b1, z1 = bk[k] 
-                    p2, b2, z2 = mk[k] 
-                    if k in weights: 
-                        KN.append([weights[k], b1, b2]) 
-            ssw_flat.extend(KN)
-        return(ssw_flat) 
-    
+        chromosomes = sorted(base.keys())
+
+        for ci,c in enumerate(sorted(base.keys())):
+            if model_key == 'NA': ssw_flat.extend([[weights[k], base[c][k][1]] for k in base[c] if k in weights]) 
+            else:                 ssw_flat.extend([[weights[k], base[c][k][1], model_key[c][k][1]] for k in base[c] if k in weights and k in model_key[c]]) 
+
+        return ssw_flat
+
+
+
+
+
+
+
+
         
     def get_lims(self, ax, BORDER=0, xLab = None, yLab = None, xLims = [], yLims = [] ):  
         self.ax = ax 
@@ -485,6 +507,8 @@ class BridgePic:
         #if VAL == 0: return plt.cm.YlOrRd
         #if VAL == 1: return plt.cm.Blues
         MAP_CANDS = [plt.cm.copper, plt.cm.spring, plt.cm.autumn, plt.cm.cool, plt.cm.twilight, plt.cm.Wistia]
+        MAP_CANDS = [plt.cm.Blues, plt.cm.Blues, plt.cm.YlOrRd, plt.cm.spring, plt.cm.autumn, plt.cm.cool, plt.cm.twilight, plt.cm.Wistia]
+        MAP_CANDS = [plt.cm.Blues, plt.cm.Blues,  plt.cm.spring, plt.cm.autumn, plt.cm.cool, plt.cm.twilight, plt.cm.Wistia]
         return random.choice(MAP_CANDS) 
         
         
