@@ -1,13 +1,8 @@
 import sys, os 
 from collections import defaultdict as dd
 from .BridgeProgress  import BridgeProgress
-from .BridgeData      import BridgeData
-
-
-
-
-
-
+from .BridgePop      import BridgePop
+from .BridgeConfig      import BridgeConfig
 
 def bridge_error(eString):
     if type(eString) in [list,tuple]:  
@@ -16,256 +11,112 @@ def bridge_error(eString):
     else: sys.stderr.write('\nBridgeSettingsError: '+eString+'\n')
     sys.exit(2) 
 
-def parse_error(eString, SAVE=False):
-    if not SAVE: 
-        sys.stderr.write('\nBridgeParseError: '+eString+'\n')
-        sys.exit(2) 
-    sys.stderr.write('BridgeParseError: '+eString+'\n')
-    return  
-            
-def parse_warning(eString, eRule): 
-    if eRule == 'inferred': sys.stderr.write('BridgeWarning: --'+eString+' not supplied by command line or config file (inferring argument from process of elimination)\n') 
-    else:                   sys.stderr.write('BridgeWarning: '+eString+'\n') 
-    
-    # tgpath pheno_files 
 
-
-
-
-
-
+def validate_requirements(module, cmd): 
+    REQ, m1, m2 = [], module.split('-')[0], module.split('-')[-1] 
+    if m1 == 'check' and cmd[0:3] != 'req': return ['ldpop','sumstats_prefix','genotype_prefix','phenotype_files'] 
+    if m1 in ['prs','build','easyrun']: 
+        if module == 'easyrun':             REQ = ['ldpop','sumstats_prefix','genotype_prefix','phenotype_files'] 
+        elif cmd in ['clump','beta']:       REQ = ['ldpop','sumstats_prefix']
+        elif cmd in ['pred','quantify']:    REQ = ['genotype_prefix','phenotype_files','beta_prefix'] 
+        if m2 in ['port','priot']:          REQ.append('model_file') 
+        if  cmd  in ['quantify']:           REQ.append('predict_prefix') 
+        
+    return REQ 
 
 
 
 class BridgeSettings: 
     def __init__(self,io):
         self.args, self.io, self.module, self.cmd = io.args, io, io.args.module, io.args.cmd
-        self.config = self.load_configs(self.args.pop_config, self.io.bridgedir) 
-        if len(self.args.pop) == 0: self.args.pop = self.config['pop'] 
-        for p in self.args.pop:
-            if p not in self.io.ld_ref.keys(): 
-                 bridge_error('Invalid Population Name: '+p) 
+        self.command_args = ['pop_config','phenotype','verbose','plinkpath','rpath','platform','cmd','module','outpath','total_cores','cores','restart','silent','noPlots'] 
+        self.config = BridgeConfig(self).load_file(self.args.pop_config, self.io.bridgedir) 
+        self.lists, self.files, self.prefixes = {}, {}, {} 
 
+    
+    def update_inputs(self, pipeline_key): 
+        for v in vars(self.args): 
+            kV = vars(self.args)[v] 
+            if v in self.config.pop_specific or kV in [None, []]: continue 
+            if v.split('_')[-1] not in ['file','prefix','files']: continue 
+            if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
+            elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
+            elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
 
-
-    def load_configs(self, configs, bp):
-        K = dd(lambda: 'NA')  
-        K['pop'] = [] 
+        for k,x in pipeline_key['prefix'].items(): self.prefixes[k] = x 
+        for k,x in pipeline_key['file'].items():   self.files[k] = x 
+        return
         
-        
-        if len(configs) == 0: return K
-        for config_file in configs: 
-            lp = "/".join(config_file.split('/')[0:-1]) 
-            try:     f_handle = open(config_file) 
-            except:  bridge_error('Invalid filepath supplied: '+config_file) 
-            for ln in f_handle: 
-                ln = ln.split('#')[0].strip().split('=') 
-                if len(ln) != 2: continue 
-                k_opt, k1, k2, k_val, k_data = ln[0].lower(), ln[0].lower().split('_')[0], ln[0].lower().split('_')[-1], ln[1], [] 
-                
-                if k_opt not in self.args: bridge_error('Invalid Argument in Configuration File: '+k_opt) 
-                elif k_opt == 'pop': K[k_opt].append(k_val) 
-                elif k2 not in ['file','files','prefix']: K[k_opt] = k_val 
-                else:
-                    for kf in k_val.split(','): 
-                        for kd in kf.split(): 
-                            kp, kn = "/".join(kd.split('/')[0:-1]), kd.split('/')[-1] 
-                            if os.path.exists(kp):          fn = os.path.abspath(kp)+'/'+kn 
-                            elif os.path.exists(lp+'/'+kp): fn = os.path.abspath(lp+'/'+kp)+'/'+kn 
-                            elif os.path.exists(bp+'/'+kp): fn = os.path.abspath(bp+'/'+kp)+'/'+kn 
-                            else:                           bridge_error('INVALID PATH SUPPLIED IN CONFIG FILE: '+k_opt+': '+kd)  
-                            k_data.append(fn) 
-                    if k2 == 'files':       K[k_opt] = k_data 
-                    elif len(k_data) == 1:  K[k_opt] = k_data[0] 
-                    else:                   bridge_error('TWO MANY FILES SUPPLIED (MAX 1): '+k_opt+': '+k_val)  
-            f_handle.close() 
-        
-        return K 
-            
-
-
-
-    def check(self):
-        ss, bd, pf = self.input.sumstats, self.input.bdata, self.input.phenotypes
-        pop_name = self.args.pop[0] 
-        config_name = self.io.paths['tmp']+'/'+pop_name+'.config.txt'
-        w = open(config_name, 'w') 
-        w.write('POP='+pop_name+'\n')
-        w.write('SUMSTATS_PREFIX='+ss.prefix+'\n') 
-        w.write('SUMSTATS_SUFFIX='+ss.suffix+'\n') 
-        w.write('SNP_FILE='+ss.snp_file+'\n') 
-        for n,v in ss.fields.items(): w.write('SSF-'+n.upper()+'='+v+'\n')
-        phenotype_files = pf.names 
-        w.write('PHENOTYPE_FILES='+pf.names+'\n') 
-        for n,v in pf.fields.items(): 
-            if n == 'NAME': w.write('PF-NAME='+v+'\n')
-            elif n == 'COVARIATES': w.write('PF_COVARIATES='+v+'\n') 
-        w.close() 
-        self.io.progress.finish_data_validation(config_name) 
-        return 
-
-
-    def verify(self, pipeline_key = None):
-        if len(self.args.pop) == 0: bridge_error('A population name is required --pop') 
-        self.pop1, self.pop2 = self.args.pop[0], self.args.pop[-1] 
-        if pipeline_key is None: pipeline_key = dd(lambda: dd(bool))
-        self.input = BridgeInputs(self).load_inputs(self.config, pipeline_key) 
-        if len(self.input.warnings) > 0: self.report_warnings(self.input.warnings['invalid'], self.input.warnings['recovered'], self.input.warnings['missing']) 
-        self.files, self.prefixes = self.input.f_key['file'], self.input.f_key['prefix']
-        self.chromosomes = self.input.sumstats.chromosomes 
+    
+    
+    
+    
+    
+    def check_analysis_data(self):  
+        return  
+    
+    
+    
+    
+    
+    
+    
+    #################   POP CHECK ############################
+    
+    def check_pop_data(self):
+        self.required = validate_requirements(self.module, self.cmd) 
+        self.disambiguate_pop_data()         
+        self.config.parse_arg_data()        #### FIX THIS  
+        self.io.progress.show_pop_data(self.pop_data) 
         return self 
+
+       
+    def disambiguate_pop_data(self): 
+        #self.ld_ref, self.pop_lists, d_strs  =  {}, {}, {} 
         
+        
+        self.pop_lists, self.pop_strs = self.config.get_pop_lists() 
+        self.load_ld_ref() 
+        #if len(self.args.pop) == 0: bridge_error('A target population name is required --pop or using a config file [--pop_config]') 
+        #if len(self.args.pop) >  2: bridge_error('At most two population name(s) are allowed --pop '+",".join(self.args.pop)) 
+        
+        if len(self.pop_lists['genotype_prefix']) != len(self.pop_lists['phenotype_files']): bridge_error(['Corresponding Phenotype And Genotype Data Required',d_strs['genotype_prefix'],d_strs['phenotype_files']])
+        for p,D in self.pop_lists.items(): 
+            if   len(D) == 0 and p not in self.required:  self.pop_lists[p] = [None]  
+            elif len(D) == 0 and p in self.required:      bridge_error('Missing Required Population Data: '+p)                      
+            elif len(D) > 1 and len(self.args.pop) == 1:  bridge_error(['Too Much Population Data For: '+p,'At Most 1 File is Supported For 1 Population',self.pop_strs[p]])
+            elif len(D) > 2 and len(self.args.pop) == 2:  bridge_error(['Too Much Population Data For: '+p,'At Most 2 File(s) Supported For 2 Populations',self.pop_strs[p]]) 
+        
+        self.pop_data = [BridgePop(self.args, self.io.paths, self.args.pop[0], {p: D[0] for p,D in self.pop_lists.items()}, self.ld_ref)] 
+        if len(self.args.pop) > 1:  self.pop_data.append(BridgePop(self.args, self.io.paths, self.args.pop[1], {p: D[-1] for p,D in self.pop_lists.items()},self.ld_ref)) 
+        self.pop = self.pop_data[0] 
+       
+    def load_ld_ref(self): 
+        self.ld_ref = {} 
+        if '1000G_ref' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_ref')                                                                                                                                                                       
+        elif '1000G_sample' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_sample')                                                                                                                                                               
+        for p in self.args.ldpath:                                                                                                                                                                                                                                                 
+            if os.path.exists(p):                      mp = os.path.abspath(p)                                                                                                                                                                                                                         
+            elif os.path.exists(self.bridgedir+'/'+p): mp = os.path.abspath(self.bridgedir+'/'+p)                                                                                                                                                                                  
+            else:                                      bridge_error(['--ldPath '+p+' Does not exist'])                                                                                                                                                                             
+            self.load_ld(mp)
 
-
-
-
-    def report_warnings(self, invalids, recovered, missing): 
-        for k,k_type,k_found in invalids:
-            if k_type == 'prefix':   sys.stderr.write('BridgeWarning: ---'+k+' '+k_found+' is an invalid file prefix (Prefix not required for this job and will be ignored)\n') 
-            else:                    sys.stderr.write('BridgeWarning: ---'+k+' '+k_found+' is an invalid file name   (File not required for this job and will be ignored)\n') 
-        for k,k_type,k_found in recovered:  sys.stderr.write('BridgeWarning: --'+k+'_'+k_type+' not supplied by command line or config file (using file generated from previous run: '+self.io.pipeline.progress_file+')\n') 
-        for k,k_type,k_found in missing:    sys.stderr.write('BridgeWarning: --'+k+' not supplied by command line or config file (inferring argument from process of elimination)\n') 
-        return 
-
-
-    def report_invalid(self, invalids): 
-        for k,k_type,k_found in invalids:
-            if k_type == 'prefix':   sys.stderr.write('BridgeIOError: ---'+k+' '+k_found+' is an invalid file prefix\n') 
-            else:                    sys.stderr.write('BridgeIOError: ---'+k+' '+k_found+' is an invalid file name\n') 
-        return  
-
-    def report_missing(self, missing): 
-        for k,k_type,k_found in missing:
-            hints = [] 
-            if k == 'clump_prefix': 
-                c_dir = self.io.paths['run']+'/clump'
-                hints = ['clump files should be located at: '+c_dir+' (maybe call ./bridgePRS single clump?)']
-                try:    c_cand = os.listdir(c_dir)[0].split('/')[-1].split('_')[0].split('-')[0].split('.')[0] 
-                except: c_cand = None
-                if c_cand == self.args.popname: hints = ['Try: --clump_prefix '+c_dir+'/'+c_cand] 
-            elif k == 'model_prefix': 
-                if self.module == 'port': c_dir = self.io.paths['run']+'/bridge'
-                else:                      c_dir = self.io.paths['run']+'/model'
-                hints = ['model files should be located at: '+c_dir+' (maybe call ./bridgePRS single model?)']
-                try:    c_cand = os.listdir(c_dir)[0].split('/')[-1].split('-')[0].split('.')[0] 
-                except: c_cand = None
-                if self.args.popname in c_cand:  hints = ['Try: --model_prefix '+c_dir+'/'+c_cand] 
-            elif k == 'beta_file': 
-                c_dir = self.io.paths['run']+'/beta'
-                hints = ['beta files should be located at: '+c_dir+' (maybe call ./bridgePRS single beta?)'] 
-                try:    found = [f for f in os.listdir(c_dir) if self.args.popname in f and 'best_model_params' in f][0] 
-                except: found = 'NA' 
-                if found != 'NA': hints = ['Try: --beta_file '+c_dir+'/'+found] 
-            sys.stderr.write('BridgeIOError: '+k+' is missing\n') 
-            for h in hints: sys.stderr.write('   BridgeHint: '+h+'\n') 
-        return  
+    def load_ld(self, ld_path):                                                                                                                                                                                                                                                     
+        ids, cands, key, k = [], [], {}, 0                                                                                                                                                                                                                                          
+        for f in os.listdir(ld_path):                                                                                                                                                                                                                                               
+            if f.split('.')[-1] in ['bed','bim','fam']: cands.append(".".join(f.split('.')[0:-1]))                                                                                                                                                                                  
+            elif 'ids' in f:                            ids.append([f.split('.')[0], ld_path+'/'+f])                                                                                                                                                                                
+        cands = list(set(cands))                                                                                                                                                                                                                                                    
+        while True:                                                                                                                                                                                                                                                                 
+            my_prefix = list(set([c[0:k] for c in cands]))[0]                                                                                                                                                                                                                          
+            ck1 = list(set([c[0:k+1] for c in cands]))                                                                                                                                                                                                                              
+            if len(ck1) == 1: k+=1                                                                                                                                                                                                                                                  
+            else: break                                                                                                                                                                                                                                                             
+        for cand in cands:                                                                                                                                                                                                                                                          
+            chr_cand = cand.split(my_prefix)[-1]                                                                                                                                                                                                                                       
+            key[chr_cand] = ld_path+'/'+cand                                                                                                                                                                                                                                        
+        if len(key) > 1: BYCHR = True 
+        else:            BYCHR = False 
+        for pop, pop_path in ids: self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+my_prefix, BYCHR, key]                                                                                                                                                                                    
+        return                                                                                                                                                                                                                                                                      
     
-        
-
-
-
-class BridgeInputs:
-    def __init__(self, settings):
-        self.args, self.module, self.cmd, self.io, self.paths = settings.args, settings.module, settings.cmd, settings.io, settings.io.paths 
-        self.defaults, self.recommended, self.required = self.load_requirements() 
-        
-        #self.required = LOAD_REQUIREMENTS(settings.module, settings.cmd) 
-        #self.defaults, self.recommended, self.required = LOAD_REQUIREMENTS(settings.module, settings.cmd) 
-        self.f_key = dd(lambda: dd(lambda: None))  
-        self.errors, self.warnings = dd(list), dd(list) 
-
-
-    def load_requirements(self): 
-        DEFAULTS, REC, REQ = dd(lambda: None), [], [] 
-        DEFAULTS['fst'] = 0.15 
-        m1, m2 = self.module.split('-')[0], self.module.split('-')[-1] 
-        if m1 in ['prs','build','easyrun']: 
-            if m1 == 'prs': REQ =   ['bfile','sumstats','id','snp','phenotype','validation'] 
-            else:           REQ =   ['bfile','sumstats','id','snp','phenotype'] 
-            if m2 in ['port','prior']: REQ.append('model') 
-            if self.cmd in ['predict','quantify']: REQ.append('beta') 
-            if self.cmd in ['quantify']:           REQ.append('predict') 
-        else: 
-            if m1 == 'check' and self.cmd[0:3] != 'req': REQ = ['bfile', 'sumstats','phenotype'] 
-        return DEFAULTS, REC, REQ 
-        
-    
-    def load_inputs(self, config_key, pipeline_key):
-        
-        FK = self.parse_triple(config_key, pipeline_key)
-        self.sumstats, self.bdata, self.phenotypes = BridgeData(self,'sumstats'), BridgeData(self, 'bdata'), BridgeData(self, 'phenotypes') 
-        if   'sumstats' in self.required and FK['prefix']['sumstats'] is not None: self.sumstats.ss_fill(FK['prefix'].pop('sumstats'), FK['file'].pop('snp'))
-        elif 'sumstats' in self.required:                                          bridge_error('Sumstats Prefix Required --sumstats_prefix (or in config file)')  
-        
-        if   'phenotype' in self.required and FK['files']['phenotype'] is not None and len(FK['files']['phenotype']) > 0: self.phenotypes.ph_fill(self.f_key['files'].pop('phenotype'))
-        elif 'sumstats' in self.required:                                                                     bridge_error('Phenotype File(s) Required --phenotype_files (or in config file)')   
-        if 'bfile' in self.required: self.bdata.bf_load(self.sumstats.chromosomes, self.io.ld_ref, self.args.pop[0]) 
-        
-        
-        #print(self.args.tgpath)  
-        #print(self.sumstats, self.sumstats.name, self.sumstats.names, self.sumstats.prefix)      
-        #print(self.args.pop)
-        #print(self.bdata)   Invalid 
-        #print(self.args.tgpath) 
-        #print(self.required) 
-        #sys.exit() pheno
-        #if   'bfile' in self.required and FK['prefix']['bfile'] is not None:       self.bdata.bf_fill(self.f_key['prefix'].pop('bfile'), self.f_key['file'].pop('id'), CHRS = self.sumstats.chromosomes) 
-        #elif 'sumstats' in self.required:                                          bridge_error('Bfile Prefix Required --bfile_prefix (or in config file)')  
-        return self  
-        
-        
-        
-        
-
-    def parse_triple(self, config_key, pipeline_key): 
-        for v, v_name, v_type, iVal, cVal in [[v, v.split('_')[0], v.split('_')[-1], vars(self.args)[v],config_key[v]] for v in vars(self.args)]: 
-            if v in ['module','cmd','spec','popname','popnames','pop_config','pop_configs','platform','outpath','rpath','plinkpath']: continue 
-            if v_type not in ['file','files','prefix']: 
-                if cVal != 'NA':
-                    if type(iVal) == bool: 
-                        if cVal in ['True','False']: vars(self.args)[v] = bool(cVal) 
-                        else:                        parse_error('Invalid Option Supplied in Config/Spec File: --'+v+' '+cVal+' (True or False required)')                    
-                    elif iVal in [None, [], '0', 0, self.defaults[v]]: vars(self.args)[v] = cVal 
-                    continue 
-            else: 
-                kV, kList = iVal, [] 
-                if kV in [None,[]] and cVal != 'NA': kV = cVal 
-                if kV in [None,[]] and pipeline_key[v_type][v_name]:     
-                    kV = pipeline_key[v_type][v_name] 
-                    if v_name in self.required:    self.warnings['recovered'].append([v_name, v_type, kV])
-                if kV is None:
-                    self.f_key[v_type][v_name] = kV 
-                else: 
-                    if v_type not in ['files','lists']: kV = [kV] 
-                    for kv in kV:         
-                        kp,kname = "/".join(kv.split('/')[0:-1]), kv.split('/')[-1] 
-                        if os.path.exists(kp): kList.append(os.path.abspath(kp)+'/'+kname) 
-                        else:                  bridge_error('Invalid path: '+v+' '+kv) 
-                    if v_type not in ['files','lists']: self.f_key[v_type][v_name] = kList[0] 
-                    else:                               self.f_key[v_type][v_name] = kList 
-        return self.f_key  
-                
-    
-    
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

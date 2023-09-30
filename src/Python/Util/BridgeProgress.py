@@ -1,17 +1,8 @@
 import sys, os 
 from collections import defaultdict as dd
-import time 
-
+import multiprocessing, time 
 LOCALTIME = time.asctime( time.localtime(time.time()) )
 
-
-def req_error(eString): 
-    if type(eString) in [list,tuple]:
-        sys.stderr.write('\n\n      RequirementError: '+eString[0]+'\n')
-        for es in eString[1::]: sys.stderr.write('    '+es+'\n')
-    else: 
-        sys.stderr.write('\n\n      RequirementError: '+eString+'\n')
-    sys.exit(2)
 
 
 
@@ -19,189 +10,329 @@ def req_error(eString):
 class BridgeProgress:
     def __init__(self,args, command_line): 
         self.obs_input = [] 
-        self.INIT, self.active, self.loud = True, True, False 
-        if args.verbose:  self.active, self.loud = True, True 
+        self.INIT, self.active, self.loud, self.HOMEDIR = True, True, False, True 
+        if   args.verbose:  self.active, self.loud = True, True 
         elif args.silent: self.active, self.loud = False, False 
         else:             self.active, self.loud = True, False 
-        self.args, self.command_line = args, command_line  
-        self.out = sys.stderr
-        self.jobs = ['init'] 
+        self.args, self.command_line, self.out, = args, command_line, sys.stderr 
         
 
     def initialize(self, runpath):
-        self.runpath, self.INIT = runpath, False
+        self.runpath, self.prepath = runpath, "/".join(runpath.split('/')[0:-1])+'/'  
+        try: self.homedir = os.path.expanduser('~') 
+        except: self.HOMEDIR = False 
+        self.sub_blank = ' '
+        self.last_line, self.run_len, self.dot_loc, self.line_loc = '', 140, 0, 0 
         self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         self.loghandle = open(self.logfile,'w') 
-        self.FILE, self.log = True, [[]] 
+        self.FILE  = True 
         self.write('BridgePRS Begins at '+LOCALTIME+' \n') 
-        if self.command_line != None:  self.write('Bridge Command-Line: '+' '.join(self.command_line)+'\n')
+        if self.command_line != None:  self.write('Bridge Command-Line:  '+' '.join(self.command_line)+'\n')
+        self.JOB_RANK = dd(int)  
+        for jb in ['clump']: self.JOB_RANK[jb]    = 1 
+        for jb in ['beta']: self.JOB_RANK[jb]     = 2 
+        for jb in ['predict','optimize']: self.JOB_RANK[jb]  = 3 
+        for jb in ['quantify','prior']: self.JOB_RANK[jb] = 4 
+        for jb in ['result']: self.JOB_RANK[jb] = 5 
         return self 
+
+
+    def show_requirements(self, RK, LOC, R_DATA):
+        self.new_bk = '            ' 
+        self.write('Checking Requirements:\n') 
+        cA, cX = multiprocessing.cpu_count(), self.args.cores
+        tC, mC, dC = str(self.args.total_cores), str(self.args.cores), self.args.total_cores - self.args.cores 
+        fs1 = '%22s  %-15s  %-25s\n' 
+        fs2 = '%22s  %-15s  %-25s  %15s\n' 
+        fs3 = '%22s  %-15s  %-25s  %15s       %-65s\n' 
+        if self.args.cores > 1 or dC < 2: self.say(fs2,('System:','platform='+self.args.platform+',', 'cores(available)='+tC+',', 'cores(used)='+mC)) 
+        else:                             self.say(fs3,('System:','platform='+self.args.platform+',', 'cores(available)='+tC+',', 'cores(used)='+mC, '(TIP: Using More Than One Core Will Improve Performace (e.g. ---cores '+str(dC)+'))')) 
+        if RK['plink']: self.say(fs1, ('Plink:','found=true,','path='+LOC['plink'])) 
+        else:           self.say(fs3, ('Plink:','found=false,','path=NA','', '(Using included version: '+LOC['plink']+')')) 
+        if RK['R'] and len(R_DATA[1]) == 0: 
+            self.say(fs3, ('R:','found=true,','path='+LOC['R']+',','version='+R_DATA[0], '(packages=up to date)')) 
+        else: 
+            if not RK['R']: 
+                self.say(fs1, ('R:','found=false','')) 
+                self.say('\n'+fs2+'\n', ('RequirementError:', 'R Not Found (please install from r-project.org)','','')) 
+            else: 
+                rc = 'install.packages(c('+",".join(['\''+x+'\'' for x in R_DATA[1]])+', repos =\"http://cran.us.r-project.org\")' 
+                self.say(fs3, ('R:','found=true,','path='+LOC['R']+',','version='+R_DATA[0],'(packages=incomplete)'))
+                self.say('\n'+fs2, ('RequirementError:', 'Missing R Packages',",".join(R_DATA[1]),'')) 
+                self.write('            To Install, Type The Following Shell Command:$ '+rc+'\n\n')  
+            sys.exit() 
+        if RK['python3'] and RK['matplotlib']: self.say(fs2, ('Python3:','found=true,','path='+LOC['python3']+',','matplotlib=true')) 
+        elif RK['python3']: self.say(fs3, ('Python3:','found=true,','path='+LOC['python3']+',','matplotlib=false','(NOTE: Please Install Matplotlib To Enable Plotting)'))
+        else:               self.say('\n'+fs1+'\n', ('RequirementError:', 'Python3 Not Found,','Please Install Python3 To Use Wrapper'))
+        return 
+
+
+    def show_settings(self,settings):
+        kSkip = ['pop','ldpop','files','outpath','platform','cores', 'config','prefix','file','path','module','cmd','dataset','ssf','pf','sumstats_suffix','phenotype_files'] 
+        kParams, kTrue, kFalse = {}, [], [] 
+        for k in vars(settings.args): 
+            kv = vars(settings.args)[k]  
+            if k.split('_')[-1] in kSkip or k.split('-')[0] in kSkip or k in kSkip or k[-4::] in kSkip: continue 
+            if k in ['verbose','silent','restart','noPlots'] and  kv:      kTrue.append(k.upper()) 
+            elif k in ['verbose','silent','restart','noPlots'] and not kv: kFalse.append(k.upper()) 
+            elif k == 'max_clump_size' and int(kv) == 0:             kParams[k] = 'NO_LIMIT' 
+            else:                                                    kParams[k] = str(kv) 
+        
+        TSTR = [] 
+        if len(kTrue) > 0:  TSTR.append('ON='+','.join(kTrue))
+        if len(kFalse) > 0: TSTR.append('OFF='+','.join(kFalse)) 
+        self.write('         Flags: '+", ".join(TSTR)+'\n')  
+        try: 
+            MSTR =  ', '.join(['Phenotype='+kParams['phenotype'], 'Covariates='+kParams['covariates'], 'Max_clump_size='+kParams['max_clump_size']]) 
+            self.write('         Model: '+MSTR+'\n')  
+        except: pass 
+        self.write('\n') 
+        return 
+
+
+    
+    def show_pop_data(self, pop_data): 
+        fs0 = '%22s  %-40s\n'
+        fs1 = '%22s  %-75s    %25s\n'
+        fs2 = '%22s  %-15s  %-25s  %15s\n' 
+        for i, pd in enumerate(pop_data): 
+            n1, n2 = pd.name, pd.ref_pop  
+            ss, bd, pt = pd.sumstats, pd.bdata, pd.phenotypes 
+            if i == 0: 
+                if len(pop_data) == 1: self.tFile = self.runpath + '/save/primary.'+n1+'.config'
+                else:                  self.tFile = self.runpath + '/save/target.'+n1+'.config'
+                self.REC = open(self.tFile,'w')  
+                self.record(fs2, [['Target Source:'],['POP',n1], ['LDPOP',n2], ['LDPATH',bd.ldpath]]) 
+            else: 
+                self.tFile = self.runpath + '/save/model.'+n1+'.config'
+                self.REC = open(self.tFile,'w')  
+                self.record(fs2, [['Model Source:'],['POP',n1], ['LDPOP',n2], ['LDPATH',bd.ldpath]]) 
+            if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix, 'WARNING: Not Given - Inferred From Directory']]) 
+            else:               self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
+            if ss.TESTS['NOSNPS']:  self.record(fs1, [['QC-Snps:'],['TOTAL',str(ss.total)], ['SNP_FILE',ss.snp_file, 'WARNING: Not Given - Created Using All SNPS']]) 
+            else:          self.record(fs1, [['QC-Snps:'],['TOTAL',str(ss.total)], ['SNP_FILE',ss.snp_file]]) 
+            self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX',pt.genotype_prefix]])  
+            pC,pJ = ",".join(self.condense_paths(pt.files)), ",".join(pt.files) 
+            self.record(fs1, [['PHENOTYPE_FILES',pJ],['Phenotypes'],['PHENOTYPE_FILES',pC],['VARIABLES',",".join(pt.header[2::])],['FIN',self.tFile,i],['']])
+            pd.config = self.tFile  
+    
+    
+    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # 
+    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # wtf 
+    def start_module(self, module, cmd, runpath):
+        self.module, self.cmd, self.runpath = module, cmd, runpath
+        self.start_heading = 'Module,command: ' 
+        self.write(self.start_heading+self.module+' '+cmd+'\n') 
+        self.sub_blank = ' '
+        self.topic, self.status, self.topics  = None, None, 0 
+        return self
+    
+    def start_minor(self,topic,RD = None, block_len = 10):
+        if self.status == 'minor': self.end(RD) 
+        else: 
+            rJ = self.reveal_new_data(RD)
+            if len(rJ) > 0: 
+                if self.status is None and self.topics == 0: self.write(' Previously Generated: '+", ".join(rJ)+'\n') 
+                else: 
+                    print('yooooo', self.status, self.topics, topic) 
+                    sys.exit() 
+        self.status = 'minor' 
+        self.topics += 1 
+        self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
+        return self 
+
+    
+    def reveal_new_data(self, RD): 
+        rData = [] 
+        if RD is None: return rData 
+        for n,D in [['file',RD.files.items()],['prefix',RD.prefixes.items()],['files',RD.lists.items()]]:
+            for k,F in D: 
+                if n != 'files' and F is not None and F not in self.obs_input: 
+                    self.obs_input.append(F) 
+                    rData.append([self.JOB_RANK[k], k+'_'+n,F.split(self.prepath)[-1]]) 
+                elif n == 'files' and len(F) > 0 and ','.join(F) not in self.obs_input: 
+                    self.obs_input.append(','.join(F))
+                    rData.append([self.JOB_RANK[k], k+'_'+n," ".join([fn.split(self.prepath)[-1] for fn in F])]) 
+        if len(rData) == 0: return rData     
+        rData.sort() 
+        rN, rD = [rd[1] for rd in rData], self.condense_paths([rd[2] for rd in rData]) 
+        return [a+'='+b for a,b in zip(rN, rD)]
+       
+
+
+    def condense_paths(self, X): 
+        X = [self.homeshrink(x) for x in X] 
+        if len(X) < 2: return X 
+        cL, cList, xLocs = X[0].split('/') , [X[0]],  [x.split('/') for x in X[1::]] 
+        for xL in xLocs: 
+            for i in range(min(len(xL),len(cL))): 
+                if xL[i] != cL[i]: break  
+            cList.append("/"+"/".join(xL[i::]))
+        return cList    
+    
+   
+
+    def homeshrink(self, f_name): 
+        try:    f_tmp = f_name.split(self.prepath)[-1] 
+        except: f_tmp = f_name 
+        if not self.HOMEDIR: return f_tmp 
+        if len(f_tmp.split('/')) < 3: return f_tmp
+        if self.homedir not in f_tmp: return f_tmp 
+        try: f_bit = '~'+f_tmp.split(self.homedir)[-1] 
+        except: f_bit = t_fmp 
+        return f_bit 
     
 
+    
+    def end(self,RD=None): 
+        rJ = self.reveal_new_data(RD)
+        if self.status == 'minor':
+            dl = max(self.run_len - self.line_loc, 1) 
+            cl = '.'.join(['' for x in range(dl)])+'Complete' 
+            if len(rJ) > 0: self.write(cl+'    [Generated: '+", ".join(rJ)+']\n') 
+            else:           self.write(cl+'\n') 
+            self.status = None  
+        return 
+        
+
+    def fail(self, MSG, ETYPE = 'BridgeError:'): 
+        EB = ' '.join(['' for x in range(len(ETYPE))]) 
+        if type(MSG) not in [list,tuple]: self.write('\n'+ETYPE+' '+MSG) 
+        else: 
+            self.write('\n'+ETYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
+            for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+        sys.exit(2) 
 
 
 
+    def finish(self,NOTE=None, FIN=False):
+        self.end(NOTE) 
+        self.write('\n') 
+        if FIN: sys.exit() 
 
-    def begin_module(self, module, cmd, runpath):
-        self.module, self.cmd, self.runpath = module, cmd, runpath
-        if self.INIT: 
-            self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
-            self.loghandle = open(self.logfile,'w') 
-            self.FILE, self.log = True, [[]] 
-            self.write('BridgePRS Begins at '+LOCALTIME+'\n') 
-            if self.command_line != None:  self.write('Bridge Command-Line: '+' '.join(self.command_line)+'\n')
-            self.INIT = False  
-        self.update_indent, self.update_len = '', 0 
-        self.start_heading = 'Module: '
-        self.job_heading   = 'Command: ' 
-        self.write('\n'+self.start_heading+self.module+'\n') 
-        self.h_blank = ''.join([' ' for x in range(len(self.start_heading))])
-        self.sub_blank = ' '
-        self.topic, self.subtopic, self.status, self.topics, self.events = None, None, None, 0, {} 
 
-    def write(self, outstring): 
+
+    # WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
+    # WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
+    def write(self, outstring, DOTS = False): 
         if self.active: 
             self.out.write(outstring) 
             self.out.flush()  
         if self.FILE: self.loghandle.write(outstring) 
+        if DOTS: self.dot_loc += len(outstring) 
+        else:    self.dot_loc = 0 
+        if '\n' in outstring: self.line_loc = len(outstring.split('\n')[-1]) 
+        else:                 self.line_loc += len(outstring) 
+        return 
 
     def whisper(self, outstring): 
         if self.loud: 
             self.out.write(outstring) 
             self.out.flush() 
         if self.FILE: self.loghandle.write(outstring) 
+        return 
+
+    def say(self, outformat, outtuple): 
+        if self.active: 
+            self.out.write(outformat % outtuple) 
+            self.out.flush()  
+        if self.FILE: self.loghandle.write(outformat % outtuple)
 
 
-
-    def missing_str_list(self, X): 
-        if len(X) == 0: return '' 
-        ki, chr_keep = 1, [[X[0]]] 
-        while ki < len(X): 
-                try:
-                    while ki < len(X) and int(X[ki]) == int(chr_keep[-1][-1])+1:
-                        chr_keep[-1].append(X[ki]) 
-                        ki+=1 
-                except: pass
-                if ki < len(X): 
-                    chr_keep.append([X[ki]])
-                    ki+=1 
-        chr_str = [] 
-        for x in chr_keep: 
-            if len(x) == 1: chr_str.append(x[0]) 
-            else:           chr_str.append(x[0]+'-'+x[-1]) 
-        return ('['+",".join(chr_str)+']') 
-
-
-
-
-    def show_settings(self,settings):
-        blank2 = self.h_blank+'  ' 
-        kFiles, kPrefixes, kSkip = [], [], ['config','prefix','file','module','cmd','dataset','ssf','pf','sumstats_suffix','phenotype_files'] 
-        if 'files' in vars(settings):
-            kFiles     = [[a,b] for a,b in settings.files.items() if b is not None and a not in ['clumpz']] 
-            kPrefixes  = [[a,b] for a,b in settings.prefixes.items() if b is not None and a not in ['clumpz']]
-            if len(kFiles) > 0: 
-                for i,(k,fn) in enumerate(sorted(kFiles)):
-                    self.obs_input.append(k) 
-                    if i == 0:  self.write(blank2+'       Files:  '+k+'_file='+fn+'\n') 
-                    else:       self.write(blank2+'               '+k+'_file='+fn+'\n') 
-            if len(kPrefixes) > 0: 
-                for i,(k,fn) in enumerate(sorted(kPrefixes)): 
-                    self.obs_input.append(k) 
-                    if i == 0:  self.write(blank2+'    Prefixes:  '+k+'_prefix='+fn+'\n') 
-                    else:       self.write(blank2+'               '+k+'_prefix='+fn+'\n') 
-        elif settings.args.module == 'check':
-            FSKIP = ['module','cmd','dataset'] 
-        
-        elif 'pop_config' in settings.args:
-            pn = vars(settings.args)['pop'] 
-            pc = vars(settings.args)['pop_config'] 
-            self.write(blank2+' Populations:  '+", ".join(pn)+'\n')  
-            self.write(blank2+'Config Files:  '+", ".join(pc)+'\n')  
+    def record(self, outformat, out_list): 
+        FIN, pL = False, [] 
+        if len(out_list) < 5: 
+            for T in out_list: 
+                if len(T) > 1 and T[0] not in ['TOTAL']: self.REC.write(T[0]+'='+T[1]+'\n')  
+                
+                if len(T) == 1:   pL.append(T[0]) 
+                elif len(T) == 2: pL.append(T[0]+'='+self.homeshrink(T[1])) 
+                elif len(T) == 3: 
+                    tp = T[0]+'='+T[1].split(self.prepath)[-1] 
+                    my_blank = ' '.join(['' for x in range(40-len(tp))]) 
+                    pL.append(tp+ my_blank+' ('+T[2]+')')
+                else: continue 
+        else: 
+            self.REC.write("=".join(out_list[0])+'\n') 
+            for ti,T in enumerate(out_list[1::]): 
+                if ti == 0:   pL.append(T[0]) 
+                elif ti == 1: pL.append(T[0]+'='+T[1].split(self.prepath)[-1]) 
+                elif ti == 2: pL.append(T[0]+'='+T[1]) 
+                elif ti == 3 and T[0] == 'FIN':  
+                    FIN, t_name, t_idx = True, T[1], T[2] 
+                    self.REC.close() 
+                    #self.record(fs2, [['PHENOTYPE_FILES',pJ],['Phenotypes'],['PHENOTYPE_FILES',pC],['VARIABLES',",".join(pt.header[2::])],['FIN',self.tFile,i],['']])
+                    break 
+        outtuple = tuple(pL) 
+        if self.active:
             
-        kFalse, kTrue, kNone, kPlatform, kOpts, kInputs, kObs = [] , [], [] , [], [], [], [] 
-        for k in vars(settings.args):
-            if k.split('_')[-1] in kSkip or k.split('-')[0] in kSkip or k in kSkip: continue 
-            v = vars(settings.args)[k]
-            kObs.append(k) 
-            if k in ['cores','platform','plinkpath','rpath']: kPlatform.append([k,v])  
-            elif str(v) == 'True':     kTrue.append([k,v]) 
-            elif str(v) == 'False':    kFalse.append([k,v]) 
-            elif v in [None,0,'0']:    kNone.append([k,v]) 
-            elif type(v) != list:      kOpts.append([k,v])              
-            else:                      kInputs.append([k,v])        
-        
-        kOpts.sort() 
-        if len(kPlatform) > 0: self.write(blank2+'      System:  '+',  '.join([k+'='+str(fn) for k,fn in sorted(kPlatform)])+'\n')
-        if len(kTrue) > 0:     self.write(blank2+'       Flags:  '+',  '.join([k+'='+str(fn) for k,fn in sorted(kTrue)+sorted(kFalse)])+'\n')
-        if len(kOpts) > 0:     self.write(blank2+'     Options:  '+',  '.join([k+'='+str(fn) for k,fn in kOpts[0:6]])+'\n')
-        if len(kOpts) > 6:     self.write(blank2+'               '+',  '.join([k+'='+str(fn) for k,fn in kOpts[6::]])+'\n')
-        if 'input' in vars(settings): self.show_inputs(settings)  
-
-
-
-
-    def show_inputs(self,settings):
-        ss, bf, ph = settings.input.sumstats, settings.input.bdata, settings.input.phenotypes
-        blank2 = self.h_blank+'  ' 
-        if ss.VALID:
-            chr_str = self.missing_str_list(sorted(ss.chromosomes)) 
-            f_data = ss.prefix+chr_str+ss.suffix 
-            self.write(blank2+'    Sumstats:\n')
-            self.write(blank2+'             Input Files:   '+f_data+'\n')
-            self.write(blank2+'             SNP-QC File:   '+ss.snp_file+'\n')
-            self.write(blank2+'             Input Fields:  '+", ".join([x+'='+y for x,y in ss.fields.items()])+'\n') 
-        
-        if bf.VALID: 
-            chr_str = self.missing_str_list(sorted(bf.chromosomes)) 
-            f_data = bf.prefix+chr_str+'.'+'[bed,bim.fam]'
-            self.write(blank2+'      Bfiles:\n')
-            self.write(blank2+'             Input Files:  '+f_data+'\n')
-            self.write(blank2+'             LD_ID File:   '+bf.id_file+'\n')
+            self.out.write(outformat % outtuple) 
+            self.out.flush()  
             
-        if ph.VALID: 
-            self.write(blank2+'  Phenotypes:\n')
+            if FIN and t_idx == 0: self.out.write(' **Target Config Made:  '+t_name+'\n\n') 
+            if FIN and t_idx == 1: self.out.write('  **Model Config Made:  '+t_name+'\n\n') 
+            self.out.flush() 
+        
+        if self.FILE: 
+            self.loghandle.write(outformat % outtuple)
             
-            pi, (p1,p2) = 0, [fx.split('/') for fx in [ph.files[0],ph.files[-1]]]
-            while pi < min(len(p1),len(p2)) and p1[pi] == p2[pi]: pi+=1 
-            if len(ph.files) == 1:   self.write(blank2+'             Test/Validation File: '+ph.files[0]+', None\n') 
-            elif pi < 2:             self.write(blank2+'             Test/Validation File: '+ph.files[0]+', '+ph.files[1]+'\n') 
-            else:                    self.write(blank2+'             Test/Validation File: '+ph.files[0]+', '+"/".join(p2[pi-1::])+'\n')
-            if 2 < 5:                self.write(blank2+'             Input Fields:         '+", ".join([x+'='+y for x,y in ph.fields.items()])+'\n') 
-        self.write('\n') 
-        return
 
-    def reveal_new_settings(self, settings): 
-        kFiles, kPrefixes = [[a,b] for a,b in settings.files.items() if b is not None and a not in self.obs_input], [[a,b] for a,b in settings.prefixes.items() if b is not None and a not in self.obs_input]
-        if len(kFiles) + len(kPrefixes) > 0: 
-            self.write(self.h_blank+'               Data Generated:       \n') 
-            if len(kFiles) > 0: 
-                for i,(k,fn) in enumerate(sorted(kFiles)):
-                    self.obs_input.append(k) 
-                    if i == 0:  self.write(self.h_blank+'                        Files:      '+k+'_file='+fn+'\n') 
-                    else:       self.write(self.h_blank+'                     '+k+'_file='+fn+'\n') 
-            if len(kPrefixes) > 0: 
-                for i,(k,fn) in enumerate(sorted(kPrefixes)): 
-                    self.obs_input.append(k) 
-                    if i == 0:  self.write(self.h_blank+'                     Prefixes:      '+k+'_prefix='+fn+'\n') 
-                    else:       self.write(self.h_blank+'                     '+k+'_prefix='+fn+'\n') 
-            self.write('\n') 
-        return            
+    def mark(self,dots=1):
+        if self.line_loc >   110:    return 
+        elif self.line_loc >  80:    dl = 1
+        elif self.line_loc >  65:    dl = dots 
+        elif self.line_loc >  50:    dl = 2*dots 
+        else:                        dl = 3*dots 
+        mark_string = '.'.join(['' for x in range(dl+1)])  
+        self.write(mark_string, DOTS = True)  
 
-
-
-
-
-
-    def update_minor(self,update):
-        if 'SKIP' in update.upper(): self.write('..'+update+'....')  
-        else:                        self.write('....'+update) 
-
-
-
-
-
-
+        
+    # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE 
+    # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE 
+    def start_rJob(self, RJ, job_name): 
+        rPaths, rCols, rSave, rOne, rVal = [], [], [], [], [] 
+        self.new_bk = self.sub_blank+'         ' 
+        if job_name == 'clump':    rInit,rJ = RJ[0:1], RJ[1::] 
+        elif RJ[1] != '--vanilla': rInit,rJ = RJ[0:2], RJ[2::] 
+        else:                      rInit,rJ = RJ[0:3], RJ[3::] 
+        for i in range(1,len(rJ), 2): 
+            a,n,b = rJ[i-1], rJ[i-1][2::], rJ[i] 
+            if   n in ['n.cores','fpath']: continue 
+            elif job_name == 'clump': 
+                if n in  ['clump-field','clump-snp-field']: continue 
+                elif n in ['clump','out','bfile','extract','keep']: rPaths.append([a,b])          
+                else:                                               rSave.append([a,b])                                                
+            else: 
+                if len(a.split('.')) > 1 and a.split('.')[0] == '--sumstats': rCols.append([a.split('.')[-1], b])
+                elif   len(rJ[i].split('/'))   > 1:                           rPaths.append([a,b]) 
+                elif   rJ[i] == '1':                                          rOne.extend([rJ[i-1], rJ[i]]) 
+                else:                                                         rSave.append([rJ[i-1],rJ[i]])
+        K, LP = self.localize_paths(job_name, rPaths) 
+        dl = max(self.run_len - self.line_loc, 5) 
+        cl = '.'.join(['' for x in range(dl)])
+        if job_name == 'clump': 
+            self.whisper(cl+'\n'+self.sub_blank+'Running Plink:\n') 
+            K = ['bfile', 'clump','extract', 'keep', 'out']
+            self.show_local(K, LP) 
+            if len(rSave) > 0: 
+                self.whisper(self.new_bk+rSave[0][0]+' '+rSave[0][1]) 
+                for rs in rSave[1::]: self.whisper(' '+rs[0]+' '+rs[1]) 
+                self.whisper('\n') 
+        else:    
+            if RJ[1] == '--vanilla': rInit,rJ = RJ[0:3], RJ[3::] 
+            else:                    rInit,rJ = RJ[0:2], RJ[2::] 
+            self.whisper(cl+'\n'+self.sub_blank+'Running Rscript:\n') 
+            self.whisper(self.new_bk+" ".join(rInit)+'\n') 
+            self.show_local(K, LP) 
+            if len(rOne) > 0: self.whisper(self.new_bk+" ".join(rOne)+'\n') 
+            if len(rSave) > 0: 
+                self.whisper(self.new_bk+rSave[0][0]+' '+rSave[0][1]) 
+                for rs in rSave[1::]: self.whisper(' '+rs[0]+' '+rs[1]) 
+                self.whisper('\n') 
+        nl = self.new_bk+'.......................................'
+        self.whisper(nl) 
+        if self.args.verbose: self.line_loc, self.last_line = len(nl), nl 
+        return  
 
     def localize_paths(self, jn, rPaths): 
         rundir = self.runpath.split('/')[-1] 
@@ -225,10 +356,8 @@ class BridgeProgress:
                 while bi < bLen and b_fields[bi] == f_fields[bi]: bi+= 1  
                 if bi > 2:  b = "*/"+"/".join(b_fields[bi-1::])
                 LP[n] = [a,b] 
-        return K, LP  
-
-
-
+        return K, LP   
+    
     def show_local(self, K, LP): 
         my_len = 0
         for i,k in enumerate(K):
@@ -239,7 +368,7 @@ class BridgeProgress:
                 self.whisper(self.new_bk+a+' '+b) 
                 my_len = len(a)+len(b) 
             else: 
-                if my_len < 90: 
+                if my_len < 70: 
                     self.whisper('  '+a+' '+b) 
                     my_len += len(a)+len(b) 
                 else:           
@@ -248,176 +377,3 @@ class BridgeProgress:
         self.whisper('\n') 
         return  
 
-
-    def finish_data_validation(self, CONFIG_FILE): 
-
-        self.new_bk = self.sub_blank+'      ' 
-        self.write('\n'+self.new_bk+'Complete: Population Data Successfully Validated'+'\n') 
-        self.write(self.new_bk+'Temporary Config File Location: '+CONFIG_FILE+'\n') 
-        sys.exit() 
-
-
-
-
-    
-    def show_requirements(self, RK, LOC, R_DATA):
-        self.new_bk = self.sub_blank+'      ' 
-        self.write('..................................................\n')  
-        if RK['plink']: self.write(self.new_bk+'Plink Found: '+LOC['plink']+'\n') 
-        else:           self.write(self.new_bk+'Plink: Not Found, (Using included version: '+LOC['plink']+')\n') 
-        if RK['python3']: self.write(self.new_bk+'Python Found: '+LOC['python3']+'\n') 
-        else:                self.write(self.new_bk+'Python: Not Found, (Install Python to use wrapper)\n') 
-        if RK['matplotlib']: self.write(self.new_bk+'Matplotlib: Found\n') 
-        else:                self.write(self.new_bk+'Matplotlib: Not Found, (Install Matplotlib to produce plots)\n') 
-        if RK['R']: self.write(self.new_bk+'R Found: '+LOC['R']+'\n') 
-        else:       req_error('R not found, Please Install R')
-        self.write(self.new_bk+'R Version: '+R_DATA[0]+'\n') 
-        ANS = 'n'  
-        if len(R_DATA[1]) == 0: self.write(self.new_bk+'R packages: Up To Date\n') 
-        else:                   
-            self.write(self.new_bk+'R Packages: Missing '+str(len(R_DATA[1]))+' (Install: '+", ".join(R_DATA[1])+')\n') 
-            self.write(self.new_bk+'Would you like to attempt to install these packages (y/n)?: ') 
-            ANS = input() 
-        
-        return ANS 
-
-
-
-
-
-
-    def start_rJob(self, RJ, job_name): 
-        rPaths, rCols, rSave, rOne, rVal = [], [], [], [], [] 
-        self.new_bk = self.sub_blank+'         ' 
-        if job_name == 'clump':    rInit,rJ = RJ[0:1], RJ[1::] 
-        elif RJ[1] != '--vanilla': rInit,rJ = RJ[0:2], RJ[2::] 
-        else:                      rInit,rJ = RJ[0:3], RJ[3::] 
-        for i in range(1,len(rJ), 2): 
-            a,n,b = rJ[i-1], rJ[i-1][2::], rJ[i] 
-            if   n in ['n.cores','fpath']: continue 
-            elif job_name == 'clump': 
-                if n in  ['clump-field','clump-snp-field']: continue 
-                elif n in ['clump','out','bfile','extract','keep']: rPaths.append([a,b])          
-                else:                                               rSave.append([a,b])                                                
-            else: 
-                if len(a.split('.')) > 1 and a.split('.')[0] == '--sumstats': rCols.append([a.split('.')[-1], b])
-                elif   len(rJ[i].split('/'))   > 1:                           rPaths.append([a,b]) 
-                elif   rJ[i] == '1':                                          rOne.extend([rJ[i-1], rJ[i]]) 
-                else:                                                         rSave.append([rJ[i-1],rJ[i]])
-        K, LP = self.localize_paths(job_name, rPaths) 
-        if job_name == 'clump': 
-            self.whisper('\n'+self.sub_blank+'Running Plink:\n') 
-            K = ['bfile', 'clump','extract', 'keep', 'out']
-            self.show_local(K, LP) 
-            if len(rSave) > 0: 
-                self.whisper(self.new_bk+rSave[0][0]+' '+rSave[0][1]) 
-                for rs in rSave[1::]: self.whisper(' '+rs[0]+' '+rs[1]) 
-                self.whisper('\n') 
-        else:    
-            if RJ[1] == '--vanilla': rInit,rJ = RJ[0:3], RJ[3::] 
-            else:                    rInit,rJ = RJ[0:2], RJ[2::] 
-            self.whisper('..................................................\n'+self.sub_blank+'Running Rscript:\n') 
-            self.whisper(self.new_bk+" ".join(rInit)+'\n') 
-            self.show_local(K, LP) 
-            if len(rOne) > 0: self.whisper(self.new_bk+" ".join(rOne)+'\n') 
-            if len(rSave) > 0: 
-                self.whisper(self.new_bk+rSave[0][0]+' '+rSave[0][1]) 
-                for rs in rSave[1::]: self.whisper(' '+rs[0]+' '+rs[1]) 
-                self.whisper('\n') 
-        self.whisper(self.new_bk+'........................................................................') 
-        return  
-
-
-
-
-    def start_major(self,topic,msg=None,subtopics=[]): 
-        if self.status == 'minor': self.end() 
-        self.status = 'major'
-        self.write(self.h_blank+self.job_heading+topic+'\n') 
-        self.blank = self.h_blank+''.join([' ' for x in range(len(self.job_heading))])
-        self.sub_blank = self.blank 
-        if msg is not None: 
-            self.write(self.blank+msg+' '+', '.join([str(s) for s in subtopics])+'\n') 
-            self.sub_blank = ''.join([' ' for x in range(len(msg))])
-        self.jblank = self.sub_blank 
-        self.log.append([topic])
-        self.topic, self.topics, self.subtopic, self.events[topic] = topic, 0, None, dd(list) 
-        self.update_indent, self.update_len = self.h_blank, 0  
-        
-
-
-    def start_minor(self,topic,block_len=10,ENUMERATE=False, REVEAL=[], SKIP=False, FIN=True):
-        if self.status == 'minor' and FIN: self.end() 
-        if len(REVEAL) > 0 and self.topics > 0:  self.reveal_new_settings(REVEAL[0]) 
-        self.topics += 1 
-        self.counter, self.status, self.subtopic = 0, 'minor', topic 
-        self.log[-1].append(topic)
-        #self.ENUMERATE=ENUMERATE
-        self.block_len,self.mp,self.dots,self.numbers = block_len,block_len,0,0 
-        if block_len > 100: self.mp = 100 
-        if SKIP: self.write('\n') 
-        self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
-        if not FIN: self.write('........................................\n') 
-        self.jblank = self.sub_blank + ''.join([' ' for x in range(6)]) 
-        self.update_indent,self.update_len = self.sub_blank,0  
-     
-
-
-    def mark(self,dots=0):
-        self.counter +=1 
-        if self.active: 
-            if dots > 0: self.write('.'.join(['' for x in range(dots)]))
-            elif dots == 0: 
-                if self.counter % self.mp == 0: 
-                    self.write('.') 
-                    self.dots +=1
-                    if self.dots > 100: self.mp = self.counter - 1 
-                    elif self.dots > 80: self.mp = self.counter / 2 
-                    elif self.dots > 60: self.mp = self.counter / 4 
-                    elif self.dots > 50: self.mp = self.counter / 8
-                    elif self.dots > 40: self.mp = self.counter / 16
-                    elif self.dots > 30: self.mp = self.counter / 8
-                    elif self.dots > 20: self.mp = self.counter / 4
-                    elif self.dots > 10: self.mp = self.counter / 2  
-            else:
-                if self.counter % self.mp == 0: 
-                    self.counter *= 5 
-                    self.write('.') 
-                    self.dots +=1
-                    if self.dots >   20: self.mp = self.counter - 1
-                    elif self.dots > 10: self.mp = self.counter /  2   
-                    else:                self.mp = self.counter * 2 
-
-                        
-    
-
-    def fail(self, MSG, notes = []): 
-        self.active = True
-        self.write('ERROR!\n') 
-        self.write(self.jblank+MSG+'\n') 
-        for n in notes:
-            self.write(self.jblank+n+'\n') 
-        sys.exit(2) 
-
-                    
-
-    def update99(self, UPDATE): 
-        self.update_len += len(UPDATE) + 2 
-        if self.update_len > 40: 
-            self.out.write('\n'+self.update_indent+'....') 
-            self.update_len = 0 
-        self.out.write(UPDATE+'..') 
-
-
-    def end(self,NOTE=None): 
-        if NOTE != None: self.write(NOTE+'\n')
-        elif self.active and self.subtopic != None: self.write('Complete\n') 
-        try:                        self.events[self.topic][self.subtopic], self.subtopic = [self.counter], None 
-        except AttributeError:      self.subtopic = None 
-        except KeyError:            self.subtopic, self.update_indent,self.update_len = None, '',0  
-
-
-
-    def finish(self,NOTE=None):
-        self.end(NOTE) 
-        self.write('\n') 

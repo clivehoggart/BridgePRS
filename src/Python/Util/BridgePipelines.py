@@ -1,36 +1,20 @@
 import sys,os
 from collections import defaultdict as dd
 
-
-# beta 
-
-
-def bridge_error(eString):
-    if type(eString) in [list,tuple]:
-        sys.stderr.write('\nBridgePipeLineError: '+eString[0]+'\n')                     
-        for es in eString[1::]: sys.stderr.write('    '+es+'\n')
-    else: sys.stderr.write('\nBridgePipeLineError: '+eString+'\n')                           
-    sys.exit()
-
-
-
-
+# PHENO
+# PHENO_FILES 
 
 class BridgePipelines:
     def __init__(self,io): 
-        self.args, self.io, self.module, self.cmd = io.args, io, io.module, io.cmd
-        self.FIN = dd(bool)
+        self.args, self.io, self.module, self.cmd, self.settings = io.args, io, io.module, io.cmd, io.settings 
+        self.eType, self.FIN = 'BridgePipelineError:', dd(bool)
         self.input_key = dd(lambda: dd(bool)) 
         if self.module != 'analyze': self.create() 
 
 
     def create(self): 
-        
-        self.commands, self.pop = [self.cmd], self.args.pop 
-        
-        
+        self.commands, self.pop = [self.cmd], self.settings.pop.name 
         if self.module != 'easyrun':
-            self.pop = self.args.pop[0]  
             if self.module.split('-')[0] == 'prs': 
                 self.io.paths['run'] = self.io.paths['home']+'/'+self.module+'_'+self.pop 
                 if self.cmd == 'run': 
@@ -41,39 +25,37 @@ class BridgePipelines:
                 self.io.paths['run'] = self.io.paths['home']+'/model_'+self.pop 
                 if self.cmd == 'run': self.commands = ['clump','beta','optimize','prior'] 
                 else:                 self.commands = [self.cmd] 
-            else: bridge_error('Unsupported Module') 
-        
+            else: self.io.progress.fail('Unsupported Module') 
             self.progress_file = self.io.paths['run']+'/bridge.'+self.module+'.result'
             self.add_dirs(self.io.paths['run'], self.commands) 
             if not os.path.isfile(self.progress_file): 
                 w = open(self.progress_file,'w')  
-                w.write('POP_NAME='+self.pop+'\n') 
+                w.write('POP='+self.pop+'\n') 
                 w.write('MODULE_NAME='+self.module+'\n')
                 w.close()
             return  
-        else: 
-            self.pop1, self.pop2 = self.args.pop 
-            for i,x in enumerate(['prs-single','prs-prior','prs-port','prs-combined']): 
-                dir1 = x+'_'+self.pop1 
-                if i < 2: self.add_dirs(self.io.paths['home']+'/'+dir1, ['clump','beta','predict','quantify'])
-                if i < 3: self.add_dirs(self.io.paths['home']+'/'+dir1, ['predict','quantify'])
-                else:     self.add_dirs(self.io.paths['home']+'/'+dir1, []) 
-                progress_file = self.io.paths['home']+'/'+dir1+'/bridge.'+x+'.result'
-                if not os.path.isfile(progress_file): 
-                    w = open(progress_file,'w')  
-                    w.write('POP_NAME='+self.pop1+'\n') 
-                    w.write('MODULE_NAME='+x+'\n')
-                    w.close()
-            
-            self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','optimize','prior']) 
-            progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.build-model.result'
+        self.pop1, self.pop2 = self.args.pop 
+        for i,x in enumerate(['prs-single','prs-prior','prs-port','prs-combined']): 
+            dir1 = x+'_'+self.pop1 
+            if i < 2: self.add_dirs(self.io.paths['home']+'/'+dir1, ['clump','beta','predict','quantify'])
+            if i < 3: self.add_dirs(self.io.paths['home']+'/'+dir1, ['predict','quantify'])
+            else:     self.add_dirs(self.io.paths['home']+'/'+dir1, []) 
+            progress_file = self.io.paths['home']+'/'+dir1+'/bridge.'+x+'.result'
             if not os.path.isfile(progress_file): 
                 w = open(progress_file,'w')  
-                w.write('POP_NAME='+self.pop2+'\n') 
-                w.write('MODULE_NAME=build-model\n')
+                w.write('POP='+self.pop1+'\nMODULE_NAME='+x+'\n') 
+                #w.write('MODULE_NAME='+x+'\n')
                 w.close()
-            return 
-       
+        self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','optimize','prior']) 
+        progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.build-model.result'
+        if not os.path.isfile(progress_file): 
+            w = open(progress_file,'w')  
+            w.write('POP='+self.pop2+'\nMODULE_NAME=build-model\n') 
+            #w.write('MODULE_NAME=build-model\n')
+            w.close()
+        return 
+  
+
 
     def add_dirs(self,parent,children,grandchildren=[]):
         if not os.path.exists(parent): os.makedirs(parent)
@@ -89,7 +71,7 @@ class BridgePipelines:
 
     
 
-    def verify(self):
+    def verify_pipeline(self):
 
         if self.module in ['easyrun','analyze']: return self  
         self.command_strings = []
@@ -109,19 +91,17 @@ class BridgePipelines:
                 if x_val == 'FIN':      self.FIN[x_job] = True  
                 elif x_val == 'PREFIX': self.input_key['prefix'][x_job.lower()] = X2 
                 elif x_val == 'FILE':   self.input_key['file'][x_job.lower()]   = X2 
-                else:                   bridge_error('Bad Key')  
+                else:                   self.io.progress.fail('Bad Key',ETYPE=self.eType)                   
             elif len(xsp) == 2: 
                 if xsp[-1] == 'FILE': self.input_key['file'][xsp[0].lower()] = X2 
                 elif xsp[0] == 'FIELD': 
                     f_type, f_name = xsp[1].split('-') 
                     if f_type == 'PHENO': self.input_key['pf-'+f_name.lower()] = X2  
-                    else: 
-                        print('wtf bro') 
-                        sys.exit() 
+                    else:                 self.io.progress.fail(['Bad Ftype',f_type],ETYPE=self.eType)  
         return self
 
     
-    def progress_pair(self): 
+    def progress_pair(self):
         p_handle = open(self.progress_file) 
         progress_pair = [x.strip().split('=') for x in p_handle.readlines()]  
         p_handle.close() 
@@ -129,23 +109,24 @@ class BridgePipelines:
 
 
 
-    def update(self, d): 
-        fD, fI, f_pass,f_obs = self.io.settings, self.io.settings.input, dd(bool), [] 
+    def log_result(self, d): 
+        fD, fI, f_pass, f_obs = self.io.settings, self.io.settings.pop, dd(bool), [] 
         np, fp, D = self.pop+'_'+d, self.io.paths['run']+'/'+d, d.upper() 
-        f_pairs = [[X1,X2] for X1,X2 in self.progress_pair() if X1.split('_')[0] != self.pop or X1.split('_')[1] != D] 
-        f_init  = [x[0] for x in f_pairs]
+        
+        #for line in open(fI.config,'rt'): 
+        
+        f_pairs = [line.strip().split('=') for line in open(fI.config,'rt')]
+        f_pairs.extend([[X1,X2] for X1,X2 in self.progress_pair() if X1.split('_')[0] != self.pop or X1.split('_')[1] != D]) 
         if fI.phenotypes.VALID: 
-            f_pairs.append(['PHENO_FILES',fI.phenotypes.names])
-            for x,y in fI.phenotypes.fields.items():  f_pairs.append(['FIELD_PHENO-'+x,y]) 
-        
-        if fI.sumstats.VALID:    f_pairs.append(['SNP_FILE',fI.sumstats.snp_file]) 
-        if fI.bdata.VALID:       f_pairs.append(['ID_FILE',fI.bdata.id_file]) 
+            f_pairs.append(['PHENOTYPE_FILES',",".join(fI.phenotypes.files)])
+            for x,y in fI.phenotypes.fields.items():  f_pairs.append(['PHENOTYPE_FIELD-'+x,y]) 
+            f_pairs.append(['PHENOTYPE_TYPE',fI.phenotypes.type]) 
+        #if fI.sumstats.VALID:    f_pairs.append(['SNP_FILE',fI.sumstats.snp_file])
+        #if fI.bdata.VALID:       f_pairs.append(['ID_FILE',fI.bdata.id_file]) 
         if 'model' in fD.files and fD.files['model'] is not None: f_pairs.append(["MODEL_FILE",fD.files['model']]) 
-        
         self.validate_path(np,fp, D) 
         self.io.settings.prefixes[d] = fp+'/'+np  
-        f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])     
-        
+        f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])             
         w = open(self.progress_file,'w') 
         for a,b in f_pairs: 
             if a not in f_obs: w.write(a+'='+b+'\n') 
@@ -156,25 +137,23 @@ class BridgePipelines:
 
 
     def validate_path(self, np, fp, D): 
-        if not os.path.isdir(fp): self.io.progress.fail('EXITED UNSUCCESSFULLY') #,[self.args.module,self.args.cmd,D])     
+        if not os.path.isdir(fp): self.io.progress.fail('EXITED UNSUCCESSFULLY',ETYPE=self.eType) 
         d_files =   [fn for fn in os.listdir(fp) if fn.split('.')[-1] not in ['log','tmp']] 
         err_files, res_files = [fn for fn in d_files if fn.split('.')[-1] == 'stderr'], [fn for fn in d_files if np in fn]
         self.check_error_output(fp, err_files, D) 
-        if len(res_files) < 1: self.io.progress.fail('EXITED UNSUCCESSFULLY; NO OUTPUT CREATED') #,[self.args.module,self.args.cmd,D])     
+        if len(res_files) < 1: self.io.progress.fail('EXITED UNSUCCESSFULLY; NO OUTPUT CREATED',ETYPE=self.eType) 
         return 
 
 
 
     def check_error_output(self, fp, err_files, D): 
-        
-        if len(err_files) != 1: self.io.progress.fail('EXITED UNSUCCESSFULLY') #,[self.args.module,self.args.cmd,D])     
-        
-        fname = fp+'/'+err_files[0] 
-        f_handle = open(fname)  
+        if len(err_files) != 1: self.io.progress.fail('EXITED UNSUCCESSFULLY', ETYPE=self.eType) 
+        #fname = fp+'/'+err_files[0] 
+        #f_handle = open(fname)  
+        f_errors, f_handle = [], open(fp+'/'+err_files[0]) 
         f_lines = [lp.strip() for lp in f_handle] 
         f_handle.close() 
-        f_errors = [] 
-
+        #f_errors = [] 
         for lp in f_lines: 
             ls = [x.lower() for x in lp.split()] 
             if len(ls) < 1: continue 
@@ -187,9 +166,8 @@ class BridgePipelines:
                 f_errors.append(' '.join(ls)) 
         
         if len(f_errors) == 0: return
-
-        print('yooo',f_errors) 
-        self.io.progress.fail('EXITED UNSUCCESSFULLY',f_errors) #,[self.args.module,self.args.cmd,D])     
+        self.io.progress.fail(['EXITED UNSUCCESSFULLY']+f_error, ETYPE=self.eType) 
+        
 
 
 

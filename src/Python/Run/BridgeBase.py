@@ -8,11 +8,18 @@ from collections import defaultdict as dd
 
 
 class BridgeBase:
-    def __init__(self, bridge, popname):
+    def __init__(self, bridge):
         self.module, self.args, self.io, self.settings, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.settings, bridge.io.progress 
-        self.popname = popname
+        #self.popname = popname
+       
+
+        self.pop = self.settings.pop  
+       
+        self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.phenotypes 
         
-        self.bd, self.ss, self.pt, self.P = self.settings.input.bdata, self.settings.input.sumstats, self.settings.input.phenotypes, self.settings.prefixes
+        self.P, self.F = self.settings.prefixes, self.settings.files 
+
+
         
         self.model, self.base_paths = {}, dd(bool) 
         if self.args.platform == 'mac':     self.make_job = self.make_mac_job
@@ -20,7 +27,7 @@ class BridgeBase:
         
         
         
-        ### MAYBE ADD USER SETTING ### combine  
+        ### MAYBE ADD USER SETTING ### combine mark 
         if self.module.split('-')[0] != 'prs': 
             self.clump_args = ['--clump-p1','1e-1','--clump-p2','1e-1','--clump-kb','1000','--clump-r2','0.01','--maf','0.001'] 
             self.lambda_val = '0.1,0.2,0.5,1,2,5,10,20'
@@ -48,8 +55,14 @@ class BridgeBase:
     
     def make_linux_job(self, run_job, SILENT = False):
         from subprocess import call 
+        
+        #print('yooooo', SILENT) 
+
+        
         if not SILENT: self.progress.start_rJob(run_job, self.name) 
+        #self.progress.start_rJob(run_job, self.name) mark  
         #if self.name != 'clump': self.progress.start_rJob(run_job) 
+        #self.progress.marq(1)  
         if not self.base_paths[self.name]:
             for k, paths in self.base_paths.items(): 
                 if paths: 
@@ -62,6 +75,7 @@ class BridgeBase:
 
 
     def make_mac_job(self, run_job, SILENT = False): 
+        #self.progress.marq(1)  
         if not self.base_paths[self.name]:
             for k, paths in self.base_paths.items(): 
                 if paths: self.base_paths[k] = False 
@@ -71,6 +85,8 @@ class BridgeBase:
         else:                    my_job = " ".join(run_job + ['>',self.base_paths[self.name][0], '2>', self.base_paths[self.name][1]]) 
         os.system(my_job) 
         return  
+
+
 
     def close_all(self): 
         if self.args.platform != 'mac': 
@@ -87,12 +103,9 @@ class BridgeBase:
         BOOL1 = chromosome!='1'
         self.name, pp =  name, self.io.programs['plink'] 
         X = ['--bfile',self.bd.map[chromosome],'--extract', self.ss.snp_file, '--keep', self.bd.id_file] + self.bd.X_fields + self.clump_args
-        rJOB = [pp,'--clump',self.ss.map[chromosome],'--out',self.io.paths['clump']+'/'+self.popname+'_clump_'+str(chromosome)] + X 
-        
-        
+        rJOB = [pp,'--clump',self.ss.map[chromosome],'--out',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)] + X 
         self.make_job(rJOB, SILENT = (chromosome != '1')) 
-        self.progress.mark()  
-        rJOB = ['gzip','-f',self.io.paths['clump']+'/'+self.popname+'_clump_'+str(chromosome)+'.clumped'] 
+        rJOB = ['gzip','-f',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)+'.clumped'] 
         self.make_job(rJOB, SILENT = True) 
         return 
 
@@ -101,12 +114,17 @@ class BridgeBase:
     def run_beta(self, name = 'beta'): 
         self.name, pp = name, self.io.programs['est_beta_bychr'] 
         X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump']] + self.ss.X_fields 
-        X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.popname+'_beta','--by.chr.sumstats',self.args.sumstats_suffix,'--n.cores',str(self.args.cores)]) 
-        X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
+        X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.pop.name+'_beta','--by.chr.sumstats',self.ss.suffix,'--n.cores',str(self.args.cores)]) 
+        X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',self.ss.thin_snps])
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
         
         X.extend(['--lambda',self.lambda_val]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
+        
+        
+        
+
+        
         self.make_job(rJOB) 
         return
         
@@ -115,12 +133,15 @@ class BridgeBase:
     
     def run_predict(self, name = 'predict'): 
         self.name, pp = name, self.io.programs['predict_bychr'] 
-        X = ['--bfile',self.bd.prefix,'--beta.stem',self.P['beta'],'--out.file',self.io.paths['predict']+'/'+self.popname+'_predict','--n.cores',str(self.args.cores)] + self.pt.X_fields
-        X.extend(['--ranking','pv','--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
+        
+
+        #print('bro bro bro') 
+        #print('bro bro bro') 
+        #print('bro bro bro')
+        #print(self.P['beta']) 
+        X = ['--bfile',self.pt.genotype_prefix,'--beta.stem',self.P['beta'],'--out.file',self.io.paths['predict']+'/'+self.pop.name+'_predict','--n.cores',str(self.args.cores)] + self.pt.X_fields
+        X.extend(['--ranking','pv','--by.chr', str(int(self.pt.BYCHR)), '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
-
-
-
         self.make_job(rJOB) 
         return 
     
@@ -130,7 +151,7 @@ class BridgeBase:
 
     def run_quantify(self, name = 'quantify'): 
         self.name, pp = name, self.io.programs['pred_combine_en']  
-        X = ['--pop2',self.popname,'--outfile',self.io.paths['quantify']+'/'+self.popname+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields  
+        X = ['--pop2',self.pop.name,'--outfile',self.io.paths['quantify']+'/'+self.pop.name+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields  
         X.extend(['--pred1',self.P['predict'],'--models1',self.P['beta']]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
         self.make_job(rJOB)     
@@ -146,8 +167,8 @@ class BridgeBase:
     #### PRS PORT ### 
     def port_predict(self, name='predict'): 
         self.name, pp = name, self.io.programs['predict_bychr'] 
-        X = ['--bfile',self.bd.prefix,'--beta.stem',self.model['beta'],'--out.file',self.io.paths['predict']+'/'+self.popname+'_predict','--n.cores',str(self.args.cores)]  + self.pt.X_fields  
-        X.extend(['--ranking','pv','--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
+        X = ['--bfile',self.pt.genotype_prefix,'--beta.stem',self.model['beta'],'--out.file',self.io.paths['predict']+'/'+self.pop.name+'_predict','--n.cores',str(self.args.cores)]  + self.pt.X_fields  
+        X.extend(['--ranking','pv','--by.chr', str(int(self.pt.BYCHR)), '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 
         return 
@@ -155,7 +176,7 @@ class BridgeBase:
     
     def port_quantify(self, name = 'quantify'): 
         self.name, pp = name, self.io.programs['pred_combine_en']  
-        X = ['--pop2',self.popname,'--outfile',self.io.paths['quantify']+'/'+self.popname+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields 
+        X = ['--pop2',self.pop.name,'--outfile',self.io.paths['quantify']+'/'+self.pop.name+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields 
         X.extend(['--pred1',self.P['predict'],'--models1',self.model['beta']]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
         self.make_job(rJOB) 
@@ -171,8 +192,7 @@ class BridgeBase:
         
         self.name, pp = name, self.io.programs['est_beta_InformPrior_bychr'] 
         X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump'],'--n.cores',str(self.args.cores)] + self.ss.X_fields 
-        #X = ['--bfile',self.P['bfile'],'--ld.ids',self.F['id'],'--sumstats',self.P['sumstats'],'--clump.stem',self.P['clump'], '--n.cores',str(self.args.cores)]  
-        X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.popname+'_beta','--by.chr.sumstats',self.args.sumstats_suffix,'--ranking','f.stat']) 
+        X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.pop.name+'_beta','--by.chr.sumstats',self.ss.suffix,'--ranking','f.stat']) 
         X.extend(['--param.file',self.model['optimize']+'_best_model_params.dat','--prior',self.model['prior'],'--fst',str(self.args.fst)])
         
         X.extend(['--sumstats.P',self.ss.fields['P']]) 
@@ -187,7 +207,7 @@ class BridgeBase:
 
     def prior_quantify(self, name = 'quantify'): 
         self.name, pp = name, self.io.programs['pred_combine_prior_only'] 
-        X = ['--pop2',self.popname,'--outfile',self.io.paths['quantify']+'/'+self.popname+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields 
+        X = ['--pop2',self.pop.name,'--outfile',self.io.paths['quantify']+'/'+self.pop.name+'_quantify','--n.cores',str(self.args.cores)] + self.pt.X_fields 
         X.extend(['--pred1',self.P['predict'],'--models1',self.P['beta']]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X  
         self.make_job(rJOB) 
@@ -200,8 +220,8 @@ class BridgeBase:
     def run_optimize(self, name = 'optimize'): 
         self.name, pp = name, self.io.programs['predict_bychr'] 
 
-        X = ['--bfile',self.bd.prefix,'--beta.stem',self.P['beta'],'--out.file',self.io.paths['optimize']+'/'+self.popname+'_optimize','--n.cores',str(self.args.cores)]  + self.pt.X_fields  
-        X.extend(['--ranking','pv','--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
+        X = ['--bfile',self.pt.genotype_prefix,'--beta.stem',self.P['beta'],'--out.file',self.io.paths['optimize']+'/'+self.pop.name+'_optimize','--n.cores',str(self.args.cores)]  + self.pt.X_fields  
+        X.extend(['--ranking','pv','--by.chr', str(int(self.pt.BYCHR)), '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 
         return 
@@ -209,11 +229,12 @@ class BridgeBase:
 
     def run_prior(self, name = 'prior'): 
         self.name, pp = name, self.io.programs['est_beta_bychr'] # PRECISION = TRUE 
-        X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix,'--clump.stem',self.P['clump'],'--beta.stem',self.io.paths['prior']+'/'+self.popname+'_prior','--n.cores',str(self.args.cores)] 
+        X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix,'--clump.stem',self.P['clump'],'--beta.stem',self.io.paths['prior']+'/'+self.pop.name+'_prior','--n.cores',str(self.args.cores)] 
         X += self.ss.X_fields
         opt_params = self.P['optimize']+'_best_model_params.dat'
-        X.extend(['--precision','TRUE','--param.file',opt_params,'--by.chr.sumstats',self.args.sumstats_suffix,'--S','1','--lambda','1']) 
-        X.extend(['--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
+        X.extend(['--precision','TRUE','--param.file',opt_params,'--by.chr.sumstats',self.ss.suffix,'--S','1','--lambda','1']) 
+        #X.extend(['--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
+        X.extend(['--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',self.ss.thin_snps]) 
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 

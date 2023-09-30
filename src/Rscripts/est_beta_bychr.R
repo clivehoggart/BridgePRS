@@ -62,8 +62,6 @@ print(opt)
 
 source(opt$fpath)
 
-# fread
-# names 
 
 logfile <- paste0(opt$beta.stem,".log")
 tmp <- t(data.frame(opt))
@@ -71,7 +69,6 @@ tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
-print('hi0') 
 
 opt$beta.stem <- ifelse( is.null(opt$beta.stem), opt$clump.stem, opt$beta.stem )
 
@@ -118,7 +115,6 @@ if( opt$by.chr.sumstats==0 ){
     }
 }
 
-print('hi1') 
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
 
 if( opt$by.chr==0 ){
@@ -128,19 +124,15 @@ if( opt$by.chr==0 ){
 }
 
 
-print('hi2') 
 #print(dirname(opt$sumstats))
 
 
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumfile  <- paste(opt$sumstats,chr,opt$by.chr.sumstats,sep='')
-        
         if(!file.exists(sumfile)) { 
             next 
             } 
-
-        print('hi3') 
         
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
         if( chr==1 ){
@@ -165,18 +157,16 @@ for( chr in 1:22 ){
         allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
         allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
         beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
-        print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXi44') 
-        print(snp.ptr) 
-        print(allele1.ptr) 
-        print(allele0.ptr) 
-        print(beta.ptr) 
+        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXi44') 
+        #print(snp.ptr) 
+        #print(allele1.ptr) 
+        #print(allele0.ptr) 
+        #print(beta.ptr) 
         
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-        print('hi46') 
         
-        print(sumstats) 
+        #print(sumstats) 
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
-        print('hi48') 
         if( opt$strand.check ){
             ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
                               sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |
@@ -188,7 +178,6 @@ for( chr in 1:22 ){
                               sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G" )
             sumstats <- sumstats[ptr.use,]
         }
-        print('hi5') 
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
     }
@@ -241,7 +230,6 @@ for( chr in 1:22 ){
 #    }
     beta.bar <- lapply( fits, getElement, 1 )
     
-    print('hi') 
     names(beta.bar) <- clump$SNP[clump.use]
 
     ptr.qc <- which(sapply(beta.bar,length)!=0)
