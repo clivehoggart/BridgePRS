@@ -2,7 +2,6 @@ import sys,os
 from collections import defaultdict as dd
 
 # PHENO
-# PHENO_FILES 
 
 class BridgePipelines:
     def __init__(self,io): 
@@ -23,7 +22,7 @@ class BridgePipelines:
                 else:                                             self.commands = [self.cmd] 
             elif self.module == 'build-model': 
                 self.io.paths['run'] = self.io.paths['home']+'/model_'+self.pop 
-                if self.cmd == 'run': self.commands = ['clump','beta','optimize','prior'] 
+                if self.cmd == 'run': self.commands = ['clump','beta','predict','prior'] 
                 else:                 self.commands = [self.cmd] 
             else: self.io.progress.fail('Unsupported Module') 
             self.progress_file = self.io.paths['run']+'/bridge.'+self.module+'.result'
@@ -46,7 +45,7 @@ class BridgePipelines:
                 w.write('POP='+self.pop1+'\nMODULE_NAME='+x+'\n') 
                 #w.write('MODULE_NAME='+x+'\n')
                 w.close()
-        self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','optimize','prior']) 
+        self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','predict','prior']) 
         progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.build-model.result'
         if not os.path.isfile(progress_file): 
             w = open(progress_file,'w')  
@@ -81,7 +80,6 @@ class BridgePipelines:
             elif c == 'beta': self.command_strings.append('Calculating SNP Weights'+JN) 
             elif c == 'predict': self.command_strings.append('Generating Polygenic Predictions'+JN) 
             elif c == 'quantify': self.command_strings.append('Quantifying PRS Result'+JN) 
-            elif c == 'optimize': self.command_strings.append('Optimizing Prior PRS Model'+JN) 
             elif c == 'prior': self.command_strings.append('Saving SNP Priors'+JN) 
             else:            self.command_strings.append(c) 
         for X1,X2 in self.progress_pair(): 

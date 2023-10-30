@@ -23,31 +23,63 @@ def zip_open(fp, HEADER = False):
 
 
 
+
 class BridgePop: 
-    def __init__(self, args, paths, pop_name, pop_key, ld_ref): 
-        self.args, self.paths, self.name, self.key  = args, paths, pop_name, pop_key 
+    def __init__(self, args, paths, pop_name, pop_key, ld_ref, pop_type = 'TARGET'):
+        self.args, self.paths, self.name, self.key, self.type  = args, paths, pop_name, pop_key, pop_type
         self.ref_pop = self.key['ldpop'] 
         
-        
-        self.bdata, self.sumstats, self.phenotypes = BridgeData(self.args, 'bdata', paths, self.ref_pop), BridgeData(self.args, 'sumstats', paths, self.ref_pop), BridgeData(self.args, 'phenotypes', paths, pop_name) 
+        self.bdata      = BridgeData(self.args, 'bdata',      paths, self.ref_pop)
+        self.sumstats   = BridgeData(self.args, 'sumstats',   paths, self.ref_pop) 
+        self.phenotypes = BridgeData(self.args, 'phenotypes', paths, pop_name, pop_type) 
         self.bdata.add_panel(ld_ref[self.ref_pop]) 
-        self.sumstats.add_stats(pop_key['sumstats_prefix'], pop_key['sumstats_suffix'], pop_key['snp_file'])
-        self.phenotypes.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_files']) 
         
         
-        
+        if pop_key['sumstats_prefix']: 
+            self.sumstats.add_stats(pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
+        if pop_key['genotype_prefix'] and pop_key['phenotype_file']: 
+            self.phenotypes.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_file'], self.args.validation_file) 
         self.chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
 
 
-class BridgeData: 
-    def __init__(self, args, datatype, paths, pop_name):
+    def validate(self, F, P, L):
         
+        mInputs, mGen = [], [] 
+        if self.args.module == 'check': return True
+        if self.args.cmd in ['go','run','clump','beta'] and not self.sumstats.VALID: mInputs.append('Sumstats Data')  
+        if self.args.cmd in ['go','run','predict','quantify'] and not self.phenotypes.VALID: mInputs.append('Genotype/Phenotype Data')  
+        
+        if self.args.cmd in ['beta']: 
+            if 'clump' not in P: mGen.append('Clump Data (Hint: Run '+self.args.module+' clump)')
+        
+        if self.args.cmd in ['predict','quantify']: 
+            if 'beta' not in P and self.args.module != 'prs-port': mGen.append('Weight Data (Hint: Run '+self.args.module+' beta)')
+            if self.args.cmd == 'quantify' and 'predict' not in P: mGen.append('Pred Data (Hint: Run '+self.args.module+' predict') 
 
-        self.args, self.datatype, self.paths, self.pop_name = args, datatype, paths, pop_name
-        self.VALID, self.TESTS = False, dd(bool)  
-        if self.datatype == 'bdata':         self.map = dd(list) 
-        elif self.datatype == 'sumstats':    self.fields, self.map, self.total = {}, dd(list), 0 
-        elif self.datatype == 'phenotypes':   self.fields, self.map = {}, dd(list) 
+        if self.args.module in ['prs-port','prs-prior'] and 'model' not in F: mInputs.append('Base Model --model_file (Hint: Run build-model)') 
+
+        if len(mInputs) + len(mGen) == 0: return True 
+
+        if len(mInputs) > 0: bridge_error(['Missing Input Data:']+mInputs) 
+        if len(mGen) > 0:    bridge_error(['Missing Run Data:']+mGen) 
+        return True  
+        
+        
+            
+
+
+
+
+
+class BridgeData: 
+    def __init__(self, args, datatype, paths, pop_name,pop_type = 'TARGET'):
+        self.args, self.datatype, self.paths, self.pop_name, self.pop_type = args, datatype, paths, pop_name, pop_type
+        self.VALID, self.TESTS, self.map = False, dd(bool), dd(list) 
+    
+        if self.datatype == 'sumstats':    
+            self.fields, self.map, self.total = {}, dd(list), 0 
+        elif self.datatype == 'phenotypes':   
+            self.fields, self.map = {}, dd(list) 
         
         
 
@@ -56,6 +88,11 @@ class BridgeData:
     def add_panel(self, ld_quad): 
         self.VALID = True 
         self.id_file, self.prefix, self.BYCHR, b_key  = ld_quad
+        
+        
+        
+        
+        
         self.ldpath = "/".join(self.prefix.split('/')[0:-1])
         for c in b_key: self.map[c] = b_key[c] 
         self.X_fields = ['--clump-field',vars(self.args)['ssf-p'], '--clump-snp-field',vars(self.args)['ssf-snpid']] 
@@ -70,7 +107,6 @@ class BridgeData:
         
         
     def add_stats(self,prefix,suffix, snp_file, thin_snps = '0'): 
-        
         self.VALID, self.BYCHR = True, True 
         self.prefix, self.prefix_path, pName, pLen, self.snp_file, self.thin_snps  = prefix, '/'.join(prefix.split('/')[0:-1]), prefix.split('/')[-1], len(prefix.split('/')[-1]), snp_file, thin_snps 
         p_files, suffix_cands = [self.prefix_path+'/'+x for x in os.listdir(self.prefix_path) if x[0:pLen] == pName], dd(int) 
@@ -94,16 +130,13 @@ class BridgeData:
             self.map[f_chr] = fp 
         self.suffix = suffix_prefix 
         if self.suffix.split('.')[-1] != 'gz': self.suffix+='.gz' 
-        #self.chromosomes = sorted([x for x in self.map.keys()]) 
-        sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-ss']
+        sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-n']
         self.fields         =  {ks.split('-')[-1].upper(): vars(self.args)[ks] for ks in sum_stats_fields}
         cands = [x for x,y in f_cnt.items() if y == len(self.map)] 
         cand_found, cand_errors = [y for x,y in self.fields.items() if y in cands], ['--ssf-'+x.lower()+' '+y for x,y in self.fields.items() if y not in cands] 
         if len(cand_errors) > 0:  bridge_error(['Invalid Sumstats Fields(s):']+cand_errors) 
-
         self.X_fields   = ['--sumstats.allele0ID',self.fields['REF'],'--sumstats.allele1ID',self.fields['ALT'],'--sumstats.betaID',self.fields['BETA']]
-        self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['SS'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
-        #self.ss_analyze_snpfile(TYPE='TEST')  
+        self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['N'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
         self.ss_test_snpfile() 
         return self 
 
@@ -150,50 +183,13 @@ class BridgeData:
         return  
 
 
-    def ss_analyze_snpfile99(self): 
-        
-        if self.snp_file is not None: self.NOSNPS = False 
-        else: 
-            self.NOSNPS = True 
-            snp_handle = self.paths['save']+'/snps.'+self.pop_name+'.txt' 
-            w = open(snp_handle,'w') 
-        
-        self.total, self.effects = 0, {} 
-        for f_chr, fp in self.map.items():  
-            gf = zip_open(fp) 
-            h_key = {h: i for i,h in enumerate(gf.readline().split())} 
-            SPB = [h_key[self.fields['SNPID']], h_key[self.fields['P']], h_key[self.fields['BETA']]]
-            null_len, effect_data = 0, [] 
-            for line in gf: 
-                line = line.split() 
-                spb = [line[k] for k in SPB] 
-                if self.NOSNPS: w.write(spb[0]+'\n') 
-                if float(spb[1]) > 0.05: null_len += 1 
-                else: 
-                    pv, effect = float(spb[1]), float(spb[2]) 
-                    self.total += null_len + 1 
-                    if null_len > 0: effect_data.append((null_len))  
-                    null_len = 0 
-                    effect_data.append((round(-log(pv,10),1),round(effect,1))) 
-            if null_len > 0: effect_data.append((null_len))             
-            self.total += null_len
-            self.effects[f_chr] = effect_data 
-        
-            gf.close()     
-        if self.TESTS['NOSNPS']: 
-            self.snp_file = snp_handle 
-            w.close()
-        return  
-
 
     ####################################   PHENOTYPES   #######################################
     
 
     def ph_get_genotypes(self, genotype_prefix): 
         self.genotype_prefix = genotype_prefix
-        g_path, g_prefix = "/".join(self.genotype_prefix.split('/')[0:-1]), self.genotype_prefix.split('/')[-1] 
-        
-        CK = dd(int) 
+        CK, g_path, g_prefix = dd(int), "/".join(self.genotype_prefix.split('/')[0:-1]), self.genotype_prefix.split('/')[-1] 
         for f in [x for x in os.listdir(g_path) if x[0:len(g_prefix)] == g_prefix]:
             if f.split('.')[-1] in ['bed','bim','fam']: CK[".".join(f.split('.')[0:-1])]+=1                                                                                                                                                                                   
         cands = [k for k,v in CK.items() if v == 3]
@@ -203,7 +199,6 @@ class BridgeData:
             self.BYCHR, k  = True, 0 
             cands = list(set(cands))                                                                                                                                                                                                                                                        
             while True:                                                                                                                                                                                                                                                                     
-                
                 my_prefix = list(set([c[0:k] for c in cands]))[0]                                                                                                                                                                                                                              
                 ck1 = list(set([c[0:k+1] for c in cands]))                                                                                                                                                                                                                                  
                 if len(ck1) == 1: k+=1                                                                                                                                                                                                                                                      
@@ -211,18 +206,34 @@ class BridgeData:
         return                                                                                                                                                                                                                                                                                  
 
 
-    def ph_fill(self, genotype_prefix, phenotype_files):
-        # cols  
-        self.VALID, self.type, self.files, col_data = True, 'binary', phenotype_files, dd(list) 
-        self.ph_get_genotypes(genotype_prefix) 
-        self.X_fields = ['--test.data',phenotype_files[0]] 
-        
-        if phenotype_files[0] == phenotype_files[-1]: 
-                self.files = [phenotype_files[0]] 
-                self.X_fields.extend(['--valid.data','0']) 
-        else:   self.X_fields.extend(['--valid.data',phenotype_files[1]]) 
-        
+    def split_phenotype_file(self, fname):
+        self.TESTS['NOVALID'] = True 
+        with open(fname, "r") as f: 
+            header = f.readline().strip() 
+            data   = [ln.strip() for ln in f]
+            h_len = int(len(data)/2)
+        d1,d2 = data[0:h_len], data[h_len::]
+        test_file, valid_file = self.paths['save']+'/'+self.pop_name+'.test_phenos.dat', self.paths['save']+'/'+self.pop_name+'.valid_phenos.dat'
+        w1, w2 = open(test_file,'w'), open(valid_file,'w') 
+        w1.write(header+'\n') 
+        w1.write("\n".join(d1)+'\n') 
+        w2.write(header+'\n') 
+        w2.write("\n".join(d2)+'\n') 
+        w1.close() 
+        w2.close() 
+        return [test_file, valid_file] 
 
+
+    def ph_fill(self, genotype_prefix, phenotype_file, validation_file = None):
+        self.VALID, self.type, self.file, col_data = True, 'binary', phenotype_file, dd(list) 
+        self.ph_get_genotypes(genotype_prefix) 
+        if self.pop_type == 'TARGET': 
+            if validation_file is not None: self.files = [phenotype_file, validation_file]
+            else:                           self.files = self.split_phenotype_file(phenotype_file) 
+            self.X_fields = ['--test.data',self.files[0],'--valid.data',self.files[1]]
+        else: 
+            self.files = [phenotype_file]
+            self.X_fields = ['--test.data',self.files[0],'--valid.data','0'] 
         if self.args.module != 'check' and self.args.phenotype is None: bridge_error('Phenotype field required (--phenotype)') 
         for i,fn in enumerate(self.files): 
             f = open(fn, 'rt') 
@@ -234,21 +245,17 @@ class BridgeData:
                 for j,c in enumerate(self.header): col_data[c].append(line[j]) 
                 if k > 100: break 
             f.close() 
-
         if self.args.phenotype is not None: 
             self.fields['NAME'] = self.args.phenotype 
             self.X_fields.extend(['--pheno.name',self.args.phenotype]) 
             if self.args.phenotype not in self.header: bridge_error('Invalid phenotype field name(s) supplied '+self.args.phenotype+', Available Fields: '+','.join(self.header)) 
             if len((list(set(col_data[self.args.phenotype])))) > 2:   self.type = 'continuous' 
             else:                                                     self.X_fields.extend(['--binary','1']) 
-
-
         if self.args.covariates is not None: 
             self.fields['COVARIATES'] = self.args.covariates
             self.X_fields.extend(['--cov.names',self.args.covariates]) 
             for c in self.args.covariates.split(','): 
                 if c not in self.header:  bridge_error('Invalid covariate field name(s) supplied '+self.args.covariates+', Available Fields: '+','.join(self.header)) 
-        
         return self 
 
 

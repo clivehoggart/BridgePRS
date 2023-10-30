@@ -125,14 +125,14 @@ class BridgePlot:
                 ax.bar(i,ht, color = self.colors[i], edgecolor='k', alpha = 0.85, zorder = 2) 
             else:
                 ax.bar(i,ht, color = 'white', edgecolor='k', alpha = 0.5, zorder = 1) 
-                btm, FK = 0, [[c,br.varexp.frac[c], color_key[c]] for c in cands]
+                cuts, btm, FK = [], 0, [[c,br.varexp.frac[c], color_key[c]] for c in cands]
                 for cand, frac, clr in FK: 
                     if cand == n or frac == 0: continue 
-                    if frac < 0.01: frac = 0.05
-                    fh = min(ht*frac, ht - btm) 
-                    ax.bar(i, fh, bottom = btm , color = clr, alpha = 0.9, zorder = 2) 
-                    btm = fh 
-                    
+                    cuts.append([ht*frac, clr, cand]) 
+                for piece, clr, cand in cuts: 
+                    ax.bar(i, piece, bottom = btm , color = clr, alpha = 0.9, zorder = 2) 
+                    btm += piece 
+
                     
         ax.plot([-0.6,4.6],[0,0], color='k', clip_on=False, zorder=0)   
         ax.plot([4.6,4.6], [0, b*1.5], color='k') 

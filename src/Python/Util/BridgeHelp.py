@@ -639,7 +639,6 @@ def create_sub_help_str(cmd, module=None):
     if cmd == 'eval': HS =  ('Evaluate SNP Clumps, Produce SNP Weights','') 
     if cmd == 'predict': HS =  ('Apply SNP Weights, Produce Polygenic Predictions','') 
     if cmd == 'quantify': HS =  ('Test Predictions, Produce Quantifiable Results','') 
-    if cmd == 'optimize': HS = ('Optimize SNP Weights,Produce Generalizable Predictions','') 
     if cmd == 'prior': HS = ('Test Predictions,Produce SNP Prior Proability Matrix','') 
     if cmd == 'result': HS = ('Analyze PRS Results','') 
     if cmd == 'combine': HS = ('Combine And Analyze PRS Results','') 

@@ -4,12 +4,7 @@ from .BridgeSettings  import BridgeSettings
 from .BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
 
-def bridge_error(eString):
-    if type(eString) in [list,tuple]:  
-        sys.stderr.write('\nBridgeIOError: '+eString[0]+'\n')
-        for es in eString[1::]: sys.stderr.write('    '+es+'\n')
-    else: sys.stderr.write('\nBridgeIOError: '+eString+'\n')
-    sys.exit(2) 
+
 
 class BridgeIO:
         def __init__(self,args,bridgedir,rundir, command_line):
@@ -19,22 +14,19 @@ class BridgeIO:
             self.set_programs_and_defaults() 
              
         def set_programs_and_defaults(self):
-            self.ROUNDS, self.FOUND, self.LOC, self.programs = 0, dd(bool), dd(lambda: 'NA'), {} 
-            for i,(p,pn) in enumerate([[self.args.rpath,'--rPath'],[self.args.plinkpath,'--plinkPath']]): #[self.args.ldpath,'--ldPath']]): 
-                if   os.path.exists(p):                      mp = os.path.abspath(p) 
-                elif os.path.exists(self.bridgedir+'/'+p):   mp = os.path.abspath(self.bridgedir+'/'+p) 
-                else:                                        bridge_error([pn+' '+p+' Does not exist']) 
-                for f in os.listdir(mp): self.programs[f.split('.')[0]] = mp+'/'+f 
+            self.ROUNDS, self.FOUND, self.LOC, self.programs= 0, dd(bool), dd(lambda: 'NA'), {} 
             try:    
                 import matplotlib, matplotlib.pyplot
                 self.FOUND['matplotlib'] = True 
             except: self.args.noPlots = True 
+            for f in os.listdir(self.args.rpath):     self.programs[f.split('.')[0]] = self.args.rpath+'/'+f 
+            for f in os.listdir(self.args.plinkpath): self.programs[f.split('.')[0]] = self.args.plinkpath+'/'+f 
             self.find_which('plink') 
             if self.FOUND['plink']:                                                            self.programs['plink'], self.args.plinkpath = self.LOC['plink'], self.LOC['plink']
             elif self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac']
             self.LOC['plink'] = self.programs['plink']  
             return 
-
+            
         def find_which(self, name): 
             p_log, p_err = self.paths['tmp']+'/tmp.'+name+'.out', self.paths['tmp']+'/tmp.'+name+'.err' 
             os.system('which '+name+' > '+p_log+' 2> '+p_err) 
@@ -48,19 +40,19 @@ class BridgeIO:
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
             self.pipeline = BridgePipelines(self).verify_pipeline() 
+            
             self.settings.update_inputs(self.pipeline.input_key) 
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.settings = BridgeSettings(self)
             self.check_requirements()
-            if self.cmd[0:3] in ['req']: self.progress.finish(FIN=True) 
-            self.progress.write('Checking Input Data:\n') 
-            
+            if self.cmd[0:3] in ['req']: self.progress.finish('Complete',FIN=True) 
             if module == 'analyze': self.settings.check_analysis_data()  
-            else:                  self.settings.check_pop_data() 
-            if module == 'check': self.progress.finish(FIN=True) 
-            self.progress.start_module(self.module, self.cmd, self.paths['home']).show_settings(self.settings) 
+            else:                   self.settings.check_pop_data() 
+            if module == 'check': self.progress.finish('Complete',FIN=True) 
+            self.progress.show_settings(self.settings) 
+            self.progress.start_module(self.module, self.cmd, self.paths['home'])# .show_settings(self.settings) 
             self.pipeline = BridgePipelines(self).verify_pipeline() 
             self.settings.update_inputs(self.pipeline.input_key) 
             return self
@@ -69,6 +61,7 @@ class BridgeIO:
             R_data, pp = [], self.programs['check_availability'] 
             self.find_which('python3') 
             self.find_which('R') 
+            p_cmd = self.programs['plink']+' > '+self.paths['tmp']+'/tmp.pk.out  2> '+self.paths['tmp']+'/tmp.pk.out'
             if self.FOUND['R']: 
                 RV_log, RV_err = self.paths['tmp']+'/tmp.RV.out', self.paths['tmp']+'/tmp.RV.err' 
                 RP_log, RP_err = self.paths['tmp']+'/tmp.RP.out', self.paths['tmp']+'/tmp.RP.err' 
@@ -82,5 +75,7 @@ class BridgeIO:
                 f = open(RP_log)
                 R_data.append([x.strip() for x in f.readlines() if len(x) > 1]) 
                 f.close() 
-            self.progress.show_requirements(self.FOUND, self.LOC, R_data) 
-            return 
+            self.progress.show_requirements(self.FOUND, self.LOC, R_data, p_cmd) 
+            return
+
+

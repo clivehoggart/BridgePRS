@@ -1,4 +1,7 @@
-~/BridgePRS/src/Bash/BridgePRS.sh \
+data="$PWD"/data 
+src="$PWD"/src 
+
+${src}/Bash/BridgePRS.sh $src/Rscripts\
     --strand_check 1 \
     --outdir out_binary \
     --by_chr 1 \
@@ -6,19 +9,19 @@
     --pop1 EUR \
     --pop2 AFR \
     --fst 0.15 \
-    --pop1_sumstats ~/BridgePRS/data/sumstats/eur.chr \
-    --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop1_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop1_test_data  ~/BridgePRS/data/eur_test.dat \
-    --pop1_ld_bfile  ~/BridgePRS/data/bfiles/chr \
-    --pop1_ld_ids ~/BridgePRS/data/eur_ids.txt \
-    --pop2_sumstats ~/BridgePRS/data/sumstats/afr.chr \
-    --pop2_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop2_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop2_test_data  ~/BridgePRS/data/afr_test.dat \
-    --pop2_valid_data  ~/BridgePRS/data/afr_valid.dat \
-    --pop2_ld_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop2_ld_ids ~/BridgePRS/data/afr_ids.txt \
+    --pop1_sumstats   ${data}/sumstats/eur.chr \
+    --pop1_qc_snplist ${data}/sumstats/qc_snplist3.txt \
+    --pop1_bfile      ${data}/bfiles/chr \
+    --pop1_test_data  ${data}/eur_test.dat \
+    --pop1_ld_bfile   ${data}/bfiles/chr \
+    --pop1_ld_ids     ${data}/eur_ids.txt \
+    --pop2_sumstats   ${data}/sumstats/afr.chr \
+    --pop2_qc_snplist ${data}/sumstats/qc_snplist3.txt \
+    --pop2_bfile      ${data}/bfiles/chr \
+    --pop2_test_data  ${data}/afr_test.dat \
+    --pop2_valid_data ${data}/afr_valid.dat \
+    --pop2_ld_bfile  ${data}/bfiles/chr \
+    --pop2_ld_ids    ${data}/afr_ids.txt \
     --sumstats_snpID ID \
     --sumstats_p P \
     --sumstats_beta BETA \

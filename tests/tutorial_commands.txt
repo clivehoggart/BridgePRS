@@ -1,15 +1,16 @@
-# Run 5 Steps: 
+# Easyrun Commands: 
+
+../bridgePRS easyrun go -o out1 --config_files ../data/afr.config ../data/eur.config --phenotype y
+../bridgePRS easyrun go -o out2 --config_files ../data/afr.config ../data/eur.config --phenotype y.binary 
 
 
-../bridgePRS easyrun go -o out1 --pop_configs ../data/afr.config ../data/eur.config --phenotype y
-../bridgePRS easyrun go -o out2 --pop_configs ../data/afr.config ../data/eur.config --phenotype y.binary
 
-../bridgePRS prs-single run -o out --pop_config ../data/afr.config --phenotype y 
-../bridgePRS build-model run -o out --pop_config ../data/eur.config --phenotype y 
-../bridgePRS prs-port run -o out --pop_config ../data/afr.config --model_file out3/model_EUR/bridge.build-model.result  
-../bridgePRS prs-prior run -o out --pop_config ../data/afr.config --model_file out3/model_EUR/bridge.build-model.result  
+# Single Commands: 
+
+
+../bridgePRS prs-single clump    -o run3 --pop AFR --config_file ../data/afr.config --phenotype y; ../bridgePRS prs-single beta    -o run3 --pop AFR --config_file ../data/afr.config --phenotype y 
+../bridgePRS prs-single predict   -o run3 --pop AFR --config_file ../data/afr.config --phenotype y; ../bridgePRS prs-single quantify    -o run3 --pop AFR --config_file ../data/afr.config --phenotype y 
+../bridgePRS build-model clump    -o run3 --pop EUR --config_file ../data/eur.config --phenotype y; ../bridgePRS build-model beta    -o run3 --pop EUR --config_file ../data/eur.config --phenotype y 
+../bridgePRS build-model predict   -o run3 --pop AFR --config_file ../data/eur.config --phenotype y; ../bridgePRS build-model prior    -o run3 --pop EUR --config_file ../data/eur.config --phenotype y 
 ../bridgePRS analyze combine -o out --results out/prs-single_AFR/bridge.prs-single.result out/prs-port_AFR/bridge.prs-port.result out/prs-prior_AFR/bridge.prs-prior.result
-
-
-
 

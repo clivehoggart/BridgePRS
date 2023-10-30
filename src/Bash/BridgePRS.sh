@@ -1,6 +1,10 @@
 #!/bin/bash
 # update key
 # Set some default values:
+
+RSCRIPTS=$1 
+FPATH=$RSCRIPTS"/functions.R"
+
 pheno_name="y"
 ext=""
 n_cores=1
@@ -35,8 +39,8 @@ pop2_bfile=0
 cov_names="000"
 binary=0
 
-RSCRIPTS=~/BridgePRS/src/Rscripts
-FPATH=$RSCRIPTS"/functions.R"
+#RSCRIPTS=~/BridgePRS/src/Rscripts
+#FPATH=$RSCRIPTS"/functions.R"
 
 
 usage()

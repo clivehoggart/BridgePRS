@@ -2,7 +2,6 @@ import sys, os
 from collections import defaultdict as dd
 from .BridgeProgress  import BridgeProgress
 from .BridgePop      import BridgePop
-from .BridgeConfig      import BridgeConfig
 
 def bridge_error(eString):
     if type(eString) in [list,tuple]:  
@@ -21,85 +20,98 @@ def validate_requirements(module, cmd):
         elif cmd in ['pred','quantify']:    REQ = ['genotype_prefix','phenotype_files','beta_prefix'] 
         if m2 in ['port','priot']:          REQ.append('model_file') 
         if  cmd  in ['quantify']:           REQ.append('predict_prefix') 
-        
     return REQ 
 
+
+DEFAULT = dd(lambda: None) 
+#POP_ARGS = ['pop','ldpop','ld_path','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
+POP_ARGS = ['pop','ldpop','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
+for a,b in [['fst',0.15]]: DEFAULT[a] = b 
+for a,b in [["p","P"],["snpid","ID"],["se","SE"],["n","OBS_CT"],["beta","BETA"],["ref","REF"],["alt","A1"],["maf","A1_FREQ"]]: DEFAULT['ssf-'+a] = b 
 
 
 class BridgeSettings: 
     def __init__(self,io):
-        self.args, self.io, self.module, self.cmd = io.args, io, io.args.module, io.args.cmd
-        self.command_args = ['pop_config','phenotype','verbose','plinkpath','rpath','platform','cmd','module','outpath','total_cores','cores','restart','silent','noPlots'] 
-        self.config = BridgeConfig(self).load_file(self.args.pop_config, self.io.bridgedir) 
-        self.lists, self.files, self.prefixes = {}, {}, {} 
+        self.args, self.io, self.module, self.cmd, self.pop = io.args, io, io.args.module, io.args.cmd, None
+        self.files, self.prefixes, self.lists = {}, {}, {} 
+        
 
-    
     def update_inputs(self, pipeline_key): 
         for v in vars(self.args): 
             kV = vars(self.args)[v] 
-            if v in self.config.pop_specific or kV in [None, []]: continue 
+            if v in ['config','snp_file','validation_file'] + POP_ARGS or kV in [None, []]: continue 
             if v.split('_')[-1] not in ['file','prefix','files']: continue 
             if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
             elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
             elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
-
+        
         for k,x in pipeline_key['prefix'].items(): self.prefixes[k] = x 
         for k,x in pipeline_key['file'].items():   self.files[k] = x 
+
+        #if self.pop is not None: self.pop.validate(self.args.module, self.args.cmd, self.files, self.prefixes, self.lists) 
+        # bro  
+        if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
         return
         
-    
-    
-    
-    
     
     def check_analysis_data(self):  
         return  
     
     
-    
-    
-    
-    
-    
     #################   POP CHECK ############################
-    
     def check_pop_data(self):
-        self.required = validate_requirements(self.module, self.cmd) 
-        self.disambiguate_pop_data()         
-        self.config.parse_arg_data()        #### FIX THIS  
-        self.io.progress.show_pop_data(self.pop_data) 
-        return self 
+        self.load_ld_ref()
+        pop_key = self.resolve_pop_args()
 
-       
-    def disambiguate_pop_data(self): 
-        #self.ld_ref, self.pop_lists, d_strs  =  {}, {}, {} 
+        if len(pop_key['pop']) != self.popnum:   bridge_error(['Insufficient Number of Population Names ('+str(len(pop_key['pop']))+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
+        if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'BASE')] 
+        else:                                    self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'TARGET')] 
+        if len(pop_key['pop']) > 1:                  
+            self.pop_data.append(BridgePop(self.args, self.io.paths, pop_key['pop'][1], {p: pop_key[p][-1] for p in POP_ARGS}, self.ld_ref, 'BASE'))
         
-        
-        self.pop_lists, self.pop_strs = self.config.get_pop_lists() 
-        self.load_ld_ref() 
-        #if len(self.args.pop) == 0: bridge_error('A target population name is required --pop or using a config file [--pop_config]') 
-        #if len(self.args.pop) >  2: bridge_error('At most two population name(s) are allowed --pop '+",".join(self.args.pop)) 
-        
-        if len(self.pop_lists['genotype_prefix']) != len(self.pop_lists['phenotype_files']): bridge_error(['Corresponding Phenotype And Genotype Data Required',d_strs['genotype_prefix'],d_strs['phenotype_files']])
-        for p,D in self.pop_lists.items(): 
-            if   len(D) == 0 and p not in self.required:  self.pop_lists[p] = [None]  
-            elif len(D) == 0 and p in self.required:      bridge_error('Missing Required Population Data: '+p)                      
-            elif len(D) > 1 and len(self.args.pop) == 1:  bridge_error(['Too Much Population Data For: '+p,'At Most 1 File is Supported For 1 Population',self.pop_strs[p]])
-            elif len(D) > 2 and len(self.args.pop) == 2:  bridge_error(['Too Much Population Data For: '+p,'At Most 2 File(s) Supported For 2 Populations',self.pop_strs[p]]) 
-        
-        self.pop_data = [BridgePop(self.args, self.io.paths, self.args.pop[0], {p: D[0] for p,D in self.pop_lists.items()}, self.ld_ref)] 
-        if len(self.args.pop) > 1:  self.pop_data.append(BridgePop(self.args, self.io.paths, self.args.pop[1], {p: D[-1] for p,D in self.pop_lists.items()},self.ld_ref)) 
+        self.io.progress.show_pop_data(self.pop_data) 
         self.pop = self.pop_data[0] 
-       
+        return self 
+    
+    def resolve_pop_args(self): 
+        KL, POP_KEY, ARG_KEY = dd(list), dd(list), {v: vars(self.args)[v] for v in vars(self.args)} 
+        if self.args.cmd in ['go','pops']: self.popnum = 2 
+        else:                              self.popnum = 1 
+        
+        for K in self.args.config: 
+            for k,v in K.items(): 
+                KL[k].append(v)
+        for k,kl in KL.items():
+            if k in ARG_KEY and k in POP_ARGS: vars(self.args)[k] = (ARG_KEY[k]+kl)[0:self.popnum] 
+            elif k in ARG_KEY: 
+                kA,kC = ARG_KEY[k], list(set(kl))[0] 
+                if len(list(set(kl))) > 1: bridge_error('Incompatible Arguments In Configuration Files: '+k+': '+",".join(kl))
+                elif kA ==  None:          vars(self.args)[k] = kC  
+                elif kA == DEFAULT[k]:     vars(self.args)[k] = kC 
+                else: 
+                    print(kA, kC,'yo') 
+                    sys.exit() 
+        
+        if len(self.args.ldpop) == 0: self.args.ldpop = self.args.pop 
+        for lp in self.args.ldpop:
+            if lp not in self.ld_ref: bridge_error('No LD-Reference Supplied For: '+lp) 
+        for v in vars(self.args): 
+            kV = vars(self.args)[v] 
+            if v in POP_ARGS: 
+                if kV not in [None, []]:        POP_KEY[v] = kV 
+                elif v not in ['pop']:          POP_KEY[v] = [None] 
+                else:                           continue 
+            #elif v.split('_')[-1] == 'file':   self.files[v.split('_')[0]] = kV 
+            #elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
+        return POP_KEY  
+        
+
+
     def load_ld_ref(self): 
         self.ld_ref = {} 
         if '1000G_ref' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_ref')                                                                                                                                                                       
         elif '1000G_sample' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_sample')                                                                                                                                                               
-        for p in self.args.ldpath:                                                                                                                                                                                                                                                 
-            if os.path.exists(p):                      mp = os.path.abspath(p)                                                                                                                                                                                                                         
-            elif os.path.exists(self.bridgedir+'/'+p): mp = os.path.abspath(self.bridgedir+'/'+p)                                                                                                                                                                                  
-            else:                                      bridge_error(['--ldPath '+p+' Does not exist'])                                                                                                                                                                             
-            self.load_ld(mp)
+        for p in self.args.ld_path:     self.load_ld(p)                                                                                                                                                                                                                                          
 
     def load_ld(self, ld_path):                                                                                                                                                                                                                                                     
         ids, cands, key, k = [], [], {}, 0                                                                                                                                                                                                                                          
@@ -119,4 +131,7 @@ class BridgeSettings:
         else:            BYCHR = False 
         for pop, pop_path in ids: self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+my_prefix, BYCHR, key]                                                                                                                                                                                    
         return                                                                                                                                                                                                                                                                      
+   
+
+    
     
