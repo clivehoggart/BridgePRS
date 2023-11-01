@@ -56,10 +56,10 @@ class BridgeProgress:
                 self.say(fs1, ('R:','found=false','')) 
                 self.say('\n'+fs2+'\n', ('RequirementError:', 'R Not Found (please install from r-project.org)','','')) 
             else: 
-                rc = 'install.packages(c('+",".join(['\''+x+'\'' for x in R_DATA[1]])+', repos =\"http://cran.us.r-project.org\")' 
+                rc = 'install.packages(c('+",".join(['\''+x+'\'' for x in R_DATA[1]])+', repos =\"http://cran.us.r-project.org\"))' 
                 self.say(fs3, ('R:','found=true,','path='+LOC['R']+',','version='+R_DATA[0],'(packages=incomplete)'))
                 self.say('\n'+fs2, ('RequirementError:', 'Missing R Packages',",".join(R_DATA[1]),'')) 
-                self.write('            To Install, Type The Following Shell Command:$ '+rc+'\n\n')  
+                self.write('            To Install, Type The Command in R: '+rc+'\n\n')  
             sys.exit() 
         if RK['python3'] and RK['matplotlib']: self.say(fs2, ('Python3:','found=true,','path='+LOC['python3']+',','matplotlib=true')) 
         elif RK['python3']: self.say(fs3, ('Python3:','found=true,','path='+LOC['python3']+',','matplotlib=false','(NOTE: Please Install Matplotlib To Enable Plotting)'))
@@ -247,7 +247,7 @@ class BridgeProgress:
 
 
 
-    # WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
+    # Shell WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
     # WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
     def write(self, outstring, DOTS = False): 
         if self.active: 

@@ -425,7 +425,11 @@ class BridgePic:
         for x in range(H1,H2,1):
             y1 = 140 - math.sqrt(r**2 - (x-h)**2)
             coord_list.append([x, y1])
-        return np.array([coord_list]).T 
+        X,Y = np.array([coord_list]).T
+        X = [x[0] for x in X] 
+        Y = [y[0] for y in Y] 
+        return X,Y 
+
         
 
     
@@ -446,11 +450,11 @@ class BridgePic:
         #ax, LX,LY,RX,RY = self.ax, [],[],[],[]  
         LX,LY,RX,RY = [],[],[],[]  
         X,Y = self.make_circle(0,20,100)         
-        
         for i,(x,y) in enumerate(zip(X,Y)): 
             rx,lx,ry,ly= x+200,x-200, y,y 
             SEND = i%10 == 0 
-            if SEND: self.ax.plot([x,x],[20,y],color='gray')
+            if SEND: 
+                self.ax.plot([x,x],[20,y],color='gray')
             if i < 100: 
                 if i > 0:
                     sl = (100-i)/100.0
@@ -474,12 +478,10 @@ class BridgePic:
         self.draw_posts([[-100,20],[100,20]])
         R = Rect((-200,15),400,5,facecolor='gray',edgecolor='k',zorder=5) 
         self.ax.add_patch(R) 
-
-        self.ALPHA=0.3 
+        self.ALPHA=0.9 
         self.CMAP = self.select_map(VAL) 
         self.gbar1([-190],[20], bottom=-100) 
         self.CMAP = self.select_map(VAL) 
-        self.ALPHA = max(0.20 + random.random(), 0.8) 
         self.gbar1([-190],[150], bottom=-100) 
         
         self.ax.set_ylim(-30,140)
