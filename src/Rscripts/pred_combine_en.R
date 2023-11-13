@@ -244,7 +244,7 @@ if( opt$valid.data!=0 ){
         write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"),
                   row.names=FALSE, quote=FALSE )
 
-        if( plot ){
+        if(  opt$plot==1 ){
             png( paste0(opt$outfile,"_weighted_combined_var_explained.png"), 500, 500 )
             cc <- hsv(1, seq(0,1,length.out = 10) , 1)
             b <- barplot( out$Est,ylim=c(0,max(out[,'97.5%'])), ylab='R2',
