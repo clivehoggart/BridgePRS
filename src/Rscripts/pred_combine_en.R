@@ -85,6 +85,8 @@ option_list = list(
                 help="", metavar="logical"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character"),
+    make_option(c("--plot"), type="numeric", default=0,
+                help="Indicator for make plots", metavar="numeric"),
     make_option(c("--binary"), type="numeric", default=0,
                 help="Indicator for binary outcome", metavar="numeric")
 )
@@ -242,13 +244,15 @@ if( opt$valid.data!=0 ){
         write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"),
                   row.names=FALSE, quote=FALSE )
 
-        png( paste0(opt$outfile,"_weighted_combined_var_explained.png"), 500, 500 )
-        cc <- hsv(1, seq(0,1,length.out = 10) , 1)
-        b <- barplot( out$Est,ylim=c(0,max(out[,'97.5%'])), ylab='R2',
-                     col=c( cc[ceiling(out$Prob[1:3]*10)], 'grey') )
-        arrows( x0=b, x1=b, y0=out[,'2.5%'], y1=out[,'97.5%'], code=3, angle=90 )
-        axis( side=1, at=b, labels=out[,1] )
-        dev.off()
+        if(  opt$plot==1 ){
+            png( paste0(opt$outfile,"_weighted_combined_var_explained.png"), 500, 500 )
+            cc <- hsv(1, seq(0,1,length.out = 10) , 1)
+            b <- barplot( out$Est,ylim=c(0,max(out[,'97.5%'])), ylab='R2',
+                         col=c( cc[ceiling(out$Prob[1:3]*10)], 'grey') )
+            arrows( x0=b, x1=b, y0=out[,'2.5%'], y1=out[,'97.5%'], code=3, angle=90 )
+            axis( side=1, at=b, labels=out[,1] )
+            dev.off()
+        }
     }
     if( is.null(opt$pred2) ){
         out <- rbind( VE.ridge1 )
