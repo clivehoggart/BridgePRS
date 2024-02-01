@@ -146,12 +146,9 @@ class BridgePipelines:
 
     def check_error_output(self, fp, err_files, D): 
         if len(err_files) != 1: self.io.progress.fail('EXITED UNSUCCESSFULLY', ETYPE=self.eType) 
-        #fname = fp+'/'+err_files[0] 
-        #f_handle = open(fname)  
         f_errors, f_handle = [], open(fp+'/'+err_files[0]) 
         f_lines = [lp.strip() for lp in f_handle] 
         f_handle.close() 
-        #f_errors = [] 
         for lp in f_lines: 
             ls = [x.lower() for x in lp.split()] 
             if len(ls) < 1: continue 
@@ -164,7 +161,7 @@ class BridgePipelines:
                 f_errors.append(' '.join(ls)) 
         
         if len(f_errors) == 0: return
-        self.io.progress.fail(['EXITED UNSUCCESSFULLY']+f_error, ETYPE=self.eType) 
+        self.io.progress.fail(['EXITED UNSUCCESSFULLY']+f_errors, ETYPE=self.eType) 
         
 
 

@@ -23,8 +23,7 @@ class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
             self.io   = BridgeIO(args, bridgedir, rundir, command_line)
-            self.io.initialize(self.args.module, self.args.cmd)  
-            
+            self.io.initialize(self.args.module, self.args.cmd)                         
             if self.args.module == 'easyrun':   self.easyrun() 
             elif self.args.module == 'analyze': self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
             else:                               self.execute(self.io.pipeline) 
