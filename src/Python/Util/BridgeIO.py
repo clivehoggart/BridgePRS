@@ -39,9 +39,8 @@ class BridgeIO:
         def update(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
-            self.pipeline = BridgePipelines(self).verify_pipeline() 
-            
-            self.settings.update_inputs(self.pipeline.input_key) 
+            self.pipeline = BridgePipelines(self).verify_pipeline()  
+            self.settings.update_inputs(self.pipeline.input_key)
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 

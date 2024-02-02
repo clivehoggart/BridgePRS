@@ -39,7 +39,27 @@ class BridgePop:
             self.sumstats.add_stats(pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
         if pop_key['genotype_prefix'] and pop_key['phenotype_file']: 
             self.phenotypes.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_file'], self.args.validation_file) 
-        self.chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
+        
+        
+        self.verify_chromosomes() 
+
+    def verify_chromosomes(self): 
+
+        chromosomes       = list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()]))
+        valid_chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
+        c_int, c_str = [], [] 
+        for c in valid_chromosomes: 
+            try:               c_int.append(int(c))  
+            except ValueError: c_str.append(c) 
+        self.chromosomes = [str(c) for c in sorted(c_int) + sorted(c_str)]
+        missing_chrs = [c for c in chromosomes if c not in valid_chromosomes] 
+        if len(missing_chrs) > 0: 
+            b_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
+            s_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
+            bridge_error('Missing Chromosomes') 
+
+        return 
+
 
 
     def validate(self, F, P, L):
@@ -88,11 +108,6 @@ class BridgeData:
     def add_panel(self, ld_quad): 
         self.VALID = True 
         self.id_file, self.prefix, self.BYCHR, b_key  = ld_quad
-        
-        
-        
-        
-        
         self.ldpath = "/".join(self.prefix.split('/')[0:-1])
         for c in b_key: self.map[c] = b_key[c] 
         self.X_fields = ['--clump-field',vars(self.args)['ssf-p'], '--clump-snp-field',vars(self.args)['ssf-snpid']] 

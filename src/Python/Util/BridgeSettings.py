@@ -32,8 +32,6 @@ for a,b in [["p","P"],["snpid","ID"],["se","SE"],["n","OBS_CT"],["beta","BETA"],
 class BridgeSettings: 
     def __init__(self,io):
         self.args, self.io, self.module, self.cmd, self.pop = io.args, io, io.args.module, io.args.cmd, None
-        
-
         self.files, self.prefixes, self.lists = {}, {}, {} 
         
 
@@ -82,7 +80,7 @@ class BridgeSettings:
         for i,K in enumerate(self.args.config):
             for k,v in K.items(): 
                 if i == 0 or k in KL:              KL[k].append(v)
-                elif k not in ['validation_file']: KL[k].append(v) 
+                elif k not in ['genotype_prefix','phenotype_file','validation_file']: KL[k].append(v) 
                 else:                              continue  
         
         for k,kl in KL.items():

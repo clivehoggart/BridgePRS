@@ -33,20 +33,24 @@ class BridgePRS:
 
         def execute(self,pl):
             self.jobs, self.base = BridgeJobs(self), BridgeBase(self) 
-            
-            
             for i,command in enumerate(pl.commands): 
                 self.io.progress.start_minor(pl.command_strings[i], RD=self.io.settings)
                 if len(pl.commands) > 1 and pl.FIN[command.upper()]: 
                     self.io.progress.write('SKIPPING-JOB')
                     continue 
-                elif command == 'clump':     self.jobs.run(self.base.run_clump, [[['chromosome'],[k]] for k in self.io.settings.pop.chromosomes])
-                elif command == 'beta':      self.jobs.run(self.base.run_beta, [[[],[]]]) 
-                elif command == 'predict':   self.jobs.run(self.base.run_predict,  [[[],[]]]) 
-                elif command == 'quantify':  self.jobs.run(self.base.run_quantify,  [[[],[]]])       
-                elif command == 'prior':     self.jobs.run(self.base.run_prior,  [[[],[]]]) 
-                pl.log_result(command)  
-                self.io.progress.end(RD=self.io.settings) 
+                else: 
+                    if command == 'clump':     
+                        self.jobs.run(self.base.run_clump, [[['chromosome'],[k]] for k in self.io.settings.pop.chromosomes])
+                    elif command == 'beta':      
+                        self.jobs.run(self.base.run_beta, [[[],[]]]) 
+                    elif command == 'predict':   
+                        self.jobs.run(self.base.run_predict,  [[[],[]]]) 
+                    elif command == 'quantify':  
+                        self.jobs.run(self.base.run_quantify,  [[[],[]]])       
+                    elif command == 'prior':     
+                        self.jobs.run(self.base.run_prior,  [[[],[]]]) 
+                    pl.log_result(command)  
+                    self.io.progress.end(RD=self.io.settings) 
             
             self.collate(pl.commands[-1]) 
             self.io.progress.finish() 
@@ -75,8 +79,6 @@ class BridgePRS:
             res_files = [] 
             for i,m in enumerate(modules): 
                 self.args.module, self.args.cmd =  m, 'run'
-               
-
                 if i != 1: self.io.settings.pop = self.io.settings.pop_data[0] 
                 else:      self.io.settings.pop = self.io.settings.pop_data[1] 
                 self.io.update(self.args.module, self.args.cmd)

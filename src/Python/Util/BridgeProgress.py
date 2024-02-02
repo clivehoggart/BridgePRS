@@ -109,6 +109,9 @@ class BridgeProgress:
             else: 
                 self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX','None']])  
                 self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILES','None'],['VARIABLES','None']]) #['FIN',self.tFile,i],['']])
+            
+            
+            self.record(fs0, [['Chromosomes:'],['FOUND',','.join(pd.chromosomes)]]) 
             self.record(fs0, [['FIN', self.tFile, i]])  
             pd.config = self.tFile  
     
@@ -122,8 +125,8 @@ class BridgeProgress:
         for k in vars(settings.args): 
             kv = vars(settings.args)[k]  
             if k.split('_')[-1] in kSkip or k.split('-')[0] in kSkip or k in kSkip or k[-4::] in kSkip: continue 
-            if k in ['verbose','silent','restart','noPlots'] and  kv:      kTrue.append(k.upper()) 
-            elif k in ['verbose','silent','restart','noPlots'] and not kv: kFalse.append(k.upper()) 
+            if k in ['verbose','silent','restart','noPlots','debug'] and  kv:      kTrue.append(k.upper()) 
+            elif k in ['verbose','silent','restart','noPlots','debug'] and not kv: kFalse.append(k.upper()) 
             elif k == 'max_clump_size' and int(kv) == 0:             kParams[k] = 'NO_LIMIT' 
             else:                                                    kParams[k] = str(kv) 
         TSTR = [] 
@@ -277,9 +280,10 @@ class BridgeProgress:
     def record(self, outformat, out_list): 
         pL = [] 
         if out_list[0][0] != 'FIN': 
+            
             for T in out_list: 
-                if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')  
                 
+                if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES','FOUND'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')        
                 if len(T) == 1:   pL.append(T[0]) 
                 elif len(T) == 2: pL.append(T[0]+'='+self.homeshrink(T[1])) 
                 elif len(T) == 3: 
