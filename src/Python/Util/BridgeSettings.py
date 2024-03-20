@@ -60,12 +60,19 @@ class BridgeSettings:
     #################   POP CHECK ############################
     def check_pop_data(self):
         self.load_ld_ref()
+        
         pop_key = self.resolve_pop_args()
+        
+
         if len(pop_key['pop']) != self.popnum:   bridge_error(['Insufficient Number of Population Names ('+str(len(pop_key['pop']))+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
+        
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'BASE')] 
         else:                                    self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'TARGET')] 
-        if len(pop_key['pop']) > 1:              self.pop_data.append(BridgePop(self.args, self.io.paths, pop_key['pop'][1], {p: pop_key[p][-1] for p in POP_ARGS}, self.ld_ref, 'BASE'))
-        
+
+        if len(pop_key['pop']) > 1:              
+            self.pop_data.append(BridgePop(self.args, self.io.paths, pop_key['pop'][1], {p: pop_key[p][-1] for p in POP_ARGS}, self.ld_ref, 'BASE', self.pop_data[0]))
+
+
         self.io.progress.show_pop_data(self.pop_data) 
         
         self.pop = self.pop_data[0] 
@@ -117,12 +124,13 @@ class BridgeSettings:
 
     def load_ld(self, ld_path):                                                                                                                                                                                                                                                     
         ids, cands, key, k = [], [], {}, 0                                                                                                                                                                                                                                          
-        for f in os.listdir(ld_path):                                                                                                                                                                                                                                               
+        for f in os.listdir(ld_path):
+            if f[0] in ['.','_']: continue 
             if f.split('.')[-1] in ['bed','bim','fam']: cands.append(".".join(f.split('.')[0:-1]))                                                                                                                                                                                  
             elif 'IDS' in [z.upper() for z in f.split('.')]:                            ids.append([f.split('.')[0], ld_path+'/'+f])                                                                                                                                                                                
         cands = list(set(cands)) 
-
         
+
         if    len(cands) == 0: bridge_error('No plink files (bed, bim, fam) found in LD-Reference Path: '+ld_path) 
         elif  len(cands) == 1: 
             bridge_error('LD-Reference files must be split by chromosome: '+ld_path) 
@@ -141,6 +149,7 @@ class BridgeSettings:
                 if len(my_prefix) > 0: chr_cand = cand.split(my_prefix)[-1]                                                                                                                                                                                                                                       
                 else:                  chr_cand = cand 
                 key[chr_cand] = ld_path+'/'+cand                                                                                                                                                                                                                                        
+            
             for pop, pop_path in ids: self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+my_prefix, BYCHR, key]                                                                                                                                                                                    
             return  
         return 

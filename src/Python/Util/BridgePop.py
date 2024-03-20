@@ -5,10 +5,28 @@ from math import log
 
 def bridge_error(eString):
     if type(eString) in [list,tuple]:  
-        sys.stderr.write('\nBridgeDataError: '+eString[0]+'\n')
+        sys.stderr.write('\nBridgePopError: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
-    else: sys.stderr.write('\nBridgeDataError: '+eString+'\n')
+    else: sys.stderr.write('\nBridgePopError: '+eString+'\n')
     sys.exit(2) 
+
+
+def bridge_sumstats_error(eString): 
+    if type(eString) in [list,tuple]:  
+        sys.stderr.write('\nBridgeSumstatsError: '+eString[0]+'\n')
+        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
+    else: sys.stderr.write('\nBridgeSumstatsError: '+eString+'\n')
+    sys.exit(2) 
+
+
+def bridge_sumstats_warning(eString): 
+    if type(eString) in [list,tuple]:  
+        sys.stderr.write('\nBridgeSumstatsWarning: '+eString[0]+'\n')
+        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
+    else: sys.stderr.write('\nBridgeSumstatsWarning: '+eString+'\n')
+
+
+
 
             
 def zip_open(fp, HEADER = False): 
@@ -25,7 +43,11 @@ def zip_open(fp, HEADER = False):
 
 
 class BridgePop: 
-    def __init__(self, args, paths, pop_name, pop_key, ld_ref, pop_type = 'TARGET'):
+    def __init__(self, args, paths, pop_name, pop_key, ld_ref, pop_type = 'TARGET', prevPop = None):
+        
+
+
+
         self.args, self.paths, self.name, self.key, self.type  = args, paths, pop_name, pop_key, pop_type
         self.ref_pop = self.key['ldpop'] 
         
@@ -33,14 +55,15 @@ class BridgePop:
         self.sumstats   = BridgeData(self.args, 'sumstats',   paths, self.ref_pop) 
         self.phenotypes = BridgeData(self.args, 'phenotypes', paths, pop_name, pop_type) 
         self.bdata.add_panel(ld_ref[self.ref_pop]) 
-        
-        
+
         if pop_key['sumstats_prefix']: 
-            self.sumstats.add_stats(pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
-        if pop_key['genotype_prefix'] and pop_key['phenotype_file']: 
-            self.phenotypes.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_file'], self.args.validation_file) 
-        
-        
+            if not prevPop: self.sumstats.add_sumstats(pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
+            else:           self.sumstats.add_sumstats(pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], prevPop.sumstats.snp_file)
+        else:                          
+            bridge_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
+        if   not pop_key['genotype_prefix']: bridge_error('At least one Genotype Prefix is Required on the Command Line (--genotype_prefix) or in a config_file (GENOTYPE_PREFIX=)')  
+        elif not pop_key['phenotype_file']:  bridge_error('At least one Phenotype File is Required on the Command Line (--phenotype_file) or in a config_file (PHENOTYPE_FILE=)')  
+        else:                                self.phenotypes.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_file'], self.args.validation_file) 
         self.verify_chromosomes() 
 
     def verify_chromosomes(self): 
@@ -53,9 +76,14 @@ class BridgePop:
             except ValueError: c_str.append(c) 
         self.chromosomes = [str(c) for c in sorted(c_int) + sorted(c_str)]
         missing_chrs = [c for c in chromosomes if c not in valid_chromosomes] 
+        
+
+
         if len(missing_chrs) > 0: 
             b_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
+            if len(b_missing) > 0: bridge_error(['Missing Chromosomes','The following chromosomes are found in the ld-panel but not in sumstats:',",".join(b_missing)])  
             s_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
+            if len(s_missing) > 0: bridge_error(['Missing Chromosomes','The following chromosomes are found in sumstats but not in ld-panel:',",".join(b_missing)])  
             bridge_error('Missing Chromosomes') 
 
         return 
@@ -95,7 +123,9 @@ class BridgeData:
     def __init__(self, args, datatype, paths, pop_name,pop_type = 'TARGET'):
         self.args, self.datatype, self.paths, self.pop_name, self.pop_type = args, datatype, paths, pop_name, pop_type
         self.VALID, self.TESTS, self.map = False, dd(bool), dd(list) 
-    
+
+
+
         if self.datatype == 'sumstats':    
             self.fields, self.map, self.total = {}, dd(list), 0 
         elif self.datatype == 'phenotypes':   
@@ -119,12 +149,55 @@ class BridgeData:
 
     ####################################   SUMSTATS   #######################################
     
+
+    def find_pfiles(self, prefix, suffix): 
+        self.prefix, self.prefix_path, pName, pLen = prefix, '/'.join(prefix.split('/')[0:-1]), prefix.split('/')[-1], len(prefix.split('/')[-1]) 
+        p_files = [self.prefix_path+'/'+x for x in os.listdir(self.prefix_path) if x[0:pLen] == pName] 
+        if   len(p_files) == 0: bridge_sumstats_error('Invalid Sumstats Path: '+self.prefix_path)
+        elif len(p_files)  > 1 or not os.path.isfile(p_files[0]): return p_files, suffix 
+        else: 
+            self.prefix_path = self.paths['save']+'/sumstats' 
+            bridge_sumstats_warning('Sumstats File not separated by chromosome, attempting to split file in '+self.prefix_path) 
+            ss = zip_open(p_files[0]) 
+            header = ss.readline()
+            if not os.path.exists(self.prefix_path): os.makedirs(self.prefix_path) 
+            self.prefix = self.prefix_path+'/ss.'+self.pop_name+'.'  
+            suffix = '.out.gz'
+            s_key = {} 
+            for line in ss:  
+                c = line.split()[0] 
+                if c not in s_key: 
+                    s_key[c] = [self.prefix+c+'.out',open(self.prefix+c+'.out','w')]
+                    s_key[c][1].write(header) 
+                s_key[c][1].write(line) 
+            ss.close() 
+            
+            p_files = [] 
+            for f_name,f_handle in s_key.values(): 
+                f_handle.close() 
+                os.system('gzip -f '+f_name) 
+                p_files.append(f_name+'.gz') 
+
+            return p_files, suffix 
+
+
+
+
+    def add_sumstats(self,prefix,suffix, snp_file, thin_snps = '0'): 
         
-        
-    def add_stats(self,prefix,suffix, snp_file, thin_snps = '0'): 
+
         self.VALID, self.BYCHR = True, True 
-        self.prefix, self.prefix_path, pName, pLen, self.snp_file, self.thin_snps  = prefix, '/'.join(prefix.split('/')[0:-1]), prefix.split('/')[-1], len(prefix.split('/')[-1]), snp_file, thin_snps 
-        p_files, suffix_cands = [self.prefix_path+'/'+x for x in os.listdir(self.prefix_path) if x[0:pLen] == pName], dd(int) 
+        self.snp_file, self.thin_snps = snp_file, thin_snps 
+
+        
+        suffix_cands = dd(int) 
+        p_files, suffix = self.find_pfiles(prefix, suffix) 
+
+
+
+
+        
+
         for pn in p_files: 
             k,p_tail = 0, pn.split(self.prefix)[-1] 
             while p_tail[k] in ['1','2','3','4','5','6','7','8','9','0']: k+=1 
@@ -179,18 +252,20 @@ class BridgeData:
         
 
     def ss_test_snpfile(self): 
+        
         if self.snp_file is None: 
             self.TESTS['NOSNPS'] = True 
-            snp_handle = self.paths['save']+'/snps.'+self.pop_name+'.txt' 
+            snp_handle = self.paths['save']+'/snps.txt' 
+            #snp_handle = self.paths['save']+'/snps.'+self.pop_name+'.txt' 
             w = open(snp_handle,'w') 
         
-        self.total  = 0 
-        for f_chr, fp in self.map.items():  
+        self.total  = 0
+        for f_chr, fp in sorted(self.map.items()):  
             gf = zip_open(fp) 
             snp_loc = {h: i for i,h in enumerate(gf.readline().split())}[self.fields['SNPID']]
             snps = [line.split()[snp_loc] for line in gf] 
             self.total += len(snps) 
-            if self.TESTS['NOSNPS']: w.write('\n'.join(snps)) 
+            if self.TESTS['NOSNPS']: w.write('\n'.join(snps)+'\n') 
             gf.close() 
         if self.TESTS['NOSNPS']: 
             self.snp_file = snp_handle 
@@ -209,7 +284,9 @@ class BridgeData:
             if f.split('.')[-1] in ['bed','bim','fam']: CK[".".join(f.split('.')[0:-1])]+=1                                                                                                                                                                                   
         cands = [k for k,v in CK.items() if v == 3]
         if len(cands) == 0: bridge_error('Invalid genotype data prefix '+self.genotype_prefix) 
-        if len(cands) == 1: self.BYCHR = False 
+        if len(cands) == 1:
+            self.genotype_prefix = "/".join(self.genotype_prefix.split('/')[0:-1])+'/'+cands[0]
+            self.BYCHR = False 
         else: 
             self.BYCHR, k  = True, 0 
             cands = list(set(cands))                                                                                                                                                                                                                                                        

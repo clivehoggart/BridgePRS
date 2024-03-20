@@ -6,7 +6,7 @@ from collections import defaultdict as dd
 class BridgePipelines:
     def __init__(self,io): 
         self.args, self.io, self.module, self.cmd, self.settings = io.args, io, io.module, io.cmd, io.settings 
-        self.eType, self.FIN = 'BridgePipelineError:', dd(bool)
+        self.eType, self.wType, self.FIN = 'BridgePipelineError:', 'BridgePipelineWarning:', dd(bool)
         self.input_key = dd(lambda: dd(bool)) 
         if self.module != 'analyze': self.create() 
 
@@ -146,22 +146,30 @@ class BridgePipelines:
 
     def check_error_output(self, fp, err_files, D): 
         if len(err_files) != 1: self.io.progress.fail('EXITED UNSUCCESSFULLY', ETYPE=self.eType) 
+        
         f_errors, f_handle = [], open(fp+'/'+err_files[0]) 
+        
+        if D not in ['CLUMP','BETA','PREDICT']: 
+            err_files = ['/home/tade/Current/bridgePRS/repo/tests/pedro/quantify.stderr']
+            f_handle = open(err_files[0]) 
         f_lines = [lp.strip() for lp in f_handle] 
-        f_handle.close() 
+        f_handle.close()
+        
         for lp in f_lines: 
             ls = [x.lower() for x in lp.split()] 
             if len(ls) < 1: continue 
-            elif ls[0][0:4] in ['warn','extr','load','usag']: continue  
+            elif ls[0][0:4] in ['warn','extr','load','usag','lade']: continue  
             else: 
                 if D == 'CLUMP': 
                     if " ".join(ls[-3::]) == 'see log file.': continue  
                     if len(ls) > 3 and ls[3] == 'ignored,':   continue 
                 if len(ls[0].split('/'))>1: ls[0] = ls[0].split('/')[-1] 
                 f_errors.append(' '.join(ls)) 
-        
+       
         if len(f_errors) == 0: return
-        self.io.progress.fail(['EXITED UNSUCCESSFULLY']+f_errors, ETYPE=self.eType) 
+        else:                  self.io.progress.warn(['UNKNOWN R-OUTPUT IN STDERR (Program may have failed):']+f_errors, WTYPE=self.wType) 
+        return
+        #self.io.progress.fail(['EXITED UNSUCCESSFULLY']+f_errors, ETYPE=self.eType) 
         
 
 

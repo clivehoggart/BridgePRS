@@ -22,14 +22,14 @@ class MPS(argparse.ArgumentParser):
         return self 
 
     def error(self, detail=None, notes = []): #values=None,choice=None): #,settings = None):
-        
         if bridgeHelp.evaluate_error(detail, sys.argv) and detail is not None: sys.stderr.write(detail+'\n')  
+        
+        sys.exit() 
         if len(notes) > 0:  
             if notes[0] == 'config' and notes[-1].split('-')[0] == 'INVALID': 
                 sys.stderr.write('\nError - Supplied \"'+notes[1]+'\" Does Not Exist: '+notes[2]+'\n') 
             else: 
                 print(notes) 
-
 
         self.print_help() 
         sys.exit(2) 

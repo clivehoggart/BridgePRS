@@ -232,8 +232,18 @@ class BridgeProgress:
         return 
         
 
+    
+    def warn(self, MSG, WTYPE = 'BridgeWarning:'): 
+        EB = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        if type(MSG) not in [list,tuple]: self.write('\n'+WTYPE+' '+MSG) 
+        else: 
+            self.write('\n'+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
+            for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+
+
+
     def fail(self, MSG, ETYPE = 'BridgeError:'): 
-        EB = ' '.join(['' for x in range(len(ETYPE))]) 
+        EB = ' '.join(['' for x in range(len(ETYPE))])+'  '
         if type(MSG) not in [list,tuple]: self.write('\n'+ETYPE+' '+MSG) 
         else: 
             self.write('\n'+ETYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     

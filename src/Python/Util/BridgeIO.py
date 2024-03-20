@@ -46,9 +46,11 @@ class BridgeIO:
             self.module, self.cmd = module, cmd 
             self.settings = BridgeSettings(self)
             self.check_requirements()
+            
             if self.cmd[0:3] in ['req']: self.progress.finish('Complete',FIN=True) 
             if module == 'analyze': self.settings.check_analysis_data()  
             else:                   self.settings.check_pop_data() 
+            
             if module == 'check': self.progress.finish('Complete',FIN=True) 
             self.progress.show_settings(self.settings) 
             self.progress.start_module(self.module, self.cmd, self.paths['home'])# .show_settings(self.settings) 

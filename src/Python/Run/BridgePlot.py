@@ -300,7 +300,11 @@ class BridgePlot:
         c_names = [vars(self.args)[x] for x in ['ssf-snpid','ssf-p','ssf-beta']]
         full_len, full_scores, full_key    = 0, {}, {} 
         for f in os.listdir(path): 
+            
+
             if prefix in f and suffix in f:  
+                
+
                 chr_key, chr_snps = {}, [] 
                 chr_name = int(f.split(prefix)[1].split(suffix)[0]) 
                 H, gf = zip_open(path+'/'+f)
@@ -317,9 +321,9 @@ class BridgePlot:
                     chr_snps.append([pos, snp, pv, beta]) 
                     chr_key[snp] = [pv, beta, pos] 
             
-            full_scores[chr_name] = sorted(chr_snps)  
-            full_key[chr_name] = chr_key 
-            full_len += len(chr_snps) 
+                full_scores[chr_name] = sorted(chr_snps)  
+                full_key[chr_name] = chr_key 
+                full_len += len(chr_snps) 
 
         return full_scores,  full_key, full_len 
 
