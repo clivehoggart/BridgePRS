@@ -149,9 +149,9 @@ class BridgePipelines:
         
         f_errors, f_handle = [], open(fp+'/'+err_files[0]) 
         
-        if D not in ['CLUMP','BETA','PREDICT']: 
-            err_files = ['/home/tade/Current/bridgePRS/repo/tests/pedro/quantify.stderr']
-            f_handle = open(err_files[0]) 
+        #if D not in ['CLUMP','BETA','PREDICT']: 
+        #    err_files = ['/home/tade/Current/bridgePRS/repo/tests/pedro/quantify.stderr']
+        #    f_handle = open(err_files[0]) 
         f_lines = [lp.strip() for lp in f_handle] 
         f_handle.close()
         
