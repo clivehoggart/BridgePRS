@@ -93,11 +93,6 @@ class BridgeBase:
         self.name, pp =  name, self.io.programs['plink'] 
         X = ['--bfile',self.bd.map[chromosome],'--extract', self.ss.snp_file, '--keep', self.bd.id_file] + self.bd.X_fields + self.clump_args
         rJOB = [pp,'--clump',self.ss.map[chromosome],'--out',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)] + X 
-        
-        
-
-
-
         self.make_job(rJOB, SILENT = (chromosome != '1')) 
         rJOB = ['gzip','-f',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)+'.clumped'] 
         self.make_job(rJOB, SILENT = True) 

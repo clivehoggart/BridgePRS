@@ -37,6 +37,8 @@ class BridgeProgress:
 
 
     def show_requirements(self, RK, LOC, R_DATA, plink_cmd):
+
+
         self.new_bk = '            ' 
         self.write('Checking Requirements:\n') 
         cA, cX = multiprocessing.cpu_count(), self.args.cores
@@ -95,11 +97,14 @@ class BridgeProgress:
                 if bd.ldpath.split('/')[-1].split('_')[0] != '1000G': self.record(fs2, [['Base Source:'],['POP',n1], ['LDPATH',bd.ldpath],['LDPOP',n2]])  
                 else: self.record(fs1, [['Base Source:'],['POP',n1], ['LDPOP',n2]])  
             if ss.VALID: 
-                if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix, 'WARNING: Not Given - Inferred From Directory']]) 
-                else:                        self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
+                if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix, 'WARNING: Not Given - Inferred From Directory']]) 
+                else:                        self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix]]) 
+                
+                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
                 if ss.TESTS['NOSNPS']:       self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total),'WARNING Not Given - Created Using All Snps']])
                 else:                        self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total)]]) 
-            else:                            self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX','None'], ['SUMSTATS_SUFFIX','None']]) 
+            else:                            
+                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX','None'], ['SUMSTATS_SUFFIX','None']]) 
             if pt.VALID: 
                 self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX',pt.genotype_prefix]])  
                 self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILE',pt.files[0]],['VARIABLES',",".join(pt.header[2::])]]) #,['FIN',self.tFile,i],['']])

@@ -22,6 +22,7 @@ def bridge_error(eString):
 class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
+            
             self.io   = BridgeIO(args, bridgedir, rundir, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
             if self.args.module == 'easyrun':   self.easyrun() 

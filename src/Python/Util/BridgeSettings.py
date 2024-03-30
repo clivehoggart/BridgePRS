@@ -3,6 +3,8 @@ from collections import defaultdict as dd
 from .BridgeProgress  import BridgeProgress
 from .BridgePop      import BridgePop
 
+# yo
+
 def bridge_error(eString):
     if type(eString) in [list,tuple]:  
         sys.stderr.write('\nBridgeSettingsError: '+eString[0]+'\n')
@@ -24,6 +26,7 @@ def validate_requirements(module, cmd):
 
 
 DEFAULT = dd(lambda: None) 
+#POP_ARGS = ['pop','ldpop','sumstats_file','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
 POP_ARGS = ['pop','ldpop','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
 for a,b in [['fst',0.15]]: DEFAULT[a] = b 
 for a,b in [["p","P"],["snpid","ID"],["se","SE"],["n","OBS_CT"],["beta","BETA"],["ref","REF"],["alt","A1"],["maf","A1_FREQ"]]: DEFAULT['ssf-'+a] = b 
@@ -46,9 +49,6 @@ class BridgeSettings:
         
         for k,x in pipeline_key['prefix'].items(): self.prefixes[k] = x 
         for k,x in pipeline_key['file'].items():   self.files[k] = x 
-
-        #if self.pop is not None: self.pop.validate(self.args.module, self.args.cmd, self.files, self.prefixes, self.lists) 
-        # bro  
         if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
         return
         
@@ -62,19 +62,12 @@ class BridgeSettings:
         self.load_ld_ref()
         
         pop_key = self.resolve_pop_args()
-        
-
         if len(pop_key['pop']) != self.popnum:   bridge_error(['Insufficient Number of Population Names ('+str(len(pop_key['pop']))+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
-        
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'BASE')] 
         else:                                    self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'TARGET')] 
-
         if len(pop_key['pop']) > 1:              
             self.pop_data.append(BridgePop(self.args, self.io.paths, pop_key['pop'][1], {p: pop_key[p][-1] for p in POP_ARGS}, self.ld_ref, 'BASE', self.pop_data[0]))
-
-
         self.io.progress.show_pop_data(self.pop_data) 
-        
         self.pop = self.pop_data[0] 
         return self 
     
@@ -82,14 +75,24 @@ class BridgeSettings:
         KL, POP_KEY, ARG_KEY = dd(list), dd(list), {v: vars(self.args)[v] for v in vars(self.args)} 
         if self.args.cmd in ['go','pops']: self.popnum = 2 
         else:                              self.popnum = 1 
-        
-
         for i,K in enumerate(self.args.config):
+            k_keys = K.keys()  
             for k,v in K.items(): 
                 if i == 0 or k in KL:              KL[k].append(v)
                 elif k not in ['genotype_prefix','phenotype_file','validation_file']: KL[k].append(v) 
                 else:                              continue  
-        
+                
+            #if 'sumstats_file' in k_keys: 
+            #    if 'sumstats_prefix' in k_keys or 'sumstats_suffix' in k_keys: bridge_error('Incompatibility In Configuration File: sumstats_file is not compatible with sumstats_prefix/sumstats_suffix') 
+            #    else:                                                          
+            #        KL['sumstats_prefix'].append(False) 
+            #        KL['sumstats_suffix'].append(False) 
+            #elif 'sumstats_prefix' in k_keys: 
+            #    KL['sumstats_file'].append(False) 
+            #    
+            #    if 'sumstats_suffix' not in k_keys: KL['sumstats_suffix'].append(False) 
+
+
         for k,kl in KL.items():
             if k in ARG_KEY and k in POP_ARGS: vars(self.args)[k] = (ARG_KEY[k]+kl)[0:self.popnum] 
             elif k in ARG_KEY: 
@@ -97,6 +100,7 @@ class BridgeSettings:
                 if len(list(set(kl))) > 1: bridge_error('Incompatible Arguments In Configuration Files: '+k+': '+",".join(kl))
                 elif kA ==  None:          vars(self.args)[k] = kC  
                 elif kA == DEFAULT[k]:     vars(self.args)[k] = kC 
+                elif kA == []:             bridge_error('Unrecognized Argument In Configuration Files: '+k+': '+kC) 
                 else: 
                     print(kA, kC,'yo') 
                     sys.exit() 

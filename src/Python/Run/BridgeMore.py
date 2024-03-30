@@ -6,7 +6,6 @@ from .BridgeResult import BridgeResult
 from .BridgePlot import BridgePlot
 
 
-
 def combine_error(eString):
     if type(eString) in [list,tuple]:
         sys.stderr.write('\nBridgeCombineError: '+eString[0]+'\n')
@@ -55,7 +54,7 @@ class BridgeMore:
         br, method = BR[0], BR[0].name.split('-')[-1] 
         
         
-        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.png']).setup(BR[0].name.split('-')[-1]) 
+        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.pdf']).setup(BR[0].name.split('-')[-1]) 
         self.bPlot.full_var_bars()
         self.bPlot.add_pred_scatter(method) 
         if method != 'single': self.bPlot.add_model(br.modelpath)
@@ -63,14 +62,13 @@ class BridgeMore:
         self.bPlot.add_summary_table(method)  
         self.bPlot.add_logo(2) 
         self.bPlot.finish() 
-        
         return 
 
 
     
     def mega_plot(self, BR, path, sPath): 
         #dict_keys(['single', 'port', 'prior', 'combine', 'weighted'])
-        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-combo.png', sPath+'/bridgeSummary.png']).setup(TYPE='MEGA') 
+        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-combo.pdf', sPath+'/bridgeSummary.pdf']).setup(TYPE='MEGA') 
         self.bPlot.full_var_bars()
         self.bPlot.add_pred_scatter('weighted')  
         self.bPlot.add_model(BR[1].modelpath) # SNPS = True) 
