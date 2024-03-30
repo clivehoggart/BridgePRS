@@ -45,22 +45,15 @@ class BridgeTools:
         for f in os.listdir(g_path): 
             if f.split('.')[-1] == 'bim' and f[0:len(g_name)] == g_name: 
                 with open(g_path+'/'+f) as filehandle:
-                    for line in filehandle: self.gt_lookup[line.split()[1]] = True 
+                    for line in filehandle: self.gt_lookup[line.split()[1]] = line.split()[0]  
         self.GT = True 
 
 
     def reformat_sumstats(self): 
-        if len(self.args.sumstats_prefix) != 1: bridge_error('A Single Sumstats Prefix Is Required')
-        
+        if len(self.args.sumstats_prefix) != 1:    bridge_error('A Single Sumstats Prefix Is Required')
+        if len(self.args.genotype_prefix) != 1:    bridge_error('A Single Genotype Prefix Is Required') 
+        self.read_genotype_prefix(self.args.genotype_prefix[0]) 
 
-    
-        
-
-
-
-        if len(self.args.genotype_prefix) > 1:    bridge_error('A Single Genotype Prefix Is Required')
-        elif len(self.args.genotype_prefix) == 1: self.read_genotype_prefix(self.args.genotype_prefix[0]) 
-        else:                                     bridge_warning(['No Genotype Prefix Supplied (SNPS may not be efficiently filtered']) 
         outprefix = self.io.paths['home']+'/'+".".join(self.args.sumstats_prefix[0].split('/')[-1].split('.')[0:-1])
         self.io.progress.start_minor('Verifying Sumstats File') 
         s_args = ['chr','snpid','ref','alt','p','beta','se','maf','n'] 
@@ -84,55 +77,55 @@ class BridgeTools:
             else:                        bridge_warning(['Missing Header Field: '+s,'Assign using --ssf-'+s+' (Available Values: '+", ".join(s_available)+')','Otherwise placeholder will be assigned: '+str(s_placeholders[s])]) 
         
         my_locs, my_defs   = [], []  
-        for s in s_args: 
+        for s in s_args[1::]: 
             if s in s_found: my_locs.append(s_found[s]) 
-            elif s != 'chr': my_defs.append(s_placeholders[s]) 
+            else:            my_defs.append(s_placeholders[s]) 
+
+            #elif s != 'chr': my_defs.append(s_placeholders[s]) 
+        
         
         
 
+        
 
-        if 'chr' not in s_found: 
-            self.io.progress.write('     ') 
-            if self.args.snpdb is None: bridge_error(['No chromosome information found in sumstats','A snp key is required --snpdb'])   
-            else:  w = open(outprefix+'.tmp','w') 
-            self.io.progress.start_minor('Writing Initial Sumstats File') 
-            my_format =     '%-16s %5s %5s %16s %22s %16s %16s %16s\n'
-            my_header = tuple(s_names[1::]) 
-        else: 
-            self.io.progress.start_minor('Writing Formatted Sumstats File') 
-            w = open(outprefix+'.reformat','w') 
-            my_format = '%-6s %16s %5s %5s %16s %22s %16s %16s %16s\n'
-            my_header = tuple(s_names) 
-        
-        w.write(my_format % my_header) 
-        
+
+        #if 'chr' not in s_found: 
+            
+            #if self.args.snpdb is None: bridge_error(['No chromosome information found in sumstats','A snp key is required --snpdb'])   
+            #else:  w = open(outprefix+'.tmp','w') 
+        #    self.io.progress.start_minor('Writing Initial Sumstats File') 
+        #    my_format =     '%-16s %5s %5s %16s %22s %16s %16s %16s\n'
+        #    my_header = tuple(s_names[1::]) 
+        #else: 
+        if len(s_missing) > 0: self.io.progress.write('     ') 
+        self.io.progress.start_minor('Writing Formatted Sumstats File') 
+        w = open(outprefix+'.reformat','w') 
+        my_format = '%-6s %16s %5s %5s %16s %22s %16s %16s %16s\n'
+        w.write(my_format % tuple(s_names)) 
         snp_loc = s_found['snpid'] 
-        #valid_snps = 0 
         for total_snps,line in enumerate(s_handle): 
             line = line.split()
             s_id = line[snp_loc] 
-            if self.GT and not self.gt_lookup[s_id]: continue 
-            elif not self.GT and s_id[0:2] != 'rs':  continue 
-            ld = tuple([line[loc] for loc in my_locs]+my_defs)
+            if s_id not in self.gt_lookup: continue 
+            if s_id[0:2] != 'rs':          continue 
+            ld = tuple([self.gt_lookup[s_id]]+[line[loc] for loc in my_locs]+my_defs)
             w.write(my_format % ld) 
-            #valid_snps += 1 
-            #if lz > 10: break 
-
+            #if total_snps > 10: break 
 
 
 
         w.close()  
-        if 'chr' not in s_found: 
-            self.io.progress.start_minor('Sorting Initial Sumstats File') 
-            os.system('sort -k1,1 '+outprefix+'.tmp > '+outprefix+'.srt') 
-            self.io.progress.start_minor('Merging Sumstats with Chromosome Key') 
-            os.system('join '+self.args.snpdb+' '+outprefix+'.srt > '+outprefix+'.reformat') 
-            CK = {} 
-            with open(self.args.snpdb) as d_handle: 
-                for line in d_handle: 
-                    break
-                    line = line.split() 
-                    CK[line[0]] = line[1] 
+        #if 'chr' not in s_found: 
+        #    self.io.progress.start_minor('Sorting Initial Sumstats File') 
+        #    os.system('sort -k1,1 '+outprefix+'.tmp > '+outprefix+'.srt') 
+        #    self.io.progress.start_minor('Merging Sumstats with Chromosome Key') 
+        #    os.system('join '+self.args.snpdb+' '+outprefix+'.srt > '+outprefix+'.reformat') 
+        #    CK = {} 
+        #    with open(self.args.snpdb) as d_handle: 
+        #        for line in d_handle: 
+        #            break
+        #            line = line.split() 
+        #            CK[line[0]] = line[1] 
 
         self.io.progress.start_minor('Zipping Sumstats File') 
         os.system('gzip -rf '+outprefix+'.reformat')

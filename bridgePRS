@@ -10,7 +10,7 @@ from   src.Python.Util.BridgeHelp import BridgeHelp
 
 
 bridgeHelp = BridgeHelp()
-HELP_FORMAT="%-48s %100s"
+HELP_FORMAT="%-48s %90s"
 
 # optimize
 
@@ -112,7 +112,7 @@ class MPS(argparse.ArgumentParser):
         if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','./bridgePRS analyze result -o out --results out/afr.result')) 
         if module == 'easyrun':       return (HELP_FORMAT  % ('Run Following Five Modules Consecutively:','./bridgePRS easyrun go -o out --pop_config afro_pop.config eur_pop.config')) 
         if module == 'check':         return (HELP_FORMAT  % ('Check system requirements or input data','./bridgePRS check data --pop_config afro_pop.config')) 
-        if module == 'tools':         return (HELP_FORMAT  % ('Use the bridgePRS script Toolbox','./bridgePRS tools reformat_sumstats --sumstats_prefix ss.1 --genotype_prefix gt.1 --snpdb snp.db')) 
+        if module == 'tools':         return (HELP_FORMAT  % ('Use the bridgePRS script Toolbox','./bridgePRS tools reformat_sumstats --sumstats_prefix ss.1 --genotype_prefix gt.1')) 
 
 
     def sub_help(self, cmd, module=None):
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     tools             =  subs.add_parser('tools', help=mps.help_str('tools')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
     tools.required    =  True
     reformat_sumstats          =  tools.add_parser('reformat_sumstats',parents=[Global,Main,Run], help=mps.sub_help('reformat_sumstats'), formatter_class=mps.formatter_class)
-    reformat_sumstats.add_argument('--snpdb',dest = 'snpdb', action = 'store', type=str, default=None, metavar='',help = 'snp_lookup') 
+    #reformat_sumstats.add_argument('--snpdb',dest = 'snpdb', action = 'store', type=str, default=None, metavar='',help = 'snp_lookup') 
         
     
     # OPTION 0: CHECK # 
