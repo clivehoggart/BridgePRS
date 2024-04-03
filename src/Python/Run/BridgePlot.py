@@ -171,28 +171,38 @@ class BridgePlot:
 
 
     def analyze_snp_dists(self, method, method2):
-
-
         base_scores, base_key, self.DATA_KEY['LEN']['target'] = self.load_base_scores(self.data[method].SS['PREFIX'], self.data[method].SS['SUFFIX']) 
-        snp_weights, model_scores  = self.data[method2].snp_weights, None
-        
-
         self.draw_manhattan(base_scores, 'Target GWAS')
-        
-        if self.MODEL:
-            model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
+        if self.MODEL: model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
+        else:          model_scores, model_key = None, 'NA' 
+        self.draw_manhattan(model_scores, 'Model GWAS') 
+
+
+        try: 
+            snp_weights = self.data[method2].snp_weights 
             w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
-            w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
+            w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
             self.DATA_KEY['LEN']['weight'] = len(w) 
+            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
+            if self.MODEL: 
+                b2 = [x[2] for x in w_bb] 
+                self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
+        except: 
+            pass  
+        
+        return 
+        if self.MODEL:
+            #w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
+            w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
+            #self.DATA_KEY['LEN']['weight'] = len(w) 
             self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
         else: 
-            w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
-            w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
+            #w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
+            #w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
             self.DATA_KEY['LEN']['weight'] = len(w) 
             self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
         
 
-        self.draw_manhattan(model_scores, 'Model GWAS') 
        
             
  
