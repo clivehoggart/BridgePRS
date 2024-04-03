@@ -81,22 +81,6 @@ class BridgeTools:
             if s in s_found: my_locs.append(s_found[s]) 
             else:            my_defs.append(s_placeholders[s]) 
 
-            #elif s != 'chr': my_defs.append(s_placeholders[s]) 
-        
-        
-        
-
-        
-
-
-        #if 'chr' not in s_found: 
-            
-            #if self.args.snpdb is None: bridge_error(['No chromosome information found in sumstats','A snp key is required --snpdb'])   
-            #else:  w = open(outprefix+'.tmp','w') 
-        #    self.io.progress.start_minor('Writing Initial Sumstats File') 
-        #    my_format =     '%-16s %5s %5s %16s %22s %16s %16s %16s\n'
-        #    my_header = tuple(s_names[1::]) 
-        #else: 
         if len(s_missing) > 0: self.io.progress.write('     ') 
         self.io.progress.start_minor('Writing Formatted Sumstats File') 
         w = open(outprefix+'.reformat','w') 

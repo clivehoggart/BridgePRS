@@ -60,12 +60,20 @@ class BridgeSettings:
     #################   POP CHECK ############################
     def check_pop_data(self):
         self.load_ld_ref()
-        
+       
+
         pop_key = self.resolve_pop_args()
+        
+
+        
+
+
+
         if len(pop_key['pop']) != self.popnum:   bridge_error(['Insufficient Number of Population Names ('+str(len(pop_key['pop']))+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
+        elif len(pop_key['pop']) > 1 and pop_key['pop'][0] == pop_key['pop'][-1]: bridge_error(['Insufficient Number of Unique Population Names ('+','.join(pop_key['pop'])+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'BASE')] 
         else:                                    self.pop_data = [BridgePop(self.args, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'TARGET')] 
-        if len(pop_key['pop']) > 1:              
+        if len(pop_key['pop']) > 1:    
             self.pop_data.append(BridgePop(self.args, self.io.paths, pop_key['pop'][1], {p: pop_key[p][-1] for p in POP_ARGS}, self.ld_ref, 'BASE', self.pop_data[0]))
         self.io.progress.show_pop_data(self.pop_data) 
         self.pop = self.pop_data[0] 

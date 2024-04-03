@@ -49,14 +49,14 @@ class BridgePop:
         
         
         #print(pop_key)
-        
 
+        
 
         self.args, self.paths, self.name, self.key, self.type  = args, paths, pop_name, pop_key, pop_type
         self.ref_pop = self.key['ldpop'] 
         
-        self.bdata      = BridgeData(self.args, 'bdata',      paths, self.ref_pop)
-        self.sumstats   = BridgeData(self.args, 'sumstats',   paths, self.ref_pop) 
+        self.bdata      = BridgeData(self.args, 'bdata',      paths, pop_name)
+        self.sumstats   = BridgeData(self.args, 'sumstats',   paths, pop_name) 
         self.phenotypes = BridgeData(self.args, 'phenotypes', paths, pop_name, pop_type) 
         self.bdata.add_panel(ld_ref[self.ref_pop]) 
 
@@ -66,19 +66,6 @@ class BridgePop:
         else:                              self.sumstats.add_sumstats(pop_key, prevPop.sumstats.snp_file) 
 
 
-        #sys.exit() 
-
-        #if pop_key['sumstats_prefix']: 
-        #    if not prevPop: self.sumstats.add_sumstats(pop_key['sumstats_file'],pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
-        #    else:           self.sumstats.add_sumstats(pop_key['sumstats_file'],pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], prevPop.sumstats.snp_file)
-        #else:                          
-        #    bridge_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
-
-        #if pop_key['sumstats_file'] or pop_key['sumstats_prefix']: 
-        #    if not prevPop: self.sumstats.add_sumstats(pop_key['sumstats_file'],pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], self.args.snp_file)
-        #    else:           self.sumstats.add_sumstats(pop_key['sumstats_file'],pop_key['sumstats_prefix'],pop_key['sumstats_suffix'], prevPop.sumstats.snp_file)
-        #else:                          
-        #    bridge_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
         
         if   not pop_key['genotype_prefix']: bridge_error('At least one Genotype Prefix is Required on the Command Line (--genotype_prefix) or in a config_file (GENOTYPE_PREFIX=)')  
         elif not pop_key['phenotype_file']:  bridge_error('At least one Phenotype File is Required on the Command Line (--phenotype_file) or in a config_file (PHENOTYPE_FILE=)')  
@@ -151,10 +138,8 @@ class BridgeData:
 
 
 
-        if self.datatype == 'sumstats':    
-            self.fields, self.map, self.total = {}, dd(list), 0 
-        elif self.datatype == 'phenotypes':   
-            self.fields, self.map = {}, dd(list) 
+        if self.datatype == 'sumstats':       self.fields, self.map, self.total = {}, dd(list), 0 
+        elif self.datatype == 'phenotypes':   self.fields, self.map = {}, dd(list) 
         
         
 
@@ -175,42 +160,15 @@ class BridgeData:
     ####################################   SUMSTATS   #######################################
     
 
-    def find_pfiles(self, prefix, suffix): 
-        self.prefix, self.prefix_path, pName, pLen = prefix, '/'.join(prefix.split('/')[0:-1]), prefix.split('/')[-1], len(prefix.split('/')[-1]) 
-        p_files = [self.prefix_path+'/'+x for x in os.listdir(self.prefix_path) if x[0:pLen] == pName] 
-        if   len(p_files) == 0: bridge_sumstats_error('Invalid Sumstats Path: '+self.prefix_path)
-        elif len(p_files)  > 1 or not os.path.isfile(p_files[0]): return p_files, suffix 
-        else: 
-            self.prefix_path = self.paths['save']+'/sumstats' 
-            bridge_sumstats_warning('Sumstats File not separated by chromosome, attempting to split file in '+self.prefix_path) 
-            
-            ss = zip_open(p_files[0]) 
-            header = ss.readline()
-            if not os.path.exists(self.prefix_path): os.makedirs(self.prefix_path) 
-            self.prefix = self.prefix_path+'/ss.'+self.pop_name+'.'  
-            suffix = '.out.gz'
-            s_key = {} 
-            for line in ss:  
-                c = line.split()[0] 
-                if c not in s_key: 
-                    s_key[c] = [self.prefix+c+'.out',open(self.prefix+c+'.out','w')]
-                    s_key[c][1].write(header) 
-                s_key[c][1].write(line) 
-            ss.close() 
-            
-            p_files = [] 
-            for f_name,f_handle in s_key.values(): 
-                f_handle.close() 
-                os.system('gzip -f '+f_name) 
-                p_files.append(f_name+'.gz') 
 
-            return p_files, suffix 
-    
+
+
     def find_sfiles(self, prefix, pn, suffix): 
         if self.snp_file is None: 
             self.TESTS['NOSNPS'] = True 
             self.snp_file  = self.paths['save']+'/snps.txt' 
             snp_handle = open(self.snp_file,'w') 
+
 
         self.prefix_path = self.paths['save']+'/sumstats' 
         if not os.path.exists(self.prefix_path): os.makedirs(self.prefix_path) 
@@ -287,171 +245,10 @@ class BridgeData:
         self.snp_file, self.thin_snps = snp_file, thin_snps 
         self.source_prefix, self.source_suffix = pk['sumstats_prefix'], pk['sumstats_suffix'] 
         self.prefix, self.suffix = self.find_sfiles(pk['sumstats_prefix'], pk['sumstats_prefix'].split('/')[-1], pk['sumstats_suffix']) 
-        
         self.X_fields   = ['--sumstats.allele0ID',self.fields['REF'],'--sumstats.allele1ID',self.fields['ALT'],'--sumstats.betaID',self.fields['BETA']]
         self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['N'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
 
 
-
-
-    def add_sumstats2(self, single_file, prefix,suffix, snp_file, thin_snps = '0'): 
-        self.VALID, self.BYCHR = True, True 
-        self.snp_file, self.thin_snps = snp_file, thin_snps 
-        sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-n']
-        self.fields         =  {ks.split('-')[-1].upper(): vars(self.args)[ks] for ks in sum_stats_fields}
-        
-
-        suffix_cands = dd(int) 
-        p_files, suffix = self.find_pfiles(prefix, suffix) 
-        for pn in p_files: 
-            k,p_tail = 0, pn.split(self.prefix)[-1] 
-            while p_tail[k] in ['1','2','3','4','5','6','7','8','9','0']: k+=1 
-            suffix_cands[p_tail[k::].split('.gz')[0]] += 1  
-        suffix_pairs, suffix_cands = [], [sc[0] for sc in sorted(suffix_cands.items(), key = lambda X: X[1], reverse=True)] 
-        if not suffix:                               suffix_prefix = suffix_cands[0] 
-        elif suffix.split('.gz')[0] in suffix_cands: suffix_prefix = suffix.split('.gz')[0] 
-        else:                                        bridge_error(['Invalid suffix supplied, --sumstats_suffix '+suffix,'Does not match file prefix: '+self.prefix]) 
-        suffix_pairs = [[pn.split(self.prefix)[-1].split(suffix_prefix)[0], pn] for pn in p_files if len(pn.split(self.prefix)[-1].split(suffix_prefix)) == 2] 
-        if suffix == None: self.TESTS['INFER_SUFFIX'] = True 
-        if len(suffix_pairs) == 1: suffix_pairs  = self.ss_split_suffix_matches(suffix_pairs[0][1], suffix_prefix)  
-        f_cnt = dd(int) 
-        
-        for f_chr, fp in suffix_pairs:    
-            for x in zip_open(fp, HEADER = True): f_cnt[x] += 1 
-            if fp.split('.')[-1] != 'gz': 
-                os.system('gzip -f '+fp)  
-                fp += '.gz' 
-            self.map[f_chr] = fp 
-        self.suffix = suffix_prefix 
-        
-
-
-        if self.suffix.split('.')[-1] != 'gz': self.suffix+='.gz' 
-        cands = [x for x,y in f_cnt.items() if y == len(self.map)] 
-        cand_found, cand_errors = [y for x,y in self.fields.items() if y in cands], ['--ssf-'+x.lower()+' '+y for x,y in self.fields.items() if y not in cands] 
-        if len(cand_errors) > 0:  bridge_error(['Invalid Sumstats Fields(s):']+cand_errors) 
-            
-
-
-
-        sys.exit() 
-
-        self.X_fields   = ['--sumstats.allele0ID',self.fields['REF'],'--sumstats.allele1ID',self.fields['ALT'],'--sumstats.betaID',self.fields['BETA']]
-        self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['N'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
-        self.ss_test_snpfile() 
-        return self 
-
-
-
-
-
-   
-
-
-    def add_sumstats3(self,single_file, prefix,suffix, snp_file, thin_snps = '0'): 
-        self.VALID, self.BYCHR = True, True 
-        self.snp_file, self.thin_snps = snp_file, thin_snps 
-        sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-n']
-        self.fields         =  {ks.split('-')[-1].upper(): vars(self.args)[ks] for ks in sum_stats_fields}
-        if single_file != False: 
-            self.file = single_file 
-            self.prefix = False 
-            ss = zip_open(self.file)  
-            ss.close() 
-        else: 
-            suffix_cands = dd(int) 
-            p_files, suffix = self.find_pfiles(prefix, suffix) 
-            for pn in p_files: 
-                k,p_tail = 0, pn.split(self.prefix)[-1] 
-                while p_tail[k] in ['1','2','3','4','5','6','7','8','9','0']: k+=1 
-                suffix_cands[p_tail[k::].split('.gz')[0]] += 1  
-            suffix_pairs, suffix_cands = [], [sc[0] for sc in sorted(suffix_cands.items(), key = lambda X: X[1], reverse=True)] 
-            if not suffix:                               suffix_prefix = suffix_cands[0] 
-            elif suffix.split('.gz')[0] in suffix_cands: suffix_prefix = suffix.split('.gz')[0] 
-            else:                                        bridge_error(['Invalid suffix supplied, --sumstats_suffix '+suffix,'Does not match file prefix: '+self.prefix]) 
-            suffix_pairs = [[pn.split(self.prefix)[-1].split(suffix_prefix)[0], pn] for pn in p_files if len(pn.split(self.prefix)[-1].split(suffix_prefix)) == 2] 
-            if suffix == None: self.TESTS['INFER_SUFFIX'] = True 
-            if len(suffix_pairs) == 1: suffix_pairs  = self.ss_split_suffix_matches(suffix_pairs[0][1], suffix_prefix)  
-            f_cnt = dd(int) 
-            for f_chr, fp in suffix_pairs:    
-                for x in zip_open(fp, HEADER = True): f_cnt[x] += 1 
-                if fp.split('.')[-1] != 'gz': 
-                    os.system('gzip -f '+fp)  
-                    fp += '.gz' 
-                self.map[f_chr] = fp 
-            self.suffix = suffix_prefix 
-            if self.suffix.split('.')[-1] != 'gz': self.suffix+='.gz' 
-            cands = [x for x,y in f_cnt.items() if y == len(self.map)] 
-            cand_found, cand_errors = [y for x,y in self.fields.items() if y in cands], ['--ssf-'+x.lower()+' '+y for x,y in self.fields.items() if y not in cands] 
-            if len(cand_errors) > 0:  bridge_error(['Invalid Sumstats Fields(s):']+cand_errors) 
-            
-        
-        self.X_fields   = ['--sumstats.allele0ID',self.fields['REF'],'--sumstats.allele1ID',self.fields['ALT'],'--sumstats.betaID',self.fields['BETA']]
-        self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['N'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
-        self.ss_test_snpfile() 
-        return self 
-
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    def ss_split_suffix_matches(self, sumstat_file, suffix): 
-        gf, new_path = zip_open(sumstat_file), self.paths['save']+'/'+self.prefix.split('/')[-1] 
-        header      = gf.readline().strip() 
-        header_list = [ih for ih,h in enumerate(header.split()) if 'CHR' in h.upper()]
-        if len(header_list) != 1:  bridge_error('Cannot Split Sumstats, CHR field not found') 
-        SP, W, chr_loc = [], {}, header_list[0] 
-        for line in gf: 
-            line, lc = line.strip(), line.split()[chr_loc] 
-            if lc not in W:    
-                W[lc] = open(new_path+lc+suffix,'w') 
-                W[lc].write(header+'\n') 
-            W[lc].write(line+'\n') 
-        for lc in W: 
-            W[lc].close() 
-            SP.append([lc, new_path+lc+suffix]) 
-        self.prefix = new_path 
-        gf.close() 
-        return SP 
-
-        
-
-    def ss_test_snpfile2(self): 
-        
-        if self.snp_file is None: 
-            self.TESTS['NOSNPS'] = True 
-            snp_handle = self.paths['save']+'/snps.txt' 
-            #snp_handle = self.paths['save']+'/snps.'+self.pop_name+'.txt' 
-            w = open(snp_handle,'w') 
-        
-        self.total  = 0
-        for f_chr, fp in sorted(self.map.items()):  
-            gf = zip_open(fp) 
-            snp_loc = {h: i for i,h in enumerate(gf.readline().split())}[self.fields['SNPID']]
-            snps = [line.split()[snp_loc] for line in gf] 
-            self.total += len(snps) 
-            if self.TESTS['NOSNPS']: w.write('\n'.join(snps)+'\n') 
-            gf.close() 
-        if self.TESTS['NOSNPS']: 
-            self.snp_file = snp_handle 
-            w.close()
-        return  
 
 
 
