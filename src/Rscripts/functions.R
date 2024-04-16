@@ -579,21 +579,24 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
                                   -1, swtch[ptr.miss] )
     }
     ptr.use <- which( swtch!=0 )
-    X <- X[,ptr.use,drop=FALSE]
-    beta.bar <- beta.bar[ptr.use,,drop=FALSE]
+    if( length(ptr.use)>0 ){
+        X <- X[,ptr.use,drop=FALSE]
+        beta.bar <- beta.bar[ptr.use,,drop=FALSE]
 
-    ptr <- which(swtch == -1)
-    if( length(ptr)>0 ){
-        X[,ptr] <- 2 - X[,ptr]
+        ptr <- which(swtch == -1)
+        if( length(ptr)>0 ){
+            X[,ptr] <- 2 - X[,ptr]
+        }
+
+        m <- apply( X, 2, mean, na.rm=TRUE )
+        for( ii in 1:ncol(X) ){
+            X[,ii] <- ifelse( is.na(X[,ii]), m[ii], X[,ii] )
+        }
+        pred <- as.matrix(X) %*% as.matrix(beta.bar[,ptr.beta.use])
+        ret <- pred
+    }else{
+        ret <- matrix(data=0,ncol=length(ptr.beta.use),nrow=nrow(X))
     }
-
-    m <- apply( X, 2, mean, na.rm=TRUE )
-    for( ii in 1:ncol(X) ){
-        X[,ii] <- ifelse( is.na(X[,ii]), m[ii], X[,ii] )
-    }
-    pred <- as.matrix(X) %*% as.matrix(beta.bar[,ptr.beta.use])
-
-    ret <- pred
     rownames(ret) <- rownames(X)
 
     return(ret)
