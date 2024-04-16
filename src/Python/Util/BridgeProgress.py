@@ -37,6 +37,8 @@ class BridgeProgress:
 
 
     def show_requirements(self, RK, LOC, R_DATA, plink_cmd):
+
+
         self.new_bk = '            ' 
         self.write('Checking Requirements:\n') 
         cA, cX = multiprocessing.cpu_count(), self.args.cores
@@ -95,11 +97,14 @@ class BridgeProgress:
                 if bd.ldpath.split('/')[-1].split('_')[0] != '1000G': self.record(fs2, [['Base Source:'],['POP',n1], ['LDPATH',bd.ldpath],['LDPOP',n2]])  
                 else: self.record(fs1, [['Base Source:'],['POP',n1], ['LDPOP',n2]])  
             if ss.VALID: 
-                if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix, 'WARNING: Not Given - Inferred From Directory']]) 
-                else:                        self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
+                if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix, 'WARNING: Not Given - Inferred From Directory']]) 
+                else:                        self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix]]) 
+                
+                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
                 if ss.TESTS['NOSNPS']:       self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total),'WARNING Not Given - Created Using All Snps']])
                 else:                        self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total)]]) 
-            else:                            self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX','None'], ['SUMSTATS_SUFFIX','None']]) 
+            else:                            
+                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX','None'], ['SUMSTATS_SUFFIX','None']]) 
             if pt.VALID: 
                 self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX',pt.genotype_prefix]])  
                 self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILE',pt.files[0]],['VARIABLES',",".join(pt.header[2::])]]) #,['FIN',self.tFile,i],['']])
@@ -109,6 +114,9 @@ class BridgeProgress:
             else: 
                 self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX','None']])  
                 self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILES','None'],['VARIABLES','None']]) #['FIN',self.tFile,i],['']])
+            
+            
+            self.record(fs0, [['Chromosomes:'],['FOUND',','.join(pd.chromosomes)]]) 
             self.record(fs0, [['FIN', self.tFile, i]])  
             pd.config = self.tFile  
     
@@ -122,8 +130,8 @@ class BridgeProgress:
         for k in vars(settings.args): 
             kv = vars(settings.args)[k]  
             if k.split('_')[-1] in kSkip or k.split('-')[0] in kSkip or k in kSkip or k[-4::] in kSkip: continue 
-            if k in ['verbose','silent','restart','noPlots'] and  kv:      kTrue.append(k.upper()) 
-            elif k in ['verbose','silent','restart','noPlots'] and not kv: kFalse.append(k.upper()) 
+            if k in ['verbose','silent','restart','noPlots','debug'] and  kv:      kTrue.append(k.upper()) 
+            elif k in ['verbose','silent','restart','noPlots','debug'] and not kv: kFalse.append(k.upper()) 
             elif k == 'max_clump_size' and int(kv) == 0:             kParams[k] = 'NO_LIMIT' 
             else:                                                    kParams[k] = str(kv) 
         TSTR = [] 
@@ -229,8 +237,18 @@ class BridgeProgress:
         return 
         
 
+    
+    def warn(self, MSG, WTYPE = 'BridgeWarning:'): 
+        EB = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        if type(MSG) not in [list,tuple]: self.write('\n'+WTYPE+' '+MSG) 
+        else: 
+            self.write('\n'+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
+            for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+
+
+
     def fail(self, MSG, ETYPE = 'BridgeError:'): 
-        EB = ' '.join(['' for x in range(len(ETYPE))]) 
+        EB = ' '.join(['' for x in range(len(ETYPE))])+'  '
         if type(MSG) not in [list,tuple]: self.write('\n'+ETYPE+' '+MSG) 
         else: 
             self.write('\n'+ETYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
@@ -277,9 +295,10 @@ class BridgeProgress:
     def record(self, outformat, out_list): 
         pL = [] 
         if out_list[0][0] != 'FIN': 
+            
             for T in out_list: 
-                if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')  
                 
+                if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES','FOUND'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')        
                 if len(T) == 1:   pL.append(T[0]) 
                 elif len(T) == 2: pL.append(T[0]+'='+self.homeshrink(T[1])) 
                 elif len(T) == 3: 

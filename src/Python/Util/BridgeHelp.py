@@ -14,9 +14,15 @@ class BridgeHelp:
     
     def evaluate_error(self, error, line): 
         if len(line) == 1: self.splash() 
-        elif error in ['too few arguments','the following arguments are required: cmd']:  self.module_specific(line[1]) 
+        elif error in ['too few arguments','the following arguments are required: cmd']:        self.module_specific(line[1]) 
         elif line[1].lower()[0:3] in ['req','man','tut','gui','web','qui']:                     self.general_help(line[1].lower()[0:3]) 
-        else: return True 
+        
+
+
+        else:
+            #FIX ME#
+            # argument --sumstats_prefix: invalid valid_pref value: '../data/pop_africa/sumstats2/afr.sumstats.out.gz'
+            return True 
         
                 
     def general_help(self, command): 
@@ -42,7 +48,7 @@ class BridgeHelp:
 
     
     def module_specific(self, module): 
-        print('this module '+module+' needs a command') 
+        print('Module '+module+' needs a command') 
         return 
 
 

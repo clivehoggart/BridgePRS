@@ -49,9 +49,6 @@ class BridgeBase:
     
     def make_linux_job(self, run_job, SILENT = False):
         from subprocess import call 
-        
-
-        
         if not SILENT: self.progress.start_rJob(run_job, self.name) 
         #self.progress.start_rJob(run_job, self.name) mark  
         #if self.name != 'clump': self.progress.start_rJob(run_job) 

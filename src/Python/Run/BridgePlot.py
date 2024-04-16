@@ -21,7 +21,7 @@ def combine_error(eString):
 ##########################################################################################################################################
 ##########################################################################################################################################
 
-
+ # print 
 
 def zip_open(fp, HEADER = True):                                                                                                                                                                                                                                                       
     if fp.split('.')[-1] == 'gz': gf = gzip.open(fp, 'rt')                                                                                                                                                                                                                              
@@ -44,9 +44,10 @@ class BridgePlot:
     def __init__(self, args, BR, pop, fig_names):  
         self.args, self.pop, self.fig_names  = args, pop, fig_names 
         self.fig, self.axes, self.ax_index, self.fs1, self.fs2 = matplotlib.pyplot.gcf(), [], 0, 25, 22 
+        
+
         self.names = [bR.name.split('-')[-1] for bR in BR] 
         self.data  = {bR.name.split('-')[-1]: bR for bR in BR}                                                                                                                                                                                                                           
-        
 
 
     # SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP #
@@ -169,35 +170,40 @@ class BridgePlot:
 
 
 
-    def analyze_snp_dists(self, method, method2): 
+    def analyze_snp_dists(self, method, method2):
         base_scores, base_key, self.DATA_KEY['LEN']['target'] = self.load_base_scores(self.data[method].SS['PREFIX'], self.data[method].SS['SUFFIX']) 
-        snp_weights, model_scores  = self.data[method2].snp_weights, None
         self.draw_manhattan(base_scores, 'Target GWAS')
-        
-        if self.MODEL: 
-            model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
-            w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
-            w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
-            self.DATA_KEY['LEN']['weight'] = len(w) 
-            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
-        
-        else: 
+        if self.MODEL: model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
+        else:          model_scores, model_key = None, 'NA' 
+        self.draw_manhattan(model_scores, 'Model GWAS') 
 
-            w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
+
+        try: 
+            snp_weights = self.data[method2].snp_weights 
+            w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
             w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
             self.DATA_KEY['LEN']['weight'] = len(w) 
             self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
-            
-
-
-        self.draw_manhattan(model_scores, 'Model GWAS') 
-       
-
-        #self.merge_snp_scores(base_key, snp_weights) 
+            if self.MODEL: 
+                b2 = [x[2] for x in w_bb] 
+                self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
+        except: 
+            pass  
         
-        
-        
+        return 
+        if self.MODEL:
             #w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
+            w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
+            #self.DATA_KEY['LEN']['weight'] = len(w) 
+            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
+        else: 
+            #w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
+            #w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
+            self.DATA_KEY['LEN']['weight'] = len(w) 
+            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
+        
+
+       
             
  
 
@@ -230,8 +236,8 @@ class BridgePlot:
         
         
         self.xSpan, self.ySpan = self.xMax - self.xMin, self.yMax - self.yMin
-        ax.set_xlim(self.xMin, self.xMax) 
-        ax.set_ylim(self.yMin, self.yMax) 
+        if self.xMin != self.xMax: ax.set_xlim(self.xMin, self.xMax) 
+        if self.yMin != self.yMax: ax.set_ylim(self.yMin, self.yMax) 
         if  BORDER > 0: 
             ax.axis('off') 
             ax.plot([self.xMin, self.xMax],[self.yMin, self.yMin], color='k') 
@@ -246,12 +252,9 @@ class BridgePlot:
             else: ax.text(self.xMin - self.xSpan/25.0, self.yMin + self.ySpan/2.0, yLab,ha='center', rotation = 90, va = 'center', fontsize=15, clip_on=False)  
             
 
-
-
     def draw_manhattan(self, scores, Tx): 
         ax = self.axes[self.ax_index] 
         self.ax_index += 1 
-        
         if scores is None: 
             ax.axis('off') 
             return
@@ -259,7 +262,14 @@ class BridgePlot:
         maxY, minY, xticks, xlabs, p_offset = 0, 100,  [] , [], 0 
         for ci,c in enumerate(chromosomes):
             bs = scores[c] 
-            X,Y = [p_offset+b[0] for b in bs], [-log(b[2],10) for b in bs]
+            
+            xlocs = [b[0] for b in bs] 
+            if xlocs[0] == xlocs[-1]: xlocs = [i for i in range(len(xlocs))] 
+            X,Y = [p_offset+xp for xp in xlocs], [-log(b[2],10) for b in bs]
+                
+
+
+
             if ci == 0: minX = X[0] 
             if max(Y) > maxY: maxY = max(Y) 
             if min(Y) < minY: minY = min(Y) 
@@ -270,7 +280,7 @@ class BridgePlot:
             xm = (p_offset + X[-1]) / 2
             xticks.append(xm) 
             xlabs.append(c) 
-            p_offset = X[-1]
+            p_offset = X[-1]+1 
         
         p_range = p_offset - minX 
         self.get_lims(ax, BORDER=2, xLims = [0, p_offset+p_range/75.0])  
@@ -287,20 +297,34 @@ class BridgePlot:
         ax.text(self.xMax+(self.xSpan*0.011), self.yMin + self.ySpan/18.0, 'logP', ha='left',  rotation = 90, fontsize=15,clip_on = False) 
         ax.axis('off') 
         ax.set_title('Manhattan Plot: '+Tx, x = 0.5, y = 0.82, fontsize=20, fontweight='bold')  
-        
         ax.set_ylim(0 - (self.yMax/10.0), self.yMax*1.15) 
         return 
 
 
 
 
+
+
+
+
+
+
+
+
     def load_base_scores(self, f_prefix, suffix): 
+        
+
+
         path   = "/".join(f_prefix.split('/')[0:-1])
         prefix = f_prefix.split('/')[-1] 
         c_names = [vars(self.args)[x] for x in ['ssf-snpid','ssf-p','ssf-beta']]
         full_len, full_scores, full_key    = 0, {}, {} 
         for f in os.listdir(path): 
+            
+
             if prefix in f and suffix in f:  
+                
+
                 chr_key, chr_snps = {}, [] 
                 chr_name = int(f.split(prefix)[1].split(suffix)[0]) 
                 H, gf = zip_open(path+'/'+f)
@@ -317,9 +341,9 @@ class BridgePlot:
                     chr_snps.append([pos, snp, pv, beta]) 
                     chr_key[snp] = [pv, beta, pos] 
             
-            full_scores[chr_name] = sorted(chr_snps)  
-            full_key[chr_name] = chr_key 
-            full_len += len(chr_snps) 
+                full_scores[chr_name] = sorted(chr_snps)  
+                full_key[chr_name] = chr_key 
+                full_len += len(chr_snps) 
 
         return full_scores,  full_key, full_len 
 

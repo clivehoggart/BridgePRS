@@ -34,9 +34,7 @@ class BridgeJobs:
                 self.progress.mark(5) 
                 self.q_serial(job_target, job_args, job_comment, job_marker) 
             elif self.args.cores > 1: 
-                
                 self.progress.write('....(Parallelizing Across '+str(self.args.cores)+' Cores)........') 
-                
                 self.q_parralel(job_target, job_args, job_comment, job_marker) 
             else: 
                 self.progress.write('...(Serialized On One Core)') 

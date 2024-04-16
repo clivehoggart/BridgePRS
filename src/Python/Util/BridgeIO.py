@@ -1,6 +1,7 @@
 import sys,os, multiprocessing 
 from .BridgeProgress  import BridgeProgress
 from .BridgeSettings  import BridgeSettings
+from .BridgeTools     import BridgeTools
 from .BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
 
@@ -39,18 +40,32 @@ class BridgeIO:
         def update(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
-            self.pipeline = BridgePipelines(self).verify_pipeline() 
-            
-            self.settings.update_inputs(self.pipeline.input_key) 
+            self.pipeline = BridgePipelines(self).verify_pipeline()  
+            self.settings.update_inputs(self.pipeline.input_key)
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.settings = BridgeSettings(self)
             self.check_requirements()
-            if self.cmd[0:3] in ['req']: self.progress.finish('Complete',FIN=True) 
-            if module == 'analyze': self.settings.check_analysis_data()  
-            else:                   self.settings.check_pop_data() 
+            
+            if module in 'tools': BridgeTools(self).apply() 
+            
+
+            if module in 'tools' or self.cmd[0:3] in ['req']: self.progress.finish('Complete',FIN=True) 
+            elif module == 'analyze':                         self.settings.check_analysis_data()  
+            else:                                             self.settings.check_pop_data() 
+
             if module == 'check': self.progress.finish('Complete',FIN=True) 
+
+
+
+            #if module == 'tools' or self.cmd[0:3] in ['req']: self.progress.finish('Complete',FIN=True) 
+            #if module == 'analyze': self.settings.check_analysis_data()  
+            #elif module == 'tools': BridgeTools(self).apply() 
+            #else:                   self.settings.check_pop_data() 
+            
+            #if module == 'check': self.progress.finish('Complete',FIN=True) 
+            
             self.progress.show_settings(self.settings) 
             self.progress.start_module(self.module, self.cmd, self.paths['home'])# .show_settings(self.settings) 
             self.pipeline = BridgePipelines(self).verify_pipeline() 
