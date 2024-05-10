@@ -271,8 +271,7 @@ class BridgeData:
         else:                                  self.thin_snps = self.args.thinned_snp_file 
         self.rs_key, self.snp_file = {}, self.args.snp_file 
         if self.args.snp_file is None: 
-            self.TESTS['NOSNPS'] = True 
-            self.TESTS['NOSNPS'], self.snp_file, self.snp_handle  = self.paths['save']+'/snps.txt', open(self.paths['save']+'/snp.txt','w') 
+            self.TESTS['NOSNPS'], self.snp_file, self.snp_handle  = True, self.paths['save']+'/snps.txt', open(self.paths['save']+'/snps.txt','w') 
         
         if self.args.debug_level >= 2: 
             if not self.TESTS['NOSNPS']: 

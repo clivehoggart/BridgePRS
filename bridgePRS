@@ -6,6 +6,7 @@ import sys, os, shutil, argparse, platform, multiprocessing
 import argparse as ap
 
 from   src.Python.Util.BridgeHelp import BridgeHelp
+from collections import Counter 
 
 
 
@@ -38,6 +39,9 @@ class MPS(argparse.ArgumentParser):
         K, fp = {}, self.valid_file(F) 
         self.paths.append("/".join(fp.split('/')[0:-1])+'/')
         with open(fp, "r") as f: f_data = [ln.split('#')[0].strip().split('=') for ln in f if len(ln.split('#')[0].split('=')) == 2] 
+        for c_name, cnt in [both for both in Counter([fd[0] for fd in f_data]).items() if both[1] > 1]: self.error('\nError - Repeated Option in Configuration File: '+c_name) 
+        #sys.exit() 
+
         for k,kval in f_data:
             kx, ktail, kp, kn = k.lower(), k.lower().split('_')[-1], "/".join(kval.split('/')[0:-1]), kval.split('/')[-1]
             if ktail in ['file','path','prefix']: 
@@ -300,7 +304,6 @@ if __name__ == '__main__':
     
 
     from src.Python.BridgePRS import BridgePRS
-    
     bridgePRS = BridgePRS(args,mydir,cwd,sys.argv)
     sys.exit() 
 
