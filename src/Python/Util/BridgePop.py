@@ -129,10 +129,13 @@ class BridgePop:
                 pk, pn, pt = s.pop_type, s.pop_name, s.phenoTYPE, 
                 eR = min(s.WT),max(s.WT)
                 self.progress.printout('\nPOP'+str(si+1)+' '+pn+' ('+pk+')')
-                self.progress.printout('Phenotype: '+self.args.phenotype+' ('+pt+')') 
-                eStr = 'Effect Size Range: '+str(eR[0])+', '+str(eR[1]) 
-                self.progress.printout(eStr) 
-                if pt == 'binary' and eR[0] > 0:  bridge_debug_error('Truncated Effect Size Range, log(odds) is required.') 
+                try: 
+                    self.progress.printout('Phenotype: '+self.args.phenotype+' ('+pt+')') 
+                    eStr = 'Effect Size Range: '+str(eR[0])+', '+str(eR[1]) 
+                    self.progress.printout(eStr) 
+                    if pt == 'binary' and eR[0] > 0:  bridge_debug_error('Truncated Effect Size Range, log(odds) is required.') 
+                except: 
+                    self.progress.printout('Phenotype: '+str("Not Declared")) 
                 
                 
 
