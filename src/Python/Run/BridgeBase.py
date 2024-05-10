@@ -10,7 +10,7 @@ class BridgeBase:
     def __init__(self, bridge):
         self.module, self.args, self.io, self.settings, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.settings, bridge.io.progress 
         self.pop, self.cores = self.settings.pop, str(self.args.cores) 
-        self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.phenotypes 
+        self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.genopheno
         self.P, self.F = self.settings.prefixes, self.settings.files 
 
         self.model, self.base_paths = {}, dd(bool) 

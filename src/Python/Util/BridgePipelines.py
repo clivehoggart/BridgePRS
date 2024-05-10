@@ -115,10 +115,10 @@ class BridgePipelines:
         
         f_pairs = [line.strip().split('=') for line in open(fI.config,'rt')]
         f_pairs.extend([[X1,X2] for X1,X2 in self.progress_pair() if X1.split('_')[0] != self.pop or X1.split('_')[1] != D]) 
-        if fI.phenotypes.VALID: 
-            f_pairs.append(['PHENOTYPE_FILES',",".join(fI.phenotypes.files)])
-            for x,y in fI.phenotypes.fields.items():  f_pairs.append(['PHENOTYPE_FIELD-'+x,y]) 
-            f_pairs.append(['PHENOTYPE_TYPE',fI.phenotypes.type]) 
+        if fI.genopheno.VALID: 
+            f_pairs.append(['PHENOTYPE_FILES',",".join(fI.genopheno.files)])
+            for x,y in fI.genopheno.fields.items():  f_pairs.append(['PHENOTYPE_FIELD-'+x,y]) 
+            f_pairs.append(['PHENOTYPE_TYPE',fI.genopheno.type]) 
         #if fI.sumstats.VALID:    f_pairs.append(['SNP_FILE',fI.sumstats.snp_file])
         #if fI.bdata.VALID:       f_pairs.append(['ID_FILE',fI.bdata.id_file]) 
         if 'model' in fD.files and fD.files['model'] is not None: f_pairs.append(["MODEL_FILE",fD.files['model']]) 

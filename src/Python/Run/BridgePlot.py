@@ -21,7 +21,7 @@ def combine_error(eString):
 ##########################################################################################################################################
 ##########################################################################################################################################
 
- # print 
+ # print pdf 
 
 def zip_open(fp, HEADER = True):                                                                                                                                                                                                                                                       
     if fp.split('.')[-1] == 'gz': gf = gzip.open(fp, 'rt')                                                                                                                                                                                                                              
@@ -82,7 +82,11 @@ class BridgePlot:
         plt.suptitle(tString, fontweight='bold', fontsize=22) 
         if self.TYPE == 'MEGA': plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
         else:                   plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
-        for fn in self.fig_names: plt.savefig(fn,dpi=200) 
+        for fn in self.fig_names: 
+            if fn.split('.')[-1] == 'pdf': plt.savefig(".".join(fn.split('.')[0:-1])+'.png',dpi=200) 
+            plt.savefig(fn,dpi=200) 
+        
+
         plt.clf() 
         plt.close()
         return

@@ -162,7 +162,9 @@ if __name__ == '__main__':
     system.add_argument('--plinkPath',    dest='plinkpath',    action='store',      type=mps.valid_path,     default='src/Python/Xtra', help=argparse.SUPPRESS) 
    
     
-    toggle.add_argument('--debug',        dest='debug',       action='store_true',  default=False,              help='Toggle Debug Mode On')
+    #toggle.add_argument('--debug',        dest='debug',       action='store_true',  default=False,              help='Toggle Debug Mode On')
+    toggle.add_argument('--debug_level',            dest = 'debug_level',           type=int,                    metavar ='',    default=1, help=argparse.SUPPRESS) 
+    #toggle.add_argument('--checkLevel',     dest='checkLevel',    action='store_true',  default=False,              help='Toggle Debug Mode On')
     toggle.add_argument('--verbose',      dest='verbose',     action='store_true',  default=False,              help='Toggle Verbose Mode On')
     toggle.add_argument('--restart',      dest='restart',     action='store_true',  default=False,              help='Toggle Restart Pipeline On') 
     toggle.add_argument('--repeat',       dest='repeat',      action='store_true',  default=False,              help='Toggle Repeat Pipeline Steps On') 
@@ -196,7 +198,7 @@ if __name__ == '__main__':
     run.add_argument('--validation_file',   dest = 'validation_file',  type=mps.valid_file,       metavar='', default=None,    help = 'phenotype validation file') 
     run.add_argument('--snp_file',          dest = 'snp_file',         type=mps.valid_file,      metavar='', default=None, help = 'path to snp qc file') 
     run.add_argument('--max_clump_size',    dest='max_clump_size',   action='store',type=int , default =  '0', metavar='',  help='Max Size for Clumping') 
-    run.add_argument('--thinned_snp_file',  dest = 'thinned_snp_file', type=mps.valid_file,      metavar='', default=None, help = 'path to thinned snp qc file') 
+    run.add_argument('--thinned_snp_file',  dest = 'thinned_snp_file', type=mps.valid_file,    metavar='', default=None, help = 'path to thinned snp qc file') 
     run.add_argument('--model_file',        dest = 'model_file', action = 'store', type=str, default=None, metavar='',help = 'large population model file') 
     run.add_argument('--fst',               dest='fst',          action='store',type=str,metavar='',default=0.15,help='fst value') 
     

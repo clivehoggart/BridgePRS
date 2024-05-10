@@ -83,7 +83,7 @@ class BridgeProgress:
         self.write('\nReading Population Data:\n') 
         for i, pd in enumerate(pop_data): 
             n1, n2 = pd.name, pd.ref_pop  
-            ss, bd, pt = pd.sumstats, pd.bdata, pd.phenotypes 
+            ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
             if self.args.module == 'build-model': i+=1
             if i == 0: 
                 if len(pop_data) == 1: self.tFile = self.runpath + '/save/primary.'+n1+'.config'
@@ -291,13 +291,21 @@ class BridgeProgress:
             self.out.flush()  
         if self.FILE: self.loghandle.write(outformat % outtuple)
 
+    
+    def printout(self, outstring): 
+        if self.active: 
+            self.out.write(outstring+'\n') 
+            self.out.flush()  
+        if self.FILE: self.loghandle.write(outstring+'\n')
+    
+
+
 
     def record(self, outformat, out_list): 
         pL = [] 
         if out_list[0][0] != 'FIN': 
             
             for T in out_list: 
-                
                 if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES','FOUND'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')        
                 if len(T) == 1:   pL.append(T[0]) 
                 elif len(T) == 2: pL.append(T[0]+'='+self.homeshrink(T[1])) 
