@@ -189,10 +189,12 @@ class BridgeData:
     ####################################   SUMSTATS   #######################################
     
     def base_comp(self, g1, g2): 
-        if g1[0] == g2[0] and g1[1] == g2[1]: return 'MATCH' 
-        elif g1[0] == g2[1] and g1[1] == g2[0]: return 'SWAPREF' 
-        elif REV_COMP[g1[0]] == g2[0] and REV_COMP[g1[1]] == g2[1]: return 'REVCOMP' 
-        else:                                                       return 'INVALID'  
+        try: 
+            if g1[0] == g2[0] and g1[1] == g2[1]: return 'MATCH' 
+            if g1[0] == g2[1] and g1[1] == g2[0]: return 'SWAPREF' 
+            if REV_COMP[g1[0]] == g2[0] and REV_COMP[g1[1]] == g2[1]: return 'REVCOMP' 
+        except: pass 
+        return 'INVALID'  
 
 
     def begin_sumstats_file(self, pf, CHR=None): 
@@ -253,11 +255,23 @@ class BridgeData:
                 except ValueError: bridge_sumstats_error(['Nonnumerical Chromosome ('+chr_cands[0]+')','    Sumstats File: '+p_file])  
                 try:                lpRef, lpAlt, lpMaf, lpN, lpWt, lpSE, lpP = LD[2], LD[3], float(LD[4]), float(LD[5]), float(LD[6]), float(LD[7]), float(LD[8])
                 except ValueError:  bridge_sumstats_error(['Sumstats File Error(s), Incorrect DataType:',header,'\t'.join(LD)]) 
+                
+                #lpRef = "AC" 
+                relationship = self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])
+                self.CK[relationship] += 1 
+                if relationship != 'INVALID': 
+                    if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
+                    self.add_sumstats_line(fC, LD, lp[iS]) 
+                    self.rs_key[lp[iS]].append(True) 
 
-                self.CK[self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])] += 1 
-                if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
-                self.add_sumstats_line(fC, LD, lp[iS]) 
-                self.rs_key[lp[iS]].append(True) 
+                #print(relationship,'yo') 
+
+                #self.CK[self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])] += 1 
+                
+
+                #if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
+                #self.add_sumstats_line(fC, LD, lp[iS]) 
+                #self.rs_key[lp[iS]].append(True) 
                  
         
         p_handle.close() 
@@ -317,7 +331,7 @@ class BridgeData:
                                 azd = str(rC)+':'+str(rL)+', '+str(chr_name)+':'+str(loc) 
                                 if   chr_name != rC: bridge_sumstats_error('Invalid Genome Builds For Base/Target Genotype, '+rs+' On Multiple Chromosomes: '+azd) 
                                 else:                bridge_sumstats_error('Invalid Genome Builds For Base/Target Genotype, '+rs+' At Multiple Locations: '+azd) 
-                            else: 
+                            else:
                                 self.CK['GENO_'+self.base_comp([ref,alt],[rRef, rAlt])] += 1 
                                 self.rs_key[rs] = [rC, rL, rRef, rAlt] 
             self.genome_snps = len(self.rs_key)+self.CK['GENO_EXTRA']
