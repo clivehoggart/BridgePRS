@@ -37,7 +37,7 @@ beta.tail.approx <- function( x1, alpha, beta ){
 }
 
 alt.strand <- function(allele){
-    allele1 <- ifelse( allele=='A', 'T', 'X' )
+    allele1 <- ifelse( allele=='A', 'T', allele )
     allele1 <- ifelse( allele=='C', 'G', allele1 )
     allele1 <- ifelse( allele=='G', 'C', allele1 )
     allele1 <- ifelse( allele=='T', 'A', allele1 )
