@@ -12,8 +12,8 @@ of model fit and SNP weights for the best model for population 2 are
 returned. In addition, validation data from population 2, can be
 supplied to make out-of-sample prediction and measures of model fit.
 
-Preprint of BridgePRS is available here:
-https://www.researchsquare.com/article/rs-1272562/v1 
+Paper descfribing BridgePRS is available here:
+https://www.nature.com/articles/s41588-023-01583-9 
 
 # Installation
 Clone this repository from your home directory using the following git command:
