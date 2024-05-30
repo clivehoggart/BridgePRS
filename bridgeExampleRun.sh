@@ -3,14 +3,14 @@ src="$PWD"/src
 
 pop=(AFR EAS)
 fst=(0.15 0.11)
-i=0
+i=1
 ${src}/Bash/BridgePRS.sh $src/Rscripts\
     --strand_check 1 \
     --outdir out \
     --by_chr 1 \
     --by_chr_sumstats .glm.linear.gz \
     --pop1 EUR \
-    --pop2 AFR \
+    --pop2 ${pop[$i]} \
     --fst ${fst[$i]} \
     --pop1_qc_snplist ${data}/qc_snplist.txt \
     --pop1_sumstats   ${data}/pop_EUR/sumstats/EUR.chr \

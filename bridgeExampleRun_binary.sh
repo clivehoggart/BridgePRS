@@ -1,25 +1,31 @@
-~/BridgePRS/src/Bash/BridgePRS.sh \
+data="$PWD"/data 
+src="$PWD"/src 
+
+pop=(AFR EAS)
+fst=(0.15 0.11)
+i=0
+${src}/Bash/BridgePRS.sh $src/Rscripts\
     --binary 1 \
     --strand_check 1 \
     --outdir out_binary \
     --by_chr 1 \
     --by_chr_sumstats .glm.linear.gz \
     --pop1 EUR \
-    --pop2 AFR \
-    --fst 0.15 \
-    --pop1_sumstats ~/BridgePRS/data/sumstats/eur.chr \
-    --pop1_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop1_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop1_test_data  ~/BridgePRS/data/eur_test.dat \
-    --pop1_ld_bfile  ~/BridgePRS/data/bfiles/chr \
-    --pop1_ld_ids ~/BridgePRS/data/eur_ids.txt \
-    --pop2_sumstats ~/BridgePRS/data/sumstats/afr.chr \
-    --pop2_qc_snplist ~/BridgePRS/data/sumstats/qc_snplist3.txt \
-    --pop2_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop2_test_data  ~/BridgePRS/data/afr_test.dat \
-    --pop2_valid_data  ~/BridgePRS/data/afr_valid.dat \
-    --pop2_ld_bfile ~/BridgePRS/data/bfiles/chr \
-    --pop2_ld_ids ~/BridgePRS/data/afr_ids.txt \
+    --pop2 ${pop[$i]} \
+    --fst ${fst[$i]} \
+    --pop1_qc_snplist ${data}/qc_snplist.txt \
+    --pop1_sumstats   ${data}/pop_EUR/sumstats/EUR.chr \
+    --pop1_bfile      ${data}/pop_EUR/genotypes/chr \
+    --pop1_test_data  ${data}/pop_EUR/phenotypes/EUR_test.dat \
+    --pop2_qc_snplist ${data}/qc_snplist.txt \
+    --pop2_sumstats   ${data}/pop_${pop[$i]}/sumstats/${pop[$i]}.chr \
+    --pop2_bfile      ${data}/pop_${pop[$i]}/genotypes/chr \
+    --pop2_test_data  ${data}/pop_${pop[$i]}/phenotypes/${pop[$i]}_test.dat \
+    --pop2_valid_data ${data}/pop_${pop[$i]}/phenotypes/${pop[$i]}_valid.dat \
+    --pop1_ld_bfile   ${data}/1000G_sample/chr \
+    --pop1_ld_ids     ${data}/1000G_sample/EUR_IDs.txt \
+    --pop2_ld_bfile   ${data}/1000G_sample/chr \
+    --pop2_ld_ids     ${data}/1000G_sample/${pop[$i]}_IDs.txt \
     --sumstats_snpID ID \
     --sumstats_p P \
     --sumstats_beta BETA \
@@ -40,4 +46,3 @@
     --do_est_beta_pop2 1 \
     --do_predict_pop2 1 \
     --do_combine 1 
-
