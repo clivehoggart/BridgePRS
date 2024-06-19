@@ -246,7 +246,11 @@ class BridgeData:
                 if lp[iS] not in self.rs_key: 
                     self.CK['NO_GENOTYPE'] += 1 
                     continue 
-                rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
+                try: rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
+                except ValueError: 
+                    print(self.rs_key[lp[iS]]) 
+                    bridge_debug_error('this is Z info:'+','.join(self.rs_key[lp[iS]])) 
+
                 LD = [lp[j] if j != 'NA' else j for j in locs] 
                 chr_cands = list(set([c for c in [str(LD[0]), str(CHR), str(rsChr)] if c != 'NA'])) 
                 if len(chr_cands) > 1: bridge_sumstats_error('Ambiguous Chromosomes For '+lp[iS]+': '+str(LD[0])+','+str(rsChr)+','+str(CHR)+' (Sumstats, Genotype, Filename(s))') 
