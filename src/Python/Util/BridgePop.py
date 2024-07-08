@@ -199,21 +199,30 @@ class BridgeData:
 
     def begin_sumstats_file(self, pf, CHR=None): 
         required, locs, names = ['CHR','SNPID','REF','ALT','MAF','N','BETA','SE','P'], [], [] 
-        FK, NK, IK = {b: a for a,b in self.fields.items()}, {'CHR': 'CHR'}, {} 
+        FK, NK, IK, ZK = {b: a for a,b in self.fields.items()}, {'CHR': 'CHR'}, {}, []  
         p_handle = zip_open(pf) 
         p_init   = p_handle.readline()  
         p_header = p_init.split()   
+        
         for i,h in enumerate(p_header): 
             if   'CHR' in h.upper(): lk = 'CHR' 
-            elif h.upper() in FK:    lk = FK[h.upper()] 
-            else:                    continue 
+            elif  h in FK:    lk = FK[h] 
+            else: 
+                ZK.append(h)     
+                continue 
             if lk in IK: bridge_sumstats_error(['Repeated Column']) 
             IK[lk], NK[lk] = i, h     
         for r in required: 
             if r not in IK: 
-                if r != 'CHR':                  bridge_sumstats_error(['Invalid Sumstats File: '+pf,'    Missing Header Field: --SSF-'+r+' '+self.fields[r]]) 
-                elif self.args.debug_level < 2: bridge_sumstats_error(['Cannot Split Sumstats, CHR field not found','    Fields Found: '+",".join(p_header)]) 
-                else:                           IK['CHR'] = 'NA'  
+                if r != 'CHR':                  
+                    my_error = ['Invalid Sumstats File: '+pf,'    Missing Header Field: --SSF-'+r+' '+self.fields[r]]
+                    if len(ZK) > 0: my_error.append('   See Available Choices:  '+",".join(ZK))  
+                    else:           my_error.append('    Please Add Column to Sumstats File')  
+                    bridge_sumstats_error(my_error) 
+                elif self.args.debug_level < 2: 
+                    bridge_sumstats_error(['Cannot Split Sumstats, CHR field not found','    Fields Found: '+",".join(p_header)]) 
+                else:                           
+                    IK['CHR'] = 'NA'  
             locs.append(IK[r])
             names.append(NK[r]) 
         if IK['CHR'] == 'NA': self.TESTS['INFER_CHR'] = True 

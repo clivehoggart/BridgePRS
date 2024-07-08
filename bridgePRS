@@ -155,7 +155,7 @@ if __name__ == '__main__':
     Main, Global, Run = MPS(add_help=False), MPS(add_help=False), MPS(add_help=False)  
     #Main.add_argument('-o','--outpath',             dest='outpath',      action='store',       type=str,   required= True, help='Output path for bridgePRS') 
     Main.add_argument('-o','--outpath',             dest='outpath',      action='store',       type=str,   default=None, help='Output path for bridgePRS') 
-    Min.add_argument('--config_file','--config_files',      dest = 'config',      type=mps.config_key,     nargs = '+', metavar='', default=[], help = 'Population config files(s)') 
+    Main.add_argument('--config_file','--config_files',      dest = 'config',      type=mps.config_key,     nargs = '+', metavar='', default=[], help = 'Population config files(s)') 
     
     
     system, toggle, labels = Global.add_argument_group('System'), Global.add_argument_group('Toggles'), Global.add_argument_group('Labels') 

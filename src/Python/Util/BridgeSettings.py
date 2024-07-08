@@ -60,15 +60,8 @@ class BridgeSettings:
     #################   POP CHECK ############################
     def check_pop_data(self):
         self.load_ld_ref()
-       
-
         pop_key = self.resolve_pop_args()
         
-
-        
-
-
-
         if len(pop_key['pop']) != self.popnum:   bridge_error(['Insufficient Number of Population Names ('+str(len(pop_key['pop']))+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
         elif len(pop_key['pop']) > 1 and pop_key['pop'][0] == pop_key['pop'][-1]: bridge_error(['Insufficient Number of Unique Population Names ('+','.join(pop_key['pop'])+') For Subprogram: '+self.args.module+' '+self.args.cmd])         
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.progress, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, self.ld_ref, 'BASE')] 
@@ -127,26 +120,36 @@ class BridgeSettings:
 
 
     def load_ld_ref(self): 
-        self.ld_ref = {} 
-        if '1000G_ref' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_ref')                                                                                                                                                                       
-        elif '1000G_sample' in os.listdir(self.io.bridgedir+'/data'): self.load_ld(self.io.bridgedir+'/data/1000G_sample')                                                                                                                                                               
-        for p in self.args.ld_path:     self.load_ld(p)                                                                                                                                                                                                                                          
+        
+         
+        self.ld_path, self.ld_ref = None, {} 
+       
+        if len(self.args.ld_path) > 0: 
+            self.ld_path = 'CUSTOM'  
+            for p in self.args.ld_path: self.load_ld(p) 
+        elif '1000G_ref' in os.listdir(self.io.bridgedir+'/data'): 
+            self.ld_path = '1000G_REF'
+            self.load_ld(self.io.bridgedir+'/data/1000G_ref')                                                                                                                                                                       
+        elif '1000G_sample' in os.listdir(self.io.bridgedir+'/data'): 
+            self.ld_path = '1000G_SAMPLE'
+            self.load_ld(self.io.bridgedir+'/data/1000G_sample')                                                                                                                                                               
+        else: 
+            bridge_error('No LD-Reference Path Found (default paths are /data/1000G_sample, /data/1000G_ref)') 
+    
 
     def load_ld(self, ld_path):                                                                                                                                                                                                                                                     
         ids, cands, key, k = [], [], {}, 0                                                                                                                                                                                                                                          
         for f in os.listdir(ld_path):
             if f[0] in ['.','_']: continue 
             if f.split('.')[-1] in ['bed','bim','fam']: cands.append(".".join(f.split('.')[0:-1]))                                                                                                                                                                                  
-            elif 'IDS' in [z.upper() for z in f.split('.')]:                            ids.append([f.split('.')[0], ld_path+'/'+f])                                                                                                                                                                                
+            elif 'IDS' in f.upper(): ids.append([f.split('_')[0].upper(), ld_path+'/'+f]) 
         cands = list(set(cands)) 
-        
-
         if    len(cands) == 0: bridge_error('No plink files (bed, bim, fam) found in LD-Reference Path: '+ld_path) 
         elif  len(cands) == 1: 
             bridge_error('LD-Reference files must be split by chromosome: '+ld_path) 
-            for pop, pop_path in ids: 
-                #print(pop, cands, pop_path, ld_path+'/'+cands[0], False, {cands[0]: ld_path+'/'+cands[0]}) 
-                self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+cands[0], False, {cands[0]: ld_path+'/'+cands[0]}]                                                                                                                                                                                    
+            for pop, pop_path in ids:
+                if pop.upper() in self.ld_ref: bridge_error('Duplication in LD Reference for Population '+pop.upper()+': '+pop_path+', '+self.ld_ref[pop.upper()][0]) 
+                else:                          self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+cands[0], False, {cands[0]: ld_path+'/'+cands[0]}]                                                                                                                                                                                    
             return  
         else: 
             BYCHR = True 
@@ -160,7 +163,10 @@ class BridgeSettings:
                 else:                  chr_cand = cand 
                 key[chr_cand] = ld_path+'/'+cand                                                                                                                                                                                                                                        
             
-            for pop, pop_path in ids: self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+my_prefix, BYCHR, key]                                                                                                                                                                                    
+            
+            for pop, pop_path in ids: 
+                if pop.upper() in self.ld_ref: bridge_error('Duplication in LD Reference for Population '+pop.upper()+': '+pop_path+', '+self.ld_ref[pop.upper()][0]) 
+                else:                          self.ld_ref[pop.upper()] = [pop_path, ld_path+'/'+my_prefix, BYCHR, key]                                                                                                                                                                                    
             return  
         return 
 
