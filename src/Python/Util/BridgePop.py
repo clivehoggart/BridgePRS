@@ -14,7 +14,7 @@ def bridge_debug_error(eString):
     sys.exit(2) 
 
 
-# bridge_error
+# debug_level 
 
 def bridge_pop_error(eString):
     if type(eString) in [list,tuple]:  
@@ -111,53 +111,19 @@ class BridgePop:
 
 
     def verify_chromosomes(self): 
-
         chromosomes       = list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()]))
-
         ld_chrs = self.get_chr_strs(self.bdata.map.keys()) 
         ss_chrs = self.get_chr_strs(self.sumstats.map.keys())
-
         valid_chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
         self.chromosomes       = self.get_chr_strs(list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()])))
-        
         if len(self.chromosomes) == len(ld_chrs) and len(self.chromosomes) == len(ss_chrs) and len(self.chromosomes) == len(valid_chromosomes): return
-        
         my_error = ['Missing Chromosomes'] 
         my_error.append('The Following Chromosomes Are Found in the ld-panel: '+",".join(ld_chrs)) 
         my_error.append('The Following Chromosomes Are Found in the sumstats: '+",".join(ss_chrs))
         if len(valid_chromosomes) == 0: my_error.append('The Following Chromosomes Are Found in both sources: None') 
         else:                           my_error.append('The Following Chromosomes Are Found in both sources: '+",".join(valid_chromosomes)) 
         my_error.append('Note: A one-to-one mapping is required, consider changing sumstats or ld-panel chromosome names')  
-
         bridge_pop_error(my_error) 
-        sys.exit() 
-        bridge_pop_error(['Missing Chromosomes','The following chromosomes are found in the ld-panel but not in sumstats:',",".join(b_missing)])  
-
-
-        print(len(ld_chrs), len(ss_chrs), len(self.chromosomes))  
-
-        ld_chrs, ss_chrs = sorted([k for k in self.bdata.map.keys()]), sorted([k for k in self.sumstats.map.keys()])
-        valid_chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
-        c_int, c_str = [], [] 
-        for c in valid_chromosomes: 
-            try:               c_int.append(int(c))  
-            except ValueError: c_str.append(c) 
-        self.chromosomes = [str(c) for c in sorted(c_int) + sorted(c_str)]
-        missing_chrs = [c for c in chromosomes if c not in valid_chromosomes] 
-
-
-
-        if len(missing_chrs) > 0: 
-            b_missing = sorted([c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()])
-            if len(b_missing) > 0: 
-                bridge_pop_error(['Missing Chromosomes','The following chromosomes are found in the ld-panel but not in sumstats:',",".join(b_missing)])  
-            s_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
-            if len(s_missing) > 0: 
-                bridge_pop_error(['Missing Chromosomes','The following chromosomes are found in sumstats but not in ld-panel:',",".join(b_missing)])  
-            bridge_pop_error('Missing Chromosomes') 
-
-        print('hi') 
-        sys.exit() 
         return 
 
 
@@ -279,14 +245,19 @@ class BridgeData:
         return
 
 
+
+
     def split_sumstats(self, p_file, CHR = 'NA'):
-        self.s_key = {} 
-        p_handle, self.header, locs, IK, iC, iS = self.begin_sumstats_file(p_file) 
+        self.s_key  = {} 
+        p_handle, self.header, locs, IK, iC, iS = self.begin_sumstats_file(p_file)
+
         if self.args.debug_level < 2: 
             for line in p_handle: 
                 lp = line.split()     
                 try: fC, LD = int(lp[iC]), [lp[j] for j in locs] 
                 except: bridge_sumstats_error('Increase Debug Level (--debug_level 2) or supply numerical chromsome information in the sumstats files') 
+                #LD[2] = LD[2].upper()  
+                #LD[3] = LD[3].upper()  
                 self.add_sumstats_line(fC, LD, lp[iS]) 
 
         else: 
@@ -295,38 +266,45 @@ class BridgeData:
                 if lp[iS] not in self.rs_key: 
                     self.CK['NO_GENOTYPE'] += 1 
                     continue 
-                try: rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
-                except ValueError: 
-                    print(self.rs_key[lp[iS]]) 
-                    bridge_debug_error('this is Z info:'+','.join(self.rs_key[lp[iS]])) 
+                
+                
+                rsData = self.rs_key[lp[iS]] 
+                if len(rsData) == 4:   rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
+                elif len(rsData) == 5: rsChr, rsLoc, rsRef, rsAlt, rsBool = self.rs_key[lp[iS]] 
+                else:                  bridge_debug_error('Invalid RS Data:'+','.join([str(xxx) for xxx in rsData])) 
 
+                
                 LD = [lp[j] if j != 'NA' else j for j in locs] 
+                
+                if rsRef == rsRef.upper(): 
+                    LD[2] = LD[2].upper() 
+                    LD[3] = LD[3].upper() 
+
+
                 chr_cands = list(set([c for c in [str(LD[0]), str(CHR), str(rsChr)] if c != 'NA'])) 
                 if len(chr_cands) > 1: bridge_sumstats_error('Ambiguous Chromosomes For '+lp[iS]+': '+str(LD[0])+','+str(rsChr)+','+str(CHR)+' (Sumstats, Genotype, Filename(s))') 
-                
-                try: fC, LD[0] = int(chr_cands[0]), chr_cands[0]
+                try:               fC, LD[0] = int(chr_cands[0]), chr_cands[0]
                 except ValueError: bridge_sumstats_error(['Nonnumerical Chromosome ('+chr_cands[0]+')','    Sumstats File: '+p_file])  
                 try:                lpRef, lpAlt, lpMaf, lpN, lpWt, lpSE, lpP = LD[2], LD[3], float(LD[4]), float(LD[5]), float(LD[6]), float(LD[7]), float(LD[8])
                 except ValueError:  bridge_sumstats_error(['Sumstats File Error(s), Incorrect DataType:',header,'\t'.join(LD)]) 
-                
-                #lpRef = "AC" 
-                relationship = self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])
+               
+                relationship = self.base_comp([lpRef, lpAlt], [rsRef.upper(), rsAlt.upper()])
                 self.CK[relationship] += 1 
                 if relationship != 'INVALID': 
                     if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
                     self.add_sumstats_line(fC, LD, lp[iS]) 
                     self.rs_key[lp[iS]].append(True) 
 
-                #print(relationship,'yo') 
 
-                #self.CK[self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])] += 1 
-                
-
-                #if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
-                #self.add_sumstats_line(fC, LD, lp[iS]) 
-                #self.rs_key[lp[iS]].append(True) 
-                 
         
+        
+        cMatch, cInvalid, cSwap, cRev, cTotal = self.CK['MATCH'], self.CK['INVALID'], self.CK['SWAPREF'], self.CK['REVCOMP'], sum([kk for kk in self.CK.values()]) 
+        if cInvalid == cTotal: bridge_sumstats_error(['Sumstats File Error(s), No Matching Ref/Alt Bases']) 
+        elif cInvalid > cTotal/2.0: bridge_sumstats_error(['Sumstats File Error(s), Majority MisMatching Ref/Alt Bases - Please Check Builds']) 
+
+
+
+     
         p_handle.close() 
         for sc,sd in self.s_key.items(): 
             sd[1].close() 
@@ -421,7 +399,7 @@ class BridgeData:
 
         if len(prefix_files) == 1: 
             bridge_sumstats_warning('Sumstats files for pop '+self.pop_name+' are not separated by chromosome, attempting to split file in '+new_prefix_path) 
-            self.source_suffix = 'NA' 
+            self.source_suffix = 'NA'
             self.split_sumstats(prefix_path+'/'+prefix_files[0])  
         else:     
             if not self.source_suffix:
