@@ -90,6 +90,8 @@ if( opt$by.chr.sumstats==0 ){
                       sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+    sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+    sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
     if( opt$strand.check ){
         ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
                           (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
@@ -130,10 +132,10 @@ if( opt$by.chr==0 ){
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumfile  <- paste(opt$sumstats,chr,opt$by.chr.sumstats,sep='')
-        if(!file.exists(sumfile)) { 
-            next 
-            } 
-        
+        if(!file.exists(sumfile)) {
+            next
+            }
+
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
         if( chr==1 ){
             sumstats.n <- sumstats[,opt$sumstats.nID]
@@ -157,15 +159,17 @@ for( chr in 1:22 ){
         allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
         allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
         beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
-        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXi44') 
-        #print(snp.ptr) 
-        #print(allele1.ptr) 
-        #print(allele0.ptr) 
-        #print(beta.ptr) 
-        
+        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXi44')
+        #print(snp.ptr)
+        #print(allele1.ptr)
+        #print(allele0.ptr)
+        #print(beta.ptr)
+
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-        
-        #print(sumstats) 
+
+        #print(sumstats)
+        sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+        sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
         if( opt$strand.check ){
             ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
@@ -229,7 +233,7 @@ for( chr in 1:22 ){
 #                                        strand.check=opt$strand.check )
 #    }
     beta.bar <- lapply( fits, getElement, 1 )
-    
+
     names(beta.bar) <- clump$SNP[clump.use]
 
     ptr.qc <- which(sapply(beta.bar,length)!=0)
