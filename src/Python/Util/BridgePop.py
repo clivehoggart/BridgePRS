@@ -14,8 +14,9 @@ def bridge_debug_error(eString):
     sys.exit(2) 
 
 
+# debug_level 
 
-def bridge_error(eString):
+def bridge_pop_error(eString):
     if type(eString) in [list,tuple]:  
         sys.stderr.write('\nBridgePopError: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
@@ -68,13 +69,13 @@ class BridgePop:
         
 
         self.genopheno = BridgeData(self.args, self.progress, 'phenotypes', paths, pop_name, pop_type) 
-        if   not pop_key['genotype_prefix']: bridge_error('At least one Genotype Prefix is Required on the Command Line (--genotype_prefix) or in a config_file (GENOTYPE_PREFIX=)')  
-        elif not pop_key['phenotype_file']:  bridge_error('At least one Phenotype File is Required on the Command Line (--phenotype_file) or in a config_file (PHENOTYPE_FILE=)')  
+        if   not pop_key['genotype_prefix']: bridge_pop_error('At least one Genotype Prefix is Required on the Command Line (--genotype_prefix) or in a config_file (GENOTYPE_PREFIX=)')  
+        elif not pop_key['phenotype_file']:  bridge_pop_error('At least one Phenotype File is Required on the Command Line (--phenotype_file) or in a config_file (PHENOTYPE_FILE=)')  
         else:                                self.genopheno.ph_fill(pop_key['genotype_prefix'],pop_key['phenotype_file'], self.args.validation_file)         
         
 
         self.sumstats   = BridgeData(self.args, self.progress, 'sumstats',   paths, pop_name, pop_type) 
-        if not pop_key['sumstats_prefix']: bridge_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
+        if not pop_key['sumstats_prefix']: bridge_pop_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
         elif not prevPop:                  self.sumstats.add_sumstats(pop_key, self.genopheno, None)
         else:                              self.sumstats.add_sumstats(pop_key, self.genopheno, prevPop.sumstats) 
         
@@ -95,29 +96,34 @@ class BridgePop:
             if self.args.cmd == 'quantify' and 'predict' not in P: mGen.append('Pred Data (Hint: Run '+self.args.module+' predict') 
         if self.args.module in ['prs-port','prs-prior'] and 'model' not in F: mInputs.append('Base Model --model_file (Hint: Run build-model)') 
         if len(mInputs) + len(mGen) == 0: return True 
-        if len(mInputs) > 0: bridge_error(['Missing Input Data:']+mInputs) 
-        if len(mGen) > 0:    bridge_error(['Missing Run Data:']+mGen) 
+        if len(mInputs) > 0: bridge_pop_error(['Missing Input Data:']+mInputs) 
+        if len(mGen) > 0:    bridge_pop_error(['Missing Run Data:']+mGen) 
         return True  
         
 
-    def verify_chromosomes(self): 
-
-        chromosomes       = list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()]))
-        valid_chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
+    def get_chr_strs(self, itbl): 
         c_int, c_str = [], [] 
-        for c in valid_chromosomes: 
+        for c in itbl: 
             try:               c_int.append(int(c))  
             except ValueError: c_str.append(c) 
-        self.chromosomes = [str(c) for c in sorted(c_int) + sorted(c_str)]
-        missing_chrs = [c for c in chromosomes if c not in valid_chromosomes] 
+        return [str(c) for c in sorted(c_int) + sorted(c_str)]
 
-        if len(missing_chrs) > 0: 
-            b_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
-            if len(b_missing) > 0: bridge_error(['Missing Chromosomes','The following chromosomes are found in the ld-panel but not in sumstats:',",".join(b_missing)])  
-            s_missing = [c for c in self.bdata.map.keys() if c not in self.sumstats.map.keys()]
-            if len(s_missing) > 0: bridge_error(['Missing Chromosomes','The following chromosomes are found in sumstats but not in ld-panel:',",".join(b_missing)])  
-            bridge_error('Missing Chromosomes') 
 
+
+    def verify_chromosomes(self): 
+        chromosomes       = list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()]))
+        ld_chrs = self.get_chr_strs(self.bdata.map.keys()) 
+        ss_chrs = self.get_chr_strs(self.sumstats.map.keys())
+        valid_chromosomes = [k for k in self.sumstats.map.keys() if k in self.bdata.map.keys()] 
+        self.chromosomes       = self.get_chr_strs(list(set([k for k in self.sumstats.map.keys()]+[k for k in self.bdata.map.keys()])))
+        if len(self.chromosomes) == len(ld_chrs) and len(self.chromosomes) == len(ss_chrs) and len(self.chromosomes) == len(valid_chromosomes): return
+        my_error = ['Missing Chromosomes'] 
+        my_error.append('The Following Chromosomes Are Found in the ld-panel: '+",".join(ld_chrs)) 
+        my_error.append('The Following Chromosomes Are Found in the sumstats: '+",".join(ss_chrs))
+        if len(valid_chromosomes) == 0: my_error.append('The Following Chromosomes Are Found in both sources: None') 
+        else:                           my_error.append('The Following Chromosomes Are Found in both sources: '+",".join(valid_chromosomes)) 
+        my_error.append('Note: A one-to-one mapping is required, consider changing sumstats or ld-panel chromosome names')  
+        bridge_pop_error(my_error) 
         return 
 
 
@@ -199,21 +205,30 @@ class BridgeData:
 
     def begin_sumstats_file(self, pf, CHR=None): 
         required, locs, names = ['CHR','SNPID','REF','ALT','MAF','N','BETA','SE','P'], [], [] 
-        FK, NK, IK = {b: a for a,b in self.fields.items()}, {'CHR': 'CHR'}, {} 
+        FK, NK, IK, ZK = {b: a for a,b in self.fields.items()}, {'CHR': 'CHR'}, {}, []  
         p_handle = zip_open(pf) 
         p_init   = p_handle.readline()  
         p_header = p_init.split()   
+        
         for i,h in enumerate(p_header): 
             if   'CHR' in h.upper(): lk = 'CHR' 
-            elif h.upper() in FK:    lk = FK[h.upper()] 
-            else:                    continue 
+            elif  h in FK:    lk = FK[h] 
+            else: 
+                ZK.append(h)     
+                continue 
             if lk in IK: bridge_sumstats_error(['Repeated Column']) 
             IK[lk], NK[lk] = i, h     
         for r in required: 
             if r not in IK: 
-                if r != 'CHR':                  bridge_sumstats_error(['Invalid Sumstats File: '+pf,'    Missing Header Field: --SSF-'+r+' '+self.fields[r]]) 
-                elif self.args.debug_level < 2: bridge_sumstats_error(['Cannot Split Sumstats, CHR field not found','    Fields Found: '+",".join(p_header)]) 
-                else:                           IK['CHR'] = 'NA'  
+                if r != 'CHR':                  
+                    my_error = ['Invalid Sumstats File: '+pf,'    Missing Header Field: --SSF-'+r+' '+self.fields[r]]
+                    if len(ZK) > 0: my_error.append('   See Available Choices:  '+",".join(ZK))  
+                    else:           my_error.append('    Please Add Column to Sumstats File')  
+                    bridge_sumstats_error(my_error) 
+                elif self.args.debug_level < 2: 
+                    bridge_sumstats_error(['Cannot Split Sumstats, CHR field not found','    Fields Found: '+",".join(p_header)]) 
+                else:                           
+                    IK['CHR'] = 'NA'  
             locs.append(IK[r])
             names.append(NK[r]) 
         if IK['CHR'] == 'NA': self.TESTS['INFER_CHR'] = True 
@@ -230,14 +245,19 @@ class BridgeData:
         return
 
 
+
+
     def split_sumstats(self, p_file, CHR = 'NA'):
-        self.s_key = {} 
-        p_handle, self.header, locs, IK, iC, iS = self.begin_sumstats_file(p_file) 
+        self.s_key  = {} 
+        p_handle, self.header, locs, IK, iC, iS = self.begin_sumstats_file(p_file)
+
         if self.args.debug_level < 2: 
             for line in p_handle: 
                 lp = line.split()     
                 try: fC, LD = int(lp[iC]), [lp[j] for j in locs] 
                 except: bridge_sumstats_error('Increase Debug Level (--debug_level 2) or supply numerical chromsome information in the sumstats files') 
+                #LD[2] = LD[2].upper()  
+                #LD[3] = LD[3].upper()  
                 self.add_sumstats_line(fC, LD, lp[iS]) 
 
         else: 
@@ -246,34 +266,45 @@ class BridgeData:
                 if lp[iS] not in self.rs_key: 
                     self.CK['NO_GENOTYPE'] += 1 
                     continue 
-                rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
+                
+                
+                rsData = self.rs_key[lp[iS]] 
+                if len(rsData) == 4:   rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
+                elif len(rsData) == 5: rsChr, rsLoc, rsRef, rsAlt, rsBool = self.rs_key[lp[iS]] 
+                else:                  bridge_debug_error('Invalid RS Data:'+','.join([str(xxx) for xxx in rsData])) 
+
+                
                 LD = [lp[j] if j != 'NA' else j for j in locs] 
+                
+                if rsRef == rsRef.upper(): 
+                    LD[2] = LD[2].upper() 
+                    LD[3] = LD[3].upper() 
+
+
                 chr_cands = list(set([c for c in [str(LD[0]), str(CHR), str(rsChr)] if c != 'NA'])) 
                 if len(chr_cands) > 1: bridge_sumstats_error('Ambiguous Chromosomes For '+lp[iS]+': '+str(LD[0])+','+str(rsChr)+','+str(CHR)+' (Sumstats, Genotype, Filename(s))') 
-                
-                try: fC, LD[0] = int(chr_cands[0]), chr_cands[0]
+                try:               fC, LD[0] = int(chr_cands[0]), chr_cands[0]
                 except ValueError: bridge_sumstats_error(['Nonnumerical Chromosome ('+chr_cands[0]+')','    Sumstats File: '+p_file])  
                 try:                lpRef, lpAlt, lpMaf, lpN, lpWt, lpSE, lpP = LD[2], LD[3], float(LD[4]), float(LD[5]), float(LD[6]), float(LD[7]), float(LD[8])
                 except ValueError:  bridge_sumstats_error(['Sumstats File Error(s), Incorrect DataType:',header,'\t'.join(LD)]) 
-                
-                #lpRef = "AC" 
-                relationship = self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])
+               
+                relationship = self.base_comp([lpRef, lpAlt], [rsRef.upper(), rsAlt.upper()])
                 self.CK[relationship] += 1 
                 if relationship != 'INVALID': 
                     if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
                     self.add_sumstats_line(fC, LD, lp[iS]) 
                     self.rs_key[lp[iS]].append(True) 
 
-                #print(relationship,'yo') 
 
-                #self.CK[self.base_comp([lpRef, lpAlt], [rsRef, rsAlt])] += 1 
-                
-
-                #if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
-                #self.add_sumstats_line(fC, LD, lp[iS]) 
-                #self.rs_key[lp[iS]].append(True) 
-                 
         
+        
+        cMatch, cInvalid, cSwap, cRev, cTotal = self.CK['MATCH'], self.CK['INVALID'], self.CK['SWAPREF'], self.CK['REVCOMP'], sum([kk for kk in self.CK.values()]) 
+        if cInvalid == cTotal: bridge_sumstats_error(['Sumstats File Error(s), No Matching Ref/Alt Bases']) 
+        elif cInvalid > cTotal/2.0: bridge_sumstats_error(['Sumstats File Error(s), Majority MisMatching Ref/Alt Bases - Please Check Builds']) 
+
+
+
+     
         p_handle.close() 
         for sc,sd in self.s_key.items(): 
             sd[1].close() 
@@ -301,7 +332,7 @@ class BridgeData:
                     for line in f: 
                         line = line.split() 
                         try: chr_name, rs, loc, ref, alt = int(line[0]), line[1], int(line[3]), line[4], line[5] 
-                        except: bridge_error('Invalid genotype file: '+gf) 
+                        except: bridge_pop_error('Invalid genotype file: '+gf) 
                         if self.TESTS['NOSNPS']: self.rs_key[rs] = [chr_name, loc, ref, alt] 
                         elif rs in self.rs_key:  self.rs_key[rs] = [chr_name, loc, ref, alt]  
                         else:                    continue  
@@ -322,7 +353,7 @@ class BridgeData:
                     for line in f: 
                         line = line.split() 
                         try: chr_name, rs, loc, ref, alt = int(line[0]), line[1], int(line[3]), line[4], line[5] 
-                        except: bridge_error('Invalid genotype file: '+gf) 
+                        except: bridge_pop_error('Invalid genotype file: '+gf) 
                         
                         if rs not in prevPop.rs_key or len(prevPop.rs_key[rs]) < 5: self.CK['GENO_EXTRA'] += 1 
                         else:
@@ -368,7 +399,7 @@ class BridgeData:
 
         if len(prefix_files) == 1: 
             bridge_sumstats_warning('Sumstats files for pop '+self.pop_name+' are not separated by chromosome, attempting to split file in '+new_prefix_path) 
-            self.source_suffix = 'NA' 
+            self.source_suffix = 'NA'
             self.split_sumstats(prefix_path+'/'+prefix_files[0])  
         else:     
             if not self.source_suffix:
@@ -416,7 +447,7 @@ class BridgeData:
         for f in [x for x in os.listdir(g_path) if x[0:len(g_prefix)] == g_prefix]:
             if f.split('.')[-1] in ['bed','bim','fam']: CK[".".join(f.split('.')[0:-1])]+=1                                                                                                                                                                                   
         cands = [k for k,v in CK.items() if v == 3]
-        if len(cands) == 0: bridge_error('Invalid genotype data prefix '+self.genotype_prefix) 
+        if len(cands) == 0: bridge_pop_error('Invalid genotype data prefix '+self.genotype_prefix) 
         if len(cands) == 1:
             self.genotype_prefix = "/".join(self.genotype_prefix.split('/')[0:-1])+'/'+cands[0]
             self.BYCHR = False 
@@ -459,12 +490,12 @@ class BridgeData:
         else: 
             self.files = [phenotype_file]
             self.X_fields = ['--test.data',self.files[0],'--valid.data','0'] 
-        if self.args.module != 'check' and self.args.phenotype is None: bridge_error('Phenotype field required (--phenotype)') 
+        if self.args.module != 'check' and self.args.phenotype is None: bridge_pop_error('Phenotype field required (--phenotype)') 
         for i,fn in enumerate(self.files): 
             with open(fn, 'rt') as f: 
                 lp = f.readline().split() 
                 if i == 0: self.header, lz = [x for x in lp] , ",".join(lp) 
-                elif ",".join(lp) != lz: bridge_error('Phenotype File Headers Do Not Match: '+lz+' AND '+",".join(lp))
+                elif ",".join(lp) != lz: bridge_pop_error('Phenotype File Headers Do Not Match: '+lz+' AND '+",".join(lp))
                 for k,line in enumerate(f):
                     line = line.split() 
                     for j,c in enumerate(self.header): col_data[c].append(line[j]) 
@@ -473,14 +504,14 @@ class BridgeData:
         if self.args.phenotype is not None: 
             self.fields['NAME'] = self.args.phenotype 
             self.X_fields.extend(['--pheno.name',self.args.phenotype]) 
-            if self.args.phenotype not in self.header: bridge_error('Invalid phenotype field name(s) supplied '+self.args.phenotype+', Available Fields: '+','.join(self.header)) 
+            if self.args.phenotype not in self.header: bridge_pop_error('Invalid phenotype field name(s) supplied '+self.args.phenotype+', Available Fields: '+','.join(self.header)) 
             if len((list(set(col_data[self.args.phenotype])))) > 2:   self.type = 'continuous' 
             else:                                                     self.X_fields.extend(['--binary','1']) 
         if self.args.covariates is not None: 
             self.fields['COVARIATES'] = self.args.covariates
             self.X_fields.extend(['--cov.names',self.args.covariates]) 
             for c in self.args.covariates.split(','): 
-                if c not in self.header:  bridge_error('Invalid covariate field name(s) supplied '+self.args.covariates+', Available Fields: '+','.join(self.header)) 
+                if c not in self.header:  bridge_pop_error('Invalid covariate field name(s) supplied '+self.args.covariates+', Available Fields: '+','.join(self.header)) 
         return self 
 
 
