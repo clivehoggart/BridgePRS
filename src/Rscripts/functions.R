@@ -546,6 +546,11 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
 get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
                            ids.use, strand.check ){
     snps <- intersect( beta.bar$snp, bim$V2 )
+    if(length(snps) < length(beta.bar$snp)){
+        print("Warning!: intersection is lower than beta.bar!")
+        print(paste0(length(snps)," > ", length(beta.bar$snp)))
+        beta.bar <- beta.bar[beta.bar$snp %in% snps,]
+    }
     X <- X.bed[ ids.use, beta.bar$snp, drop=FALSE ]
 
     ptr <- match( beta.bar$snp, colnames(X) )
