@@ -4,7 +4,7 @@ import multiprocessing, time
 LOCALTIME = time.asctime( time.localtime(time.time()) )
 
 
-# JOB optimize
+# JOB optimize  fail 
 
 
 class BridgeProgress:
@@ -81,7 +81,7 @@ class BridgeProgress:
     def show_pop_data(self, pop_data): 
         fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
         self.write('\nReading Population Data:\n') 
-        for i, pd in enumerate(pop_data): 
+        for i, pd in enumerate(pop_data):
             n1, n2 = pd.name, pd.ref_pop  
             ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
             if self.args.module == 'build-model': i+=1
@@ -253,6 +253,7 @@ class BridgeProgress:
         else: 
             self.write('\n'+ETYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
             for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+        self.write('\n') 
         sys.exit(2) 
 
 
@@ -411,8 +412,13 @@ class BridgeProgress:
     
     def show_local(self, K, LP): 
         my_len = 0
+        
+     
+
         for i,k in enumerate(K):
+            if k not in LP: continue 
             a,b = LP[k]
+
             if b[-1] == '1': b = b.strip('1')+'*' 
             if i == 0:   self.whisper(self.new_bk+a+' '+b+'\n') 
             elif i == 1:     

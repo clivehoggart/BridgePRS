@@ -14,7 +14,7 @@ def bridge_debug_error(eString):
     sys.exit(2) 
 
 
-# debug_level 
+# Ambiguous debug_level Ref/Alt Missing snps.txt 
 
 def bridge_pop_error(eString):
     if type(eString) in [list,tuple]:  
@@ -59,14 +59,15 @@ NUM_STRS =  ['1','2','3','4','5','6','7','8','9','0']
 
 
 class BridgePop: 
-    def __init__(self, args, progress, paths, pop_name, pop_key, ld_ref, pop_type = 'TARGET', prevPop = None):
-        
+    def __init__(self, args, progress, paths, pop_name, pop_key, pop_type = 'TARGET', prevPop = None):
+      
         self.args, self.progress, self.paths, self.name, self.key, self.type  = args, progress, paths, pop_name, pop_key, pop_type
-        self.ref_pop = self.key['ldpop'] 
-        
         self.bdata      = BridgeData(self.args, self.progress, 'bdata',      paths, pop_name)
-        self.bdata.add_panel(ld_ref[self.ref_pop]) 
-        
+        self.bdata.add_panel(self.key['ldref']) 
+        self.ref_pop = self.bdata.ld_pop  
+
+        #self.bdata.add_panel(ld_ref[self.ref_pop]) 
+        #self.ref_pop  
 
         self.genopheno = BridgeData(self.args, self.progress, 'phenotypes', paths, pop_name, pop_type) 
         if   not pop_key['genotype_prefix']: bridge_pop_error('At least one Genotype Prefix is Required on the Command Line (--genotype_prefix) or in a config_file (GENOTYPE_PREFIX=)')  
@@ -181,10 +182,11 @@ class BridgeData:
 
     
     def add_panel(self, ld_quad): 
-        self.VALID = True 
-        self.id_file, self.prefix, self.BYCHR, b_key  = ld_quad
+        self.VALID, self.BYCHR = True, True
+        self.ld_pop, self.id_file, self.prefix, b_key = ld_quad 
         self.ldpath = "/".join(self.prefix.split('/')[0:-1])
         for c in b_key: self.map[c] = b_key[c] 
+        #for c in b_key: self.map[int(c)] = b_key[c] 
         self.X_fields = ['--clump-field',vars(self.args)['ssf-p'], '--clump-snp-field',vars(self.args)['ssf-snpid']] 
         return self 
 
@@ -237,6 +239,8 @@ class BridgeData:
 
     def add_sumstats_line(self,fC,LD,snpID): 
         self.total += 1 
+        
+
         if fC not in self.s_key: 
             self.s_key[fC] = [self.prefix+str(fC)+'.out', open(self.prefix+str(fC)+'.out','w')]
             self.s_key[fC][1].write(self.header+'\n')
@@ -251,31 +255,27 @@ class BridgeData:
         self.s_key  = {} 
         p_handle, self.header, locs, IK, iC, iS = self.begin_sumstats_file(p_file)
 
-        if self.args.debug_level < 2: 
+        if self.args.debug_level < 1: 
             for line in p_handle: 
                 lp = line.split()     
                 try: fC, LD = int(lp[iC]), [lp[j] for j in locs] 
                 except: bridge_sumstats_error('Increase Debug Level (--debug_level 2) or supply numerical chromsome information in the sumstats files') 
-                #LD[2] = LD[2].upper()  
-                #LD[3] = LD[3].upper()  
                 self.add_sumstats_line(fC, LD, lp[iS]) 
 
-        else: 
+        else:
+
+             
             for li,line in enumerate(p_handle): 
                 lp = line.split() 
                 if lp[iS] not in self.rs_key: 
                     self.CK['NO_GENOTYPE'] += 1 
                     continue 
-                
-                
                 rsData = self.rs_key[lp[iS]] 
                 if len(rsData) == 4:   rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
                 elif len(rsData) == 5: rsChr, rsLoc, rsRef, rsAlt, rsBool = self.rs_key[lp[iS]] 
                 else:                  bridge_debug_error('Invalid RS Data:'+','.join([str(xxx) for xxx in rsData])) 
-
                 
                 LD = [lp[j] if j != 'NA' else j for j in locs] 
-                
                 if rsRef == rsRef.upper(): 
                     LD[2] = LD[2].upper() 
                     LD[3] = LD[3].upper() 
@@ -294,15 +294,10 @@ class BridgeData:
                     if len(self.WT) < 2 or lpWt < min(self.WT) or lpWt > max(self.WT):  self.WT.append(lpWt) 
                     self.add_sumstats_line(fC, LD, lp[iS]) 
                     self.rs_key[lp[iS]].append(True) 
-
-
         
-        
-        cMatch, cInvalid, cSwap, cRev, cTotal = self.CK['MATCH'], self.CK['INVALID'], self.CK['SWAPREF'], self.CK['REVCOMP'], sum([kk for kk in self.CK.values()]) 
-        if cInvalid == cTotal: bridge_sumstats_error(['Sumstats File Error(s), No Matching Ref/Alt Bases']) 
-        elif cInvalid > cTotal/2.0: bridge_sumstats_error(['Sumstats File Error(s), Majority MisMatching Ref/Alt Bases - Please Check Builds']) 
-
-
+            cMatch, cInvalid, cSwap, cRev, cTotal = self.CK['MATCH'], self.CK['INVALID'], self.CK['SWAPREF'], self.CK['REVCOMP'], sum([kk for kk in self.CK.values()]) 
+            if cInvalid == cTotal: bridge_sumstats_error(['Sumstats File Error(s), No Matching Ref/Alt Bases']) 
+            elif cInvalid > cTotal/2.0: bridge_sumstats_error(['Sumstats File Error(s), Majority MisMatching Ref/Alt Bases - Please Check Builds']) 
 
      
         p_handle.close() 
@@ -321,7 +316,7 @@ class BridgeData:
         if self.args.snp_file is None: 
             self.TESTS['NOSNPS'], self.snp_file, self.snp_handle  = True, self.paths['save']+'/snps.txt', open(self.paths['save']+'/snps.txt','w') 
         
-        if self.args.debug_level >= 2: 
+        if self.args.debug_level >= 1: 
             if not self.TESTS['NOSNPS']: 
                 with open(self.snp_file) as f: self.rs_key = {line.strip(): [] for line in f} 
             else:                              self.rs_key = {} 
@@ -343,8 +338,14 @@ class BridgeData:
 
 
     def continue_sumstats(self,genoPheno, prevPop): 
+
+
+        self.TESTS['NOSNPS'] = prevPop.TESTS['NOSNPS'] 
         self.rs_key, self.snp_file, self.thin_snps = {}, prevPop.snp_file, prevPop.thin_snps 
-        if self.args.debug_level >= 2:
+        
+
+
+        if self.args.debug_level >= 1:
             self.snp_list_len = prevPop.snp_list_len 
             geno_path, geno_name = '/'.join(genoPheno.genotype_prefix.split('/')[0:-1]), genoPheno.genotype_prefix.split('/')[-1] 
             geno_files = [f for f in os.listdir(geno_path) if f[0:len(geno_name)] == geno_name and f.split('.')[-1]=='bim'] 
@@ -375,16 +376,10 @@ class BridgeData:
         sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-n']
         sum_stats_args      =  [vars(self.args)[ks] for ks in sum_stats_fields] 
         self.fields         =  {a.split('-')[-1].upper(): b for a,b in zip(sum_stats_fields, sum_stats_args)}
-        
-
-         
         self.CK, self.WT, self.VALID, self.BYCHR = dd(int), [], True, True
         if not prevPop: self.initialize_sumstats(genoPheno) 
         else:           self.continue_sumstats(genoPheno, prevPop) 
-
-           
-
-
+        
         self.source_prefix, self.source_suffix = pk['sumstats_prefix'], pk['sumstats_suffix'] 
         prefix_path, prefix_name = '/'.join(self.source_prefix.split('/')[0:-1]), self.source_prefix.split('/')[-1] 
         prefix_files = [f for f in os.listdir(prefix_path) if f[0:len(prefix_name)] == prefix_name] 
@@ -396,29 +391,53 @@ class BridgeData:
             if not os.path.exists(new_prefix_path): os.makedirs(new_prefix_path) 
             self.prefix, self.suffix = new_prefix_path +'/ss.'+self.pop_name+'.', '.out.gz'
 
-
         if len(prefix_files) == 1: 
             bridge_sumstats_warning('Sumstats files for pop '+self.pop_name+' are not separated by chromosome, attempting to split file in '+new_prefix_path) 
             self.source_suffix = 'NA'
             self.split_sumstats(prefix_path+'/'+prefix_files[0])  
-        else:     
-            if not self.source_suffix:
-                if self.args.debug_level == 0: bridge_sumstats_error('Increase Debug Level (--debug_level) or supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
-                suffix_cands = [] 
-                for p in prefix_files: 
-                    k, c_cand, NEED_CHR = 0, p.split(prefix_name)[-1], False 
-                    while k < len(c_cand) and c_cand[k] in NUM_STRS: k+=1  
-                    suffix_cands.append(c_cand[k::]) 
-                if len(list(set(suffix_cands))) != 1:  bridge_sumstats_error('Ambiguous Sumstats Suffixes ('+','.join(list(set(suffix_cands)))+'), please supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
-                self.TESTS['INFER_SUFFIX'] = True 
-                self.source_suffix = suffix_cands[0] 
-            for p in prefix_files: 
-                try: chr_num = int(p.split(self.source_suffix)[0].split(prefix_name)[-1])
-                except ValueError:  bridge_sumstats_error(['Nonnumerical Chromosome ('+c_cand.split(self.source_suffix)[0]+')','    Sumstats File: '+p,'    Consider Prefix, Suffix Combination: '+prefix_name+' '+self.source_suffix]) 
-                if self.args.debug_level > 0: self.split_sumstats(prefix_path+'/'+p, chr_num) 
-                else:                         self.map[str(chr_num)] = prefix_path+'/'+p 
+        else:
+            if self.source_suffix: 
+                chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[-1] for pf in prefix_files] 
+                try:       chromosomes = [int(c) for c in chromosomes]
+                except:    bridge_sumstats_error(['Nonnumerical Chromosomes or Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
 
-        if self.TESTS['NOSNPS']: self.snp_handle.close() 
+            if not self.source_suffix:
+                self.TESTS['INFER_SUFFIX'] = True 
+                if self.args.debug_level == 0: bridge_sumstats_error('Increase Debug Level (--debug_level) or supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
+                try: 
+                    new_prefix, new_suffix = self.get_prefix_suffix(prefix_files)                                                                                                                                                                                     
+                    chromosomes = [pf.split(new_suffix)[0].split(new_prefix)[-1] for pf in prefix_files] 
+                    chromosomes = [int(c) for c in chromosomes]
+                    self.source_prefix        = prefix_path+'/'+new_prefix
+                    self.source_suffix = new_suffix 
+                except: 
+                    try: 
+                        suffix_cands = [] 
+                        for p in prefix_files:
+                            k, c_cand, NEED_CHR = 0, p.split(prefix_name)[-1], False 
+                            while k < len(c_cand) and c_cand[k] in NUM_STRS: k+=1  
+                            suffix_cands.append(c_cand[k::]) 
+                        if len(list(set(suffix_cands))) != 1:  
+                            bridge_sumstats_error('Ambiguous Sumstats Suffixes ('+','.join(list(set(suffix_cands)))+'), please supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
+                        self.source_suffix = suffix_cands[0] 
+                        chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[-1] for pf in prefix_files] 
+                        chromosomes = [int(c) for c in chromosomes]
+                    except: 
+                        bridge_sumstats_error(['Nonnumerical Chromosomes or Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
+
+            
+            for c,p in zip(chromosomes, prefix_files): 
+                if self.args.debug_level > 0: self.split_sumstats(prefix_path+'/'+p, c) 
+                else:                         self.map[str(c)] = prefix_path+'/'+p 
+
+        if self.TESTS['NOSNPS']: 
+            try: 
+                self.snp_handle.close() 
+                if self.args.debug_level > 0: self.TESTS['NOSNPS'] = False 
+                else:                         self.TESTS['NOSNPS'] = True
+            except: pass 
+        
+
         self.X_fields   = ['--sumstats.allele0ID',self.fields['REF'],'--sumstats.allele1ID',self.fields['ALT'],'--sumstats.betaID',self.fields['BETA']]
         self.X_fields.extend(['--sumstats.frqID',self.fields['MAF'],'--sumstats.nID',self.fields['N'],'--sumstats.seID',self.fields['SE'], '--sumstats.snpID',self.fields['SNPID']])
         
@@ -427,7 +446,27 @@ class BridgeData:
 
 
 
-
+    def get_prefix_suffix(self, cands):                                                                                                                                                                                     
+        my_prefix,my_suffix, k = ' ', ' ', 0                                                                                                                                                                                
+        while True:                                                                                                                                                                                                         
+            my_prefixes = list(set([c[0:k] for c in cands]))                                                                                                                                                                
+            if len(my_prefixes) == 1:                                                                                                                                                                                       
+                my_prefix = my_prefixes[0]                                                                                                                                                                                  
+                k+=1                                                                                                                                                                                                        
+            else:                                                                                                                                                                                                           
+                break                                                                                                                                                                                                       
+        k = 0                                                                                                                                                                                                               
+        while True:                                                                                                                                                                                                         
+            my_suffixes = list(set([c[len(c)-k::] for c in cands]))                                                                                                                                                         
+            if len(my_suffixes) == 1:                                                                                                                                                                                       
+                my_suffix = my_suffixes[0]                                                                                                                                                                                  
+                k+=1                                                                                                                                                                                                        
+            else:                                                                                                                                                                                                           
+                break                                                                                                                                                                                                       
+        
+        if len(my_prefix) == 0: my_prefix = ' '                                                                                                                                                                             
+        if len(my_suffix) == 0: my_suffix = ' '  
+        return my_prefix, my_suffix    
 
 
 
@@ -454,12 +493,12 @@ class BridgeData:
         else: 
             self.BYCHR, k  = True, 0 
             cands = list(set(cands))                                                                                                                                                                                                                                                        
-            while True:                                                                                                                                                                                                                                                                     
-                my_prefix = list(set([c[0:k] for c in cands]))[0]                                                                                                                                                                                                                              
+            while True:
+                my_prefix = list(set([c[0:k] for c in cands]))[0] 
                 ck1 = list(set([c[0:k+1] for c in cands]))                                                                                                                                                                                                                                  
                 if len(ck1) == 1: k+=1                                                                                                                                                                                                                                                      
-                else: break                                                                                                                                                                                                                                                                 
-        return                                                                                                                                                                                                                                                                                  
+                else: break
+        return
 
 
     def split_phenotype_file(self, fname):
