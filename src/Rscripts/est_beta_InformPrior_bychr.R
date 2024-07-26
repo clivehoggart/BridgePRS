@@ -86,6 +86,8 @@ if( opt$by.chr.sumstats==0 ){
     p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
+    sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+    sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
     if( opt$strand.check ){
         ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
                           (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
@@ -133,6 +135,8 @@ for( chr in 1:22 ){
        }
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
+        sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+        sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
         if( opt$strand.check ){
             ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
                               sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |

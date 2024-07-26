@@ -6,7 +6,7 @@ library("optparse")
 options(stringsAsFactors=FALSE)
 
 
-# toupper 
+# toupper
 
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,help="Function File Path", metavar="character"),
@@ -93,8 +93,8 @@ if( opt$by.chr.sumstats==0 ){
                       sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
-    #sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
-    #sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
+    sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+    sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
     if( opt$strand.check ){
         ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
                           (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
@@ -171,9 +171,9 @@ for( chr in 1:22 ){
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
 
         #print(sumstats)
-        #sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
-        #sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+        sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
+        sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
         if( opt$strand.check ){
             ptr.use <- which( sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C" |
                               sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G" |
