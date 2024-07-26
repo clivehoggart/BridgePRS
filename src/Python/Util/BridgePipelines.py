@@ -13,7 +13,28 @@ class BridgePipelines:
 
     def create(self): 
         self.commands, self.pop = [self.cmd], self.settings.pop.name 
-        if self.module != 'easyrun':
+        if self.module in ['pipeline','easyrun']: 
+            self.pop1, self.pop2 = self.args.pop 
+            if self.module == 'pipeline' and not self.args.port: command_list = ['prs-single','prs-prior','prs-combined'] 
+            else:                                                command_list = ['prs-single','prs-prior','prs-port','prs-combined'] 
+            for i,x in enumerate(command_list): 
+                dir1 = x+'_'+self.pop1 
+                if x in ['prs-single','prs-prior']: self.add_dirs(self.io.paths['home']+'/'+dir1, ['clump','beta','predict','quantify'])
+                elif x == 'prs-port':               self.add_dirs(self.io.paths['home']+'/'+dir1, ['predict','quantify'])
+                else:                               self.add_dirs(self.io.paths['home']+'/'+dir1, []) 
+                progress_file = self.io.paths['home']+'/'+dir1+'/bridge.'+x+'.result'
+                if not os.path.isfile(progress_file): 
+                    w = open(progress_file,'w')  
+                    w.write('POP='+self.pop1+'\nMODULE_NAME='+x+'\n') 
+                    w.close()
+            self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','predict','prior']) 
+            progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.build-model.result'
+            if not os.path.isfile(progress_file): 
+                w = open(progress_file,'w')  
+                w.write('POP='+self.pop2+'\nMODULE_NAME=build-model\n') 
+                w.close()
+            return 
+        else:
             if self.module.split('-')[0] == 'prs': 
                 self.io.paths['run'] = self.io.paths['home']+'/'+self.module+'_'+self.pop 
                 if self.cmd == 'run': 
@@ -33,27 +54,12 @@ class BridgePipelines:
                 w.write('MODULE_NAME='+self.module+'\n')
                 w.close()
             return  
-        self.pop1, self.pop2 = self.args.pop 
-        for i,x in enumerate(['prs-single','prs-prior','prs-port','prs-combined']): 
-            dir1 = x+'_'+self.pop1 
-            if i < 2: self.add_dirs(self.io.paths['home']+'/'+dir1, ['clump','beta','predict','quantify'])
-            if i < 3: self.add_dirs(self.io.paths['home']+'/'+dir1, ['predict','quantify'])
-            else:     self.add_dirs(self.io.paths['home']+'/'+dir1, []) 
-            progress_file = self.io.paths['home']+'/'+dir1+'/bridge.'+x+'.result'
-            if not os.path.isfile(progress_file): 
-                w = open(progress_file,'w')  
-                w.write('POP='+self.pop1+'\nMODULE_NAME='+x+'\n') 
-                #w.write('MODULE_NAME='+x+'\n')
-                w.close()
-        self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','predict','prior']) 
-        progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.build-model.result'
-        if not os.path.isfile(progress_file): 
-            w = open(progress_file,'w')  
-            w.write('POP='+self.pop2+'\nMODULE_NAME=build-model\n') 
-            #w.write('MODULE_NAME=build-model\n')
-            w.close()
-        return 
-  
+
+
+
+
+
+
 
 
     def add_dirs(self,parent,children,grandchildren=[]):
@@ -72,7 +78,7 @@ class BridgePipelines:
 
     def verify_pipeline(self):
 
-        if self.module in ['easyrun','analyze']: return self  
+        if self.module in ['easyrun','pipeline','analyze']: return self  
         self.command_strings = []
         for i,c in enumerate(self.commands):
             JN = ' ('+self.module+' '+c+')'

@@ -22,13 +22,34 @@ def bridge_error(eString):
 class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
-            
+
             self.io   = BridgeIO(args, bridgedir, rundir, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
-            if self.args.module == 'easyrun':   self.easyrun() 
-            elif self.args.module == 'analyze': self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
-            else:                               self.execute(self.io.pipeline) 
+            
+
+            if self.args.module in ['easyrun','pipeline']:   self.easyrun() 
+            elif self.args.module == 'analyze':              self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
+            else:                                            self.execute(self.io.pipeline) 
          
+
+        
+        def easyrun(self): 
+            if self.args.module == 'pipeline' and not self.args.port: modules = ['prs-single','build-model','prs-prior'] 
+            else:                                                     modules = ['prs-single','build-model','prs-port','prs-prior'] 
+            res_files = [] 
+            for i,m in enumerate(modules): 
+                self.args.module, self.args.cmd =  m, 'run'
+                if i != 1: self.io.settings.pop = self.io.settings.pop_data[0] 
+                else:      self.io.settings.pop = self.io.settings.pop_data[1] 
+                self.io.update(self.args.module, self.args.cmd)
+                self.execute(self.io.pipeline) 
+                if i == 1:  self.args.model_file = str(self.io.pipeline.progress_file) 
+                else:       res_files.append(str(self.io.pipeline.progress_file)) 
+            self.args.result_files = res_files 
+            self.args.module, self.args.cmd = 'analyze','combine' 
+            self.io.update(self.args.module, self.args.cmd) 
+            self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
+
 
 
 
@@ -59,7 +80,6 @@ class BridgePRS:
 
 
 
-
         def collate(self, cmd): 
             self.base.close_all() 
             if cmd == 'quantify' and not self.args.noPlots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
@@ -75,22 +95,3 @@ class BridgePRS:
             return 
 
         
-        def easyrun(self): 
-            modules = ['prs-single','build-model','prs-port','prs-prior'] 
-            res_files = [] 
-            for i,m in enumerate(modules): 
-                self.args.module, self.args.cmd =  m, 'run'
-                if i != 1: self.io.settings.pop = self.io.settings.pop_data[0] 
-                else:      self.io.settings.pop = self.io.settings.pop_data[1] 
-                self.io.update(self.args.module, self.args.cmd)
-                self.execute(self.io.pipeline) 
-                if i == 1:  self.args.model_file = str(self.io.pipeline.progress_file) 
-                else:       res_files.append(str(self.io.pipeline.progress_file)) 
-                    
-            
-            self.args.result_files = res_files 
-            self.args.module, self.args.cmd = 'analyze','combine' 
-            self.io.update(self.args.module, self.args.cmd) 
-            self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
-
-

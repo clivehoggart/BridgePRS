@@ -4,7 +4,7 @@ from .BridgeProgress  import BridgeProgress
 from math import log 
 
 #Missing Chromosomes 
-
+# Prefix is Required 
 
 def bridge_debug_error(eString):
     if type(eString) in [list,tuple]:  
@@ -76,6 +76,11 @@ class BridgePop:
         
 
         self.sumstats   = BridgeData(self.args, self.progress, 'sumstats',   paths, pop_name, pop_type) 
+        
+        #for k in pop_key.keys(): 
+        #    print(k, pop_key[k]) 
+
+
         if not pop_key['sumstats_prefix']: bridge_pop_error('A Sumstats Prefix is Required on the Command Line (--sumstats_prefix) or in a config file (SUMSTATS_PREFIX=) for pop '+pop_name)  
         elif not prevPop:                  self.sumstats.add_sumstats(pop_key, self.genopheno, None)
         else:                              self.sumstats.add_sumstats(pop_key, self.genopheno, prevPop.sumstats) 

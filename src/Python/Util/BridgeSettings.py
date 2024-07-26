@@ -40,6 +40,7 @@ def validate_requirements(module, cmd):
 
 DEFAULT = dd(lambda: None) 
 #POP_ARGS = ['pop','ldpop','sumstats_file','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
+#POP_ARGS = ['pop','ldpop','ld_path','ldref','sumstats_file','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
 POP_ARGS = ['pop','ldpop','ld_path','ldref','sumstats_prefix','sumstats_suffix','genotype_prefix','phenotype_file']
 for a,b in [['fst',0.15]]: DEFAULT[a] = b 
 for a,b in [["p","P"],["snpid","ID"],["se","SE"],["n","OBS_CT"],["beta","BETA"],["ref","REF"],["alt","A1"],["maf","A1_FREQ"]]: DEFAULT['ssf-'+a] = b 
@@ -54,7 +55,7 @@ class BridgeSettings:
     def update_inputs(self, pipeline_key):
         for v in vars(self.args): 
             kV = vars(self.args)[v] 
-            if v in ['config','snp_file','validation_file'] + POP_ARGS or kV in [None, []]: continue 
+            if v in ['config','snp_file','validation_file','sumstats_file'] + POP_ARGS or kV in [None, []]: continue 
             if v.split('_')[-1] not in ['file','prefix','files']: continue 
             if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
             elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
@@ -78,8 +79,6 @@ class BridgeSettings:
 
         pop_key = self.resolve_pop_args()
         
-        
-        
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.progress, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, 'BASE')] 
         else:                                    self.pop_data = [BridgePop(self.args, self.io.progress, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS},  'TARGET')] 
         if len(pop_key['pop']) > 1:    
@@ -91,15 +90,20 @@ class BridgeSettings:
     
     def resolve_pop_args(self): 
         KL, POP_KEY, ARG_KEY = dd(list), dd(list), {v: vars(self.args)[v] for v in vars(self.args)} 
-        if self.args.cmd in ['go','pops']: self.popnum = 2 
-        else:                              self.popnum = 1 
+        if   self.args.module in ['pipeline']: self.popnum = 2 
+        elif self.args.cmd in ['go','pops']:   self.popnum = 2 
+        else:                                  self.popnum = 1 
         for i,K in enumerate(self.args.config):
             k_keys = K.keys()  
             for k,v in K.items(): 
                 if i == 0 or k in KL:              KL[k].append(v)
                 elif k not in ['genotype_prefix','phenotype_file','validation_file']: KL[k].append(v) 
                 else:                              continue  
+        
+
         for k,kl in KL.items():
+            
+
             if k in ARG_KEY and k in POP_ARGS: vars(self.args)[k] = (ARG_KEY[k]+kl)[0:self.popnum] 
             elif k in ARG_KEY: 
                 kA,kC = ARG_KEY[k], list(set(kl))[0] 
@@ -109,7 +113,8 @@ class BridgeSettings:
                 elif kA == DEFAULT[k]:     vars(self.args)[k] = kC 
                 elif kA == []:             bridge_error('Unrecognized Argument In Configuration Files: '+k+': '+kC) 
                 else:                      bridge_error('Universal Argument '+k+' Cannot Be Included In Configuration File (must be passed on command line --'+k+')')
-        
+       
+
         if len(self.args.pop) != len(self.args.ldpop): 
             if len(self.args.ldpop) == 0: self.args.ldpop = [pn for pn in self.args.pop]
             else:                         bridge_error('Ambiguous pop/ldpop assignments: '+",".join(self.args.pop)+" and "+",".join(self.args.ldpop)) 

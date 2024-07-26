@@ -55,7 +55,12 @@ class MPS(argparse.ArgumentParser):
         if 'pop' in K and 'ldpop' not in K: K['ldpop'] = K['pop']  
         k_keys = [k for k in K.keys()] 
         if 'sumstats_file' in k_keys:                                                                       
-            if 'sumstats_prefix' in k_keys or 'sumstats_suffix' in k_keys: self.error('Incompatibility In Configuration File: sumstats_file is not compatible with sumstats_prefix/sumstats_suffix')
+            ss_file = K['sumstats_file'] 
+            if    'sumstats_prefix' in k_keys or 'sumstats_suffix' in k_keys: self.error('Incompatibility In Configuration File: sumstats_file is not compatible with sumstats_prefix/sumstats_suffix')
+            else: K['sumstats_prefix'] = K.pop('sumstats_file') 
+
+
+
 
         return K 
         
@@ -186,7 +191,7 @@ if __name__ == '__main__':
     #pop.add_argument('--ld_path',          dest = 'ld_path',         type=mps.valid_path,   nargs = '+',  metavar ='',    default=[], help=argparse.SUPPRESS) 
     pop.add_argument('--ld_path',          dest = 'ld_path',         type=mps.valid_path,   nargs = '+',  metavar ='',    default=[], help='Path to LD-Reference Panel') 
     #pop.add_argument('--sumstats_file',  dest = 'sumstats_file',     type=mps.valid_file,   nargs = '+',  metavar ='',        default=[], help = 'path to sumstats file') 
-    pop.add_argument('--sumstats_prefix',  dest = 'sumstats_prefix', type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to sumstats prefix') 
+    pop.add_argument('--sumstats_prefix','--sumstats_file',  dest = 'sumstats_prefix', type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to sumstats prefix') 
     pop.add_argument('--sumstats_suffix',  dest = 'sumstats_suffix', type=str,              nargs = '+',  metavar ='',    default=[], help = 'sumstats suffix') 
     pop.add_argument('--genotype_prefix',  dest = 'genotype_prefix', type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to genotype prefix') 
     pop.add_argument('--phenotype_file',   dest = 'phenotype_file',  type=mps.valid_file,   nargs = '+',  metavar ='',    default=[], help = 'phenotype file') 
@@ -231,9 +236,9 @@ if __name__ == '__main__':
     # Option: PIPELINE # 
     pipeline          = subs.add_parser('pipeline', help=mps.help_str('pipeline')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
     pipeline.required = True
-    run               =  easyrun.add_parser('run',parents=[Global,Main,Run], help=mps.sub_help('run'), formatter_class=mps.formatter_class)
-    run.add_argument('--port',       dest='port',      action='store_true',  default=False,              help=ap.SUPPRESS) 
-    check             =  easyrun.add_parser('check',parents=[Global,Main,Run], help=mps.sub_help('check'), formatter_class=mps.formatter_class)
+    execute               =  pipeline.add_parser('go',parents=[Global,Main,Run], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
+    execute.add_argument('--port',       dest='port',      action='store_true',  default=False,              help=ap.SUPPRESS) 
+    check             =  pipeline.add_parser('check',parents=[Global,Main,Run], help=mps.sub_help('check'), formatter_class=mps.formatter_class)
     
     #pop, run, gen, labels = Run.add_argument_group('Pop Data:'), Run.add_argument_group('Run'), Run.add_argument_group('Generated'), Run.add_argument_group('Column Labels:') 
     
@@ -295,15 +300,15 @@ if __name__ == '__main__':
     for v in ['pop','ldpop','ld_path','sumstats_suffix','sumstats_prefix','genotype_prefix','phenotype_file','config']: 
         if v not in vars(args) or len(vars(args)[v]) == 0: continue 
         kV = vars(args)[v]
-
-
-        if args.cmd in ['go','pops'] and len(kV) != 2: 
-            
-            if v in ['pop','sumstats_prefix','sumstats_suffix','config']: mps.error('Module Requires Two Populations, One Target and One Base Value For: --'+v) 
-            elif len(kV) < 1:                                             mps.error('Module Requires At Least One Target Population Value For: --'+v) 
-            
-            
-        if args.cmd not in  ['go','pops','data'] and len(kV) > 1:   mps.error('Module '+args.module+' Requires at most one value for: --'+v) 
+        if v == 'config': vstr = '--config_files(s)' 
+        else:             vstr = '--'+v 
+        
+        if args.module in ['pipeline','easyrun'] or args.cmd in ['go','pops']:
+            if len(kV) != 2: 
+                if v in ['pop','sumstats_prefix','sumstats_suffix','config']: mps.error('Module Requires Two Populations, One Target and One Base Value For: '+vstr) 
+                elif len(kV) < 1:                                             mps.error('Module Requires At Least One Target Population Value For: '+vstr)  
+         
+        elif args.cmd not in  ['go','pops','data'] and len(kV) > 1:   mps.error('Module: '+args.module+' requires at most one value for: '+vstr) 
     
     
 
