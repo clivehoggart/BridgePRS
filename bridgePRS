@@ -11,9 +11,9 @@ from collections import Counter
 
 
 bridgeHelp = BridgeHelp()
-HELP_FORMAT="%-48s %90s"
+HELP_FORMAT="%-30s %40s"
 
-# optimize easyrun
+# optimize easyrun web
 
 
 class MPS(argparse.ArgumentParser):
@@ -111,15 +111,15 @@ class MPS(argparse.ArgumentParser):
         return x.upper()
 
     def help_str(self,module):
-        if module == 'prs-single':    return (HELP_FORMAT % ('Single Population PRS (Ridge Regression)',    './bridgePRS prs-single  run -o out --pop africa --pop_config afro_pop.config')) 
-        if module == 'build-model':   return (HELP_FORMAT % ('Build large pop model to allow (port/bridge)','./bridgePRS build-model run -o out --pop euro   --pop_config euro_pop.config'))
-        if module == 'prs-port':      return (HELP_FORMAT % ('Port PRS snp-weights from large to small pop','./bridgePRS prs-port    run -o out --pop afr    --model_file euro.model')) 
-        if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors from large to small pop',   './bridgePRS prs-prior   run -o out --pop afr    --model_file euro.model'))
-        if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','./bridgePRS analyze result -o out --results out/afr.result')) 
-        if module == 'easyrun':       return (HELP_FORMAT  % ('Run Following Five Modules Consecutively:','./bridgePRS easyrun go -o out --pop_config afro_pop.config eur_pop.config')) 
-        if module == 'check':         return (HELP_FORMAT  % ('Check system requirements or input data','./bridgePRS check data --pop_config afro_pop.config')) 
-        if module == 'tools':         return (HELP_FORMAT  % ('Use the bridgePRS script Toolbox','./bridgePRS tools reformat_sumstats --sumstats_prefix ss.1 --genotype_prefix gt.1')) 
-
+        if module == 'prs-single':    return (HELP_FORMAT % ('Single Pop PRS',    'Ridge Regression')) 
+        if module == 'build-model':   return (HELP_FORMAT % ('Build base model','Necessary for (port/bridge)')) 
+        if module == 'prs-port':      return (HELP_FORMAT % ('Port snp-weights btwn pops','None'))  
+        if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors btwn pops','None')) 
+        if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','Plots Require Matplotlib')) 
+        if module == 'easyrun':       return (HELP_FORMAT  % ('Run bridgePRS Pipeline:','Full Program')) 
+        if module == 'pipeline':       return (HELP_FORMAT  % ('Run bridgePRS Pipeline:','Full Program')) 
+        if module == 'check':         return (HELP_FORMAT  % ('Bridge Axillary Commands','None')) 
+        if module == 'tools':         return (HELP_FORMAT  % ('Bridge Axillary Tools','None'))
 
     def sub_help(self, cmd, module=None):
         if cmd == 'run': HS =   ('Run The Following Module Commands:','') 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     mps = MPS(formatter_class = lambda prog: ap.RawTextHelpFormatter(prog, max_help_position=100)).set_paths() 
     
     
-    subs = mps.add_subparsers(help=(HELP_FORMAT % ('Description','Example')),dest='module',title='Modules') 
+    subs = mps.add_subparsers(help=(HELP_FORMAT % ('Description','Notes')),dest='module',title='Modules') 
     subs.required = True 
     sub_help = (str(HELP_FORMAT % ('Description','')))
 

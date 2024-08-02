@@ -23,6 +23,16 @@ class BridgePRS:
         def __init__(self,args,bridgedir,rundir,command_line):
             self.args = args 
 
+            try: 
+                import matplotlib
+            except: 
+                if not self.args.noPlots: 
+                    bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
+
+            
+
+
+
             self.io   = BridgeIO(args, bridgedir, rundir, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
             

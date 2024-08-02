@@ -2,7 +2,7 @@ import sys, os
 from collections import defaultdict as dd
 
 
-
+# web
 
 
 class BridgeHelp:
@@ -54,10 +54,8 @@ class BridgeHelp:
 
     def splash(self): 
         bridge_splash_image() 
-        self.out.write('User with browser-access can learn more if they type: ./bridgePRS web\n') 
+        self.out.write('Please see our website: www.bridgePRS.net\n\n') 
         self.out.write('For information on software requirements,       type:    ./bridgePRS requirements\n') 
-        self.out.write('For a quickstart guide to run bridgePRS,        type:    ./bridgePRS tutorial\n') 
-        self.out.write('For more detailed instructions on bridgePRS,    type:   ./bridgePRS manual\n') 
         self.out.write('For help with a specific bridgePRS module,      type:   ./bridgePRS [module]\n') 
         self.out.write('---------------------------------------------------------------------\n') 
         return 

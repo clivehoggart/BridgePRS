@@ -2,14 +2,17 @@
 
 import os, sys, gzip
 from collections import defaultdict as dd
-import matplotlib 
-import matplotlib.pyplot as plt 
-from math import log 
-import numpy as np 
-from scipy import stats
-import math
 import random 
-from matplotlib.patches import Rectangle as Rect
+import math
+from math import log 
+
+try: 
+    import matplotlib 
+    import matplotlib.pyplot as plt 
+    from matplotlib.patches import Rectangle as Rect
+except: pass 
+
+
 
 
 def combine_error(eString):
@@ -21,7 +24,7 @@ def combine_error(eString):
 ##########################################################################################################################################
 ##########################################################################################################################################
 
- # print pdf 
+ # Rank print pdf 
 
 def zip_open(fp, HEADER = True):                                                                                                                                                                                                                                                       
     if fp.split('.')[-1] == 'gz': gf = gzip.open(fp, 'rt')                                                                                                                                                                                                                              
@@ -32,16 +35,38 @@ def zip_open(fp, HEADER = True):
     return gf 
 
 
-def S_CORR(x,y): 
-    Rs, pv = stats.spearmanr(x, y)
-    Rs = str(round(Rs,2)) 
-    pv = '%5.1es ' % pv
-    return Rs 
+def R_CORR(x,y): 
+    Rc = round(my_pearson_corr(x,y),2) 
+    return str(Rc) 
+        
+def average(x):
+    assert len(x) > 0
+    return float(sum(x)) / len(x)
+
+def my_pearson_corr(x, y):
+    assert len(x) == len(y)
+    n = len(x)
+    assert n > 0
+    avg_x = average(x)
+    avg_y = average(y)
+    diffprod = 0
+    xdiff2 = 0
+    ydiff2 = 0
+    for idx in range(n):
+        xdiff = x[idx] - avg_x
+        ydiff = y[idx] - avg_y
+        diffprod += xdiff * ydiff
+        xdiff2 += xdiff * xdiff
+        ydiff2 += ydiff * ydiff
+
+    return diffprod / math.sqrt(xdiff2 * ydiff2)
 
 
 
 class BridgePlot: 
     def __init__(self, args, BR, pop, fig_names):  
+        
+
         self.args, self.pop, self.fig_names  = args, pop, fig_names 
         self.fig, self.axes, self.ax_index, self.fs1, self.fs2 = matplotlib.pyplot.gcf(), [], 0, 25, 22 
         
@@ -187,24 +212,14 @@ class BridgePlot:
             w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
             w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
             self.DATA_KEY['LEN']['weight'] = len(w) 
-            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
+            self.DATA_KEY['CORR'] = {'wTarget': R_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
             if self.MODEL: 
                 b2 = [x[2] for x in w_bb] 
-                self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
+                self.DATA_KEY['CORR'] = {'wTarget': R_CORR(w, b1), 'wModel': R_CORR(w, b2), 'MT': R_CORR(b1,b2)} 
         except: 
             pass  
         
         return 
-        if self.MODEL:
-            #w_bb =  self.merge_snp_scores(base_key, snp_weights, model_key) 
-            w, b1, b2 = [x[0] for x in w_bb],[x[1] for x in w_bb],  [x[2] for x in w_bb] 
-            #self.DATA_KEY['LEN']['weight'] = len(w) 
-            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': S_CORR(w, b2), 'MT': S_CORR(b1,b2)} 
-        else: 
-            #w_bb =  self.merge_snp_scores(base_key, snp_weights, 'NA') 
-            #w, b1 = [x[0] for x in w_bb],[x[1] for x in w_bb]
-            self.DATA_KEY['LEN']['weight'] = len(w) 
-            self.DATA_KEY['CORR'] = {'wTarget': S_CORR(w, b1), 'wModel': 'NA', 'MT': 'NA'} 
         
 
        
@@ -359,14 +374,14 @@ class BridgePlot:
 
 
     def add_logo(self, ax_index): 
-        
+       
+
         ax = self.axes[ax_index]
         if self.TYPE == 'MEGA': val = 0 
         elif self.TYPE == 'single': val = 1
         elif self.TYPE == 'port': val =  2 
         elif self.TYPE == 'prior': val = 3 
         else: val = random.randrange(5) 
-        
         bp = BridgePic(ax).draw(val) 
 
 
@@ -420,7 +435,7 @@ class DataTable:
         WD, yL, yJ = [36,32,32], 82, 23 
         self.add_row(['','Target','Model'], COLORS=['whitesmoke' for i in range(4)], X = (0,100), Y = (yL,100), FS = fs1, WIDTHS = WD)
         d1 = ['Populations:\n(GWAS, Geno/Pheno)', tp.ldpop+', '+tp.pop, mk['LDPOP']+', '+mk['POP']]
-        d2 = ['GWAS Size\n(Rank Correlation: '+K_CORR['MT']+')', K_LEN['target'], K_LEN['model']]
+        d2 = ['GWAS Size\n(Correlation: '+K_CORR['MT']+')', K_LEN['target'], K_LEN['model']]
         d3 = ['Result: SNP Weights\n('+str(K_LEN['weight'])+')','GWAS Corr= '+K_CORR['wTarget'], 'GWAS Corr='+K_CORR['wModel']]
         d4 = ['Geno/Pheno Samples \n('+p_name+', '+p_type+')', str(p_lens[0])+', '+str(p_lens[-1])+'\n (Test/Validate)', 'NA']
         
@@ -450,13 +465,18 @@ class BridgePic:
 
     def make_circle(self, h,k,r): 
         coord_list, H1, H2 = [], 1+h-r, h+r-1
+        
+
         for x in range(H1,H2,1):
             y1 = 140 - math.sqrt(r**2 - (x-h)**2)
             coord_list.append([x, y1])
-        X,Y = np.array([coord_list]).T
-        X = [x[0] for x in X] 
-        Y = [y[0] for y in Y] 
+       
+        X = [float(c[0]) for c in coord_list] 
+        Y = [c[1] for c in coord_list] 
+
         return X,Y 
+
+
 
         
 
@@ -616,11 +636,3 @@ class BridgePic:
 
     
     
-    
-#bp = BridgePlot(sys.argv[-1]) 
-    
-
-
-#bp.draw()
-#bp.finish() 
-
