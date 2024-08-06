@@ -5,6 +5,8 @@ from math import log
 
 #Missing Chromosomes 
 # Prefix is Required 
+# Directory 
+
 
 def bridge_debug_error(eString):
     if type(eString) in [list,tuple]:  
@@ -396,44 +398,56 @@ class BridgeData:
             if not os.path.exists(new_prefix_path): os.makedirs(new_prefix_path) 
             self.prefix, self.suffix = new_prefix_path +'/ss.'+self.pop_name+'.', '.out.gz'
 
+        if self.source_suffix: 
+            suffix_files = [pf for pf in prefix_files if pf[-1*len(self.source_suffix)::] == self.source_suffix] 
+            if len(suffix_files) == 0: bridge_sumstats_error(['Incorrect prefix/suffix names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
+            else:                      prefix_files = suffix_files 
+
+
         if len(prefix_files) == 1: 
             bridge_sumstats_warning('Sumstats files for pop '+self.pop_name+' are not separated by chromosome, attempting to split file in '+new_prefix_path) 
             self.source_suffix = 'NA'
             self.split_sumstats(prefix_path+'/'+prefix_files[0])  
         else:
-            if self.source_suffix: 
-                chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[-1] for pf in prefix_files] 
+            if self.source_suffix:
+                chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[1] for pf in prefix_files] 
                 try:       chromosomes = [int(c) for c in chromosomes]
                 except:    bridge_sumstats_error(['Nonnumerical Chromosomes or Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
-
+                
             if not self.source_suffix:
                 self.TESTS['INFER_SUFFIX'] = True 
-                if self.args.debug_level == 0: bridge_sumstats_error('Increase Debug Level (--debug_level) or supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
-                try: 
-                    new_prefix, new_suffix = self.get_prefix_suffix(prefix_files)                                                                                                                                                                                     
+                if self.args.debug_level == 0: 
+                    bridge_sumstats_error('Increase Debug Level (--debug_level) or supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
+                try:
+                    new_prefix, new_suffix = self.get_prefix_suffix(prefix_files) 
                     chromosomes = [pf.split(new_suffix)[0].split(new_prefix)[-1] for pf in prefix_files] 
                     chromosomes = [int(c) for c in chromosomes]
                     self.source_prefix        = prefix_path+'/'+new_prefix
                     self.source_suffix = new_suffix 
                 except: 
+                    suffix_cands, test_suffixes = [], ''
                     try: 
-                        suffix_cands = [] 
                         for p in prefix_files:
                             k, c_cand, NEED_CHR = 0, p.split(prefix_name)[-1], False 
                             while k < len(c_cand) and c_cand[k] in NUM_STRS: k+=1  
                             suffix_cands.append(c_cand[k::]) 
+                        
+                        test_suffixes = ','.join(list(set(suffix_cands))) 
                         if len(list(set(suffix_cands))) != 1:  
-                            bridge_sumstats_error('Ambiguous Sumstats Suffixes ('+','.join(list(set(suffix_cands)))+'), please supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
+                            bridge_sumstats_error('Ambiguous Sumstats Suffixes ('+test_suffixes+'), please supply sumstats suffix for pop '+self.pop_name+' (on Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))')  
                         self.source_suffix = suffix_cands[0] 
                         chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[-1] for pf in prefix_files] 
                         chromosomes = [int(c) for c in chromosomes]
-                    except: 
+                    except:
+                        error_list = ['Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),] 
+                        if len(test_suffixes.split(',')) > 1: 
+                            bridge_sumstats_error(error_list+['    Please Supply sumstats suffix for pop '+self.pop_name+' (on the Command Line (--sumstats_suffix) or in a config_file (SUMSTATS_SUFFIX=))'])  
                         bridge_sumstats_error(['Nonnumerical Chromosomes or Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
 
-            
             for c,p in zip(chromosomes, prefix_files): 
                 if self.args.debug_level > 0: self.split_sumstats(prefix_path+'/'+p, c) 
                 else:                         self.map[str(c)] = prefix_path+'/'+p 
+
 
         if self.TESTS['NOSNPS']: 
             try: 
