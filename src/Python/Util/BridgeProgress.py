@@ -5,7 +5,7 @@ LOCALTIME = time.asctime( time.localtime(time.time()) )
 
 
 # JOB optimize  fail 
-
+# Generated  
 
 class BridgeProgress:
     def __init__(self,args, command_line): 
@@ -25,7 +25,7 @@ class BridgeProgress:
         self.runpath, self.prepath = runpath, "/".join(runpath.split('/')[0:-1])+'/'  
         try: self.homedir = os.path.expanduser('~') 
         except: self.HOMEDIR = False 
-        self.last_line, self.run_len, self.dot_loc, self.line_loc = '', 140, 0, 0 
+        self.last_line, self.run_len, self.dot_loc, self.line_loc = '', 100, 0, 0 
         self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         self.loghandle = open(self.logfile,'w') 
         self.FILE  = True 
@@ -47,7 +47,7 @@ class BridgeProgress:
         fs2 = '%22s  %-15s  %-25s  %15s\n' 
         fs3 = '%22s  %-15s  %-25s  %15s       %-65s\n' 
         if self.args.cores > 1 or dC < 2: self.say(fs2,('System:','platform='+self.args.platform+',', 'cores(available)='+tC+',', 'cores(used)='+mC)) 
-        else:                             self.say(fs3,('System:','platform='+self.args.platform+',', 'cores(available)='+tC+',', 'cores(used)='+mC, '(TIP: Using More Than One Core Will Improve Performace (e.g. ---cores '+str(dC)+'))')) 
+        else:                             self.say(fs3,('System:','platform='+self.args.platform+',', 'cores(available)='+tC+',', 'cores(used)='+mC, '(TIP: Using More Than One Core Will Improve Performace (e.g. --cores '+str(dC)+'))')) 
         if RK['plink']: self.say(fs1, ('Plink:','found=true,','path='+LOC['plink'])) 
         else:           self.say(fs3, ('Plink:','found=false,','path=NA','', '(Using included version: '+LOC['plink']+')')) 
         os.system(plink_cmd)  
@@ -231,7 +231,7 @@ class BridgeProgress:
         if self.status == 'minor':
             dl = max(self.run_len - self.line_loc, 1) 
             cl = '.'.join(['' for x in range(dl)])+'Complete' 
-            if len(rJ) > 0: self.write(cl+'    [Generated: '+", ".join(rJ)+']\n') 
+            if len(rJ) > 0: self.write(cl+'\n     [File(s) Generated: '+", ".join(rJ)+']\n') 
             else:           self.write(cl+'\n') 
             self.status = None  
         return 

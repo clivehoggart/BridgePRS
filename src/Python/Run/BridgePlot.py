@@ -12,7 +12,7 @@ try:
     from matplotlib.patches import Rectangle as Rect
 except: pass 
 
-
+# bar Result 
 
 
 def combine_error(eString):
@@ -103,7 +103,13 @@ class BridgePlot:
     def finish(self): 
         
         if self.TYPE == 'MEGA': tString = 'bridgePRS: Weighted-Combined Analysis' 
-        else:                   tString = 'bridgePRS: PRS-'+self.TYPE.upper()+' Result'
+        else:
+            TUP = self.TYPE.upper()
+            if TUP == 'SINGLE': tString = 'bridgePRS: PRS-'+self.TYPE.upper()+' (Stage-1)'
+            elif TUP == 'PORT': tString = 'bridgePRS: PRS-'+self.TYPE.upper()
+            elif TUP == 'PRIOR': tString = 'bridgePRS: PRS-'+self.TYPE.upper()+' (Stage-2)' 
+            else: tString = 'bridgePRS: PRS-'+self.TYPE.upper()+' Result'
+        
         plt.suptitle(tString, fontweight='bold', fontsize=22) 
         if self.TYPE == 'MEGA': plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
         else:                   plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
@@ -131,14 +137,14 @@ class BridgePlot:
 
         #self.colors = ['tab:cyan','tab:gray','tab:green','tab:pink','tab:orange']  
         #self.colors = ['y','tab:gray','tab:blue','tab:green','tab:green']  
-        self.colors = ['y','tab:gray','cornflowerblue','tab:green','tab:green']  
-        self.colors = ['yellow','tab:gray','cyan','lime','tab:green']  
-        self.colors = ['yellow','tab:pink','cyan','lime','tab:green']  
-        cands       = ['single', 'port', 'prior', 'combine', 'weighted'] 
+        #self.colors = ['y','tab:gray','cornflowerblue','tab:green','tab:green']  
+        #self.colors = ['yellow','tab:gray','cyan','lime','tab:green']  
+        self.colors = ['tab:gray','yellow','cyan','lime','tab:green']  
+        cands       = ['port','single', 'prior', 'combine', 'weighted'] 
         color_key   = {m: c for m,c in zip(cands, self.colors)}
-       
         b_vals = [self.data[c].varexp.interval[-1] for c in self.names] 
         
+
         for i,n in enumerate(cands): 
             if n not in self.names: continue 
             br = self.data[n] 
@@ -148,7 +154,13 @@ class BridgePlot:
             ax.plot([i,i],[a,b], color='k', zorder=1, linewidth=0.85)  
             ax.plot([i-0.1,i+0.1],[a,a], color='k', zorder=1, linewidth=0.85)  
             ax.plot([i-0.1,i+0.1],[b,b], color='k', zorder=1,linewidth=0.85)  
-            if len(self.names) > 1: ax.text(i-0.2,b+0.001,'prs\n'+n, ha='center',rotation=20, fontsize=14) 
+            if len(self.names) > 1: 
+                if n == 'single': nz = 'stage-1'
+                elif n == 'prior': nz = 'stage-2'
+                elif n == 'combine': nz = 'stage-1+2'
+                elif n == 'weighted': nz = 'weighted'
+                else: nz = 'prs-'+n 
+                ax.text(i,b*1.03+0.001,nz, ha='center', fontsize=14) 
             
 
             if n != 'weighted':  
