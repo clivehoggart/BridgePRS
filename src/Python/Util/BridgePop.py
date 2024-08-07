@@ -277,12 +277,20 @@ class BridgeData:
                 if lp[iS] not in self.rs_key: 
                     self.CK['NO_GENOTYPE'] += 1 
                     continue 
+                
+
                 rsData = self.rs_key[lp[iS]] 
                 if len(rsData) == 4:   rsChr, rsLoc, rsRef, rsAlt = self.rs_key[lp[iS]] 
                 elif len(rsData) == 5: rsChr, rsLoc, rsRef, rsAlt, rsBool = self.rs_key[lp[iS]] 
                 else:                  bridge_debug_error('Invalid RS Data:'+','.join([str(xxx) for xxx in rsData])) 
                 
-                LD = [lp[j] if j != 'NA' else j for j in locs] 
+                LD = [lp[j] if j != 'NA' else j for j in locs]
+
+                if 'NA' in LD: 
+                    self.CK['NA_LINE'] += 1 
+                    continue 
+
+
                 if rsRef == rsRef.upper(): 
                     LD[2] = LD[2].upper() 
                     LD[3] = LD[3].upper() 
@@ -290,10 +298,14 @@ class BridgeData:
 
                 chr_cands = list(set([c for c in [str(LD[0]), str(CHR), str(rsChr)] if c != 'NA'])) 
                 if len(chr_cands) > 1: bridge_sumstats_error('Ambiguous Chromosomes For '+lp[iS]+': '+str(LD[0])+','+str(rsChr)+','+str(CHR)+' (Sumstats, Genotype, Filename(s))') 
-                try:               fC, LD[0] = int(chr_cands[0]), chr_cands[0]
-                except ValueError: bridge_sumstats_error(['Nonnumerical Chromosome ('+chr_cands[0]+')','    Sumstats File: '+p_file])  
-                try:                lpRef, lpAlt, lpMaf, lpN, lpWt, lpSE, lpP = LD[2], LD[3], float(LD[4]), float(LD[5]), float(LD[6]), float(LD[7]), float(LD[8])
-                except ValueError:  bridge_sumstats_error(['Sumstats File Error(s), Incorrect DataType:',header,'\t'.join(LD)]) 
+                try:               
+                    fC, LD[0] = int(chr_cands[0]), chr_cands[0]
+                except ValueError: 
+                    bridge_sumstats_error(['Nonnumerical Chromosome ('+chr_cands[0]+')','    Sumstats File: '+p_file])  
+                try:                
+                    lpRef, lpAlt, lpMaf, lpN, lpWt, lpSE, lpP = LD[2], LD[3], float(LD[4]), float(LD[5]), float(LD[6]), float(LD[7]), float(LD[8])
+                except ValueError:  
+                    bridge_sumstats_error(['Sumstats File Error(s), Incorrect DataType:',self.header,'\t'.join(LD)]) 
                
                 relationship = self.base_comp([lpRef, lpAlt], [rsRef.upper(), rsAlt.upper()])
                 self.CK[relationship] += 1 
@@ -379,6 +391,11 @@ class BridgeData:
     
     
     def add_sumstats(self, pk, genoPheno, prevPop): 
+        
+
+        NN_ERROR = 'Nonnumerical Chromosomes or Ambiguous Sumstats Names' 
+
+
         self.phenoTYPE      = genoPheno.type
         sum_stats_fields    =  ['ssf-alt', 'ssf-beta', 'ssf-maf', 'ssf-p', 'ssf-ref', 'ssf-se', 'ssf-snpid', 'ssf-n']
         sum_stats_args      =  [vars(self.args)[ks] for ks in sum_stats_fields] 
@@ -412,7 +429,8 @@ class BridgeData:
             if self.source_suffix:
                 chromosomes = [pf.split(self.source_suffix)[0].split(prefix_name)[1] for pf in prefix_files] 
                 try:       chromosomes = [int(c) for c in chromosomes]
-                except:    bridge_sumstats_error(['Nonnumerical Chromosomes or Ambiguous Sumstats Names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
+                except:    
+                    bridge_sumstats_error([NN_ERROR,'    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
                 
             if not self.source_suffix:
                 self.TESTS['INFER_SUFFIX'] = True 
