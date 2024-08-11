@@ -55,9 +55,13 @@ class BridgeHelp:
     def splash(self): 
         bridge_splash_image() 
         self.out.write('Please see our website: www.bridgePRS.net\n\n') 
-        self.out.write('For information on software requirements,       type:    ./bridgePRS requirements\n') 
+        self.out.write('For information on software requirements,       type:   ./bridgePRS requirements\n') 
+        self.out.write('For general help with bridgePRS commands,      type:   ./bridgePRS --help\n') 
         self.out.write('For help with a specific bridgePRS module,      type:   ./bridgePRS [module]\n') 
         self.out.write('---------------------------------------------------------------------\n') 
+        sys.exit()  
+
+
         return 
 
 
@@ -399,7 +403,6 @@ class BridgeTutorial:
 
     def begin(self): 
         bridge_tutorial_image() 
-        #bridge_manual_summary() 
         self.list_files() 
         self.list_prefixes() 
         self.list_options() 
@@ -522,7 +525,6 @@ class BridgeRequirements:
 
     def begin(self): 
         bridge_requirement_image() 
-        #bridge_manual_summary() 
         self.list_basic() 
         self.list_packages() 
         self.list_options() 
@@ -537,18 +539,16 @@ class BridgeRequirements:
 
     def list_basic(self): 
         bridge_start_chapter() 
-        self.say('***************************************************************************************\n')
+        self.say('***************************************************************************************') 
         self.say('bridgePRS requires python3, plink, and R.\n') 
-        self.say('Plink is included in the src directory,\nPython can be downloaded from python.org,\nR can be downloaded from www.r-project.org\n') 
+        self.say('Plink is included in the src directory,\nPython can be downloaded from python.org,\nR can be downloaded from www.r-project.org') 
         return 
     
     def list_packages(self): 
         bridge_start_chapter() 
         self.say('*******************************   R Packages     ***************************************')
-        self.say('*****************************************************************************************\n')
-        self.say('bridgePRS requires that the following R-packages be installed:\n')
+        self.say('bridgePRS requires that the following R-packages be installed:')
         self.say('BEDMatrix, R.utils, boot, data.table, doMC, glmnet, MASS, optparse, and parallel') 
-        self.say('') 
         self.say('The command install.packages() can be used to install them') 
         #self.say('> install.packages(c('BEDMatrix', R.util, boot, data.table, doMC, glmnet, MASS, optparse, and parallel') 
         return    
@@ -559,7 +559,6 @@ class BridgeRequirements:
     def list_options(self): 
         bridge_start_chapter() 
         self.say('*******************************   Python Libraries  ************************************')
-        self.say('*****************************************************************************************\n')
         self.say('For plotting (optional) bridgePRS relies on matplotlib\n') 
         return 
 
