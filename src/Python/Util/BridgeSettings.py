@@ -4,7 +4,7 @@ from collections import Counter as cc
 from .BridgeProgress  import BridgeProgress
 from .BridgePop      import BridgePop
 
-# yo
+# model_file
 
 def bridge_error(eString):
     if type(eString) in [list,tuple]:  
@@ -53,6 +53,8 @@ class BridgeSettings:
         
 
     def update_inputs(self, pipeline_key):
+        
+
         for v in vars(self.args): 
             kV = vars(self.args)[v] 
             if v in ['config','snp_file','validation_file','sumstats_file'] + POP_ARGS or kV in [None, []]: continue 
@@ -75,10 +77,7 @@ class BridgeSettings:
     
     #################   POP CHECK ############################
     def check_pop_data(self):
-
-
         pop_key = self.resolve_pop_args()
-        
         if self.module.split('-')[0] == 'build': self.pop_data = [BridgePop(self.args, self.io.progress, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS}, 'BASE')] 
         else:                                    self.pop_data = [BridgePop(self.args, self.io.progress, self.io.paths, pop_key['pop'][0], {p: pop_key[p][0] for p in POP_ARGS},  'TARGET')] 
         if len(pop_key['pop']) > 1:    
@@ -96,11 +95,11 @@ class BridgeSettings:
         for i,K in enumerate(self.args.config):
             k_keys = K.keys()  
             for k,v in K.items(): 
+
                 if i == 0 or k in KL:              KL[k].append(v)
                 elif k not in ['genotype_prefix','phenotype_file','validation_file']: KL[k].append(v) 
                 else:                              continue  
-        
-
+    
         for k,kl in KL.items():
             
 
@@ -114,7 +113,6 @@ class BridgeSettings:
                 elif kA == []:             bridge_error('Unrecognized Argument In Configuration Files: '+k+': '+kC) 
                 else:                      bridge_error('Universal Argument '+k+' Cannot Be Included In Configuration File (must be passed on command line --'+k+')')
        
-
         if len(self.args.pop) != len(self.args.ldpop): 
             if len(self.args.ldpop) == 0: self.args.ldpop = [pn for pn in self.args.pop]
             else:                         bridge_error('Ambiguous pop/ldpop assignments: '+",".join(self.args.pop)+" and "+",".join(self.args.ldpop)) 

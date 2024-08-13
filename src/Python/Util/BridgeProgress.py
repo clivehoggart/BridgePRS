@@ -5,7 +5,7 @@ LOCALTIME = time.asctime( time.localtime(time.time()) )
 
 
 # JOB optimize  fail 
-# Generated  
+# Generated yooooo 
 
 class BridgeProgress:
     def __init__(self,args, command_line): 
@@ -21,12 +21,18 @@ class BridgeProgress:
 
 
 
-    def initialize(self, runpath):
+    def initialize(self, runpath, poplist):
         self.runpath, self.prepath = runpath, "/".join(runpath.split('/')[0:-1])+'/'  
         try: self.homedir = os.path.expanduser('~') 
         except: self.HOMEDIR = False 
         self.last_line, self.run_len, self.dot_loc, self.line_loc = '', 100, 0, 0 
-        self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
+        
+    
+        if len(poplist) == 0:   self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
+        else:                   self.logfile = runpath + '/logs/bridgePRS.'+'-'.join([p.lower() for p in poplist])+'.'+self.args.module+'.'+self.args.cmd+'.log'  
+
+
+        #self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         self.loghandle = open(self.logfile,'w') 
         self.FILE  = True 
         self.write('BridgePRS Begins at '+LOCALTIME+' \n') 
@@ -74,11 +80,71 @@ class BridgeProgress:
 
 
 
+            
+    def record_me(self, n,v, INIT=False, KEEP=True, NOTE=False): 
+        if INIT: 
+            if NOTE: self.say('%s\n', (n+'='+v+'    '+NOTE)) 
+            else:    self.say('%s\n', (n+'='+v)) 
+        else: 
+
+            if NOTE: self.say('%25s %s\n',(' ',n+'='+v+'     '+NOTE)) 
+            else:    self.say('%25s %s\n',(' ',n+'='+v)) 
+        if KEEP: self.REC.write(n+'='+v+'\n') 
+        return
+
+
+    def show_pop_data(self, pop_data): 
+        fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
+        self.write('\nReading Population Data:\n') 
+        for i, pd in enumerate(pop_data):
+            my_notes = [False,False,False]
+            n1, n2 = pd.name, pd.ref_pop  
+            ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
+            if self.args.module == 'build-model': i+=1 
+            if i == 0   and len(pop_data) == 2:     sn = 'target' 
+            elif i == 0 and len(pop_data) == 1:     sn = 'primary' 
+            elif i == 1:                            sn = 'base'                                    
+            self.tFile = self.runpath + '/save/'+n1+'.'+sn+'.config'
+            self.REC = open(self.tFile,'w')  
+            self.say('%25s\n',(sn.capitalize()+' Data:')) 
+            self.say('%25s ',('Names:')) 
+            self.record_me('POP',n1, INIT=True) 
+            self.record_me('LDPOP',n2) 
+            self.record_me('LD_PATH',bd.ldpath) 
+            self.record_me('FST',str(self.args.fst), KEEP=False) 
+            if ss.TESTS['INFER_SUFFIX']: my_notes[0] = '(WARNING: Not Given - Inferred From Directory)' 
+            if ss.TESTS['NEWSNPS']:      my_notes[1] = '(WARNING: Not Given - Created Using All Snps)'
+            if pt.TESTS['NOVALID']:      my_notes[2] = '(WARNING: Not Given - Created by Splitting Phenotype File)'
+            
+
+            self.say('%25s ',('Sumstats:')) 
+            self.record_me('SOURCE_PREFIX',ss.source_prefix,INIT=True,KEEP=False) 
+            self.record_me('SOURCE_SUFFIX',ss.source_suffix,KEEP=False,NOTE=my_notes[0]) 
+            self.record_me('SUMSTATS_PREFIX',ss.prefix) 
+            self.record_me('SUMSTATS_SUFFIX',ss.suffix) 
+            self.say('%25s ',('QC-Snps:')) 
+            self.record_me('SNP_FILE',ss.snp_file,NOTE=my_notes[1],INIT=True) 
+            self.say('%25s ',('Genotype/Phenotype:')) 
+            if not pt.VALID:
+                self.record_me('GENOTYPE_PREFIX','NONE',INIT=True,KEEP=False) 
+                self.record_me('PHENOTYPE_FILE','NONE',KEEP=False) 
+                self.record_me('PHENOTYPE_VARIABLES','NONE',KEEP=False) 
+            else: 
+                self.record_me('GENOTYPE_PREFIX',pt.genotype_prefix,INIT=True)  
+                self.record_me('PHENOTYPE_FILE',pt.files[0])  
+                if i == 0: self.record_me('VALIDATION_FILE',pt.files[1],NOTE=my_notes[2])
+                self.record_me('CHROMOSOMES',','.join(pd.chromosomes),KEEP=False)  
+                self.record_me('PHENOTYPE_VARIABLES',",".join(pt.header[2::]),KEEP=False) 
+
+            
+            self.say('%25s\n\n','    **'+sn.capitalize()+' Config Made:'+' '+self.tFile) 
+            self.REC.close() 
+            pd.config = self.tFile  
 
 
 
     
-    def show_pop_data(self, pop_data): 
+    def show_pop_data2(self, pop_data): 
         fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
         self.write('\nReading Population Data:\n') 
         for i, pd in enumerate(pop_data):
@@ -98,8 +164,7 @@ class BridgeProgress:
                 else: self.record(fs1, [['Base Source:'],['POP',n1], ['LDPOP',n2]])  
             if ss.VALID: 
                 if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix, 'WARNING: Not Given - Inferred From Directory']]) 
-                else:                        self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix]]) 
-                
+                else:                        self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix]])         
                 self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
                 if ss.TESTS['NOSNPS']:       self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total),'WARNING Not Given - Created Using All Snps']])
                 else:                        self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total)]]) 
@@ -174,7 +239,7 @@ class BridgeProgress:
                 if self.status is None and self.topics == 0: self.write(self.bk2+'Previously Generated: '+", ".join(rJ)+'\n') 
                 elif self.status == 'major':                 self.write(self.bk1+'Previously Generated: '+", ".join(rJ)+'\n') 
                 else: 
-                    print('yooooo', self.status, self.topics, topic) 
+                    print('zzzerror', self.status, self.topics, topic) 
                     sys.exit() 
         self.status = 'minor' 
         self.topics += 1 

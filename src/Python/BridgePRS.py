@@ -17,25 +17,21 @@ def bridge_error(eString):
     sys.exit()
 
 
+# pl.log_result
+
 
 
 class BridgePRS:
-        def __init__(self,args,bridgedir,rundir,command_line):
+        def __init__(self,args,pops,bridgedir,rundir,command_line):
             self.args = args 
-
             try: 
                 import matplotlib
             except: 
                 if not self.args.noPlots: 
                     bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
 
-            
-
-
-
-            self.io   = BridgeIO(args, bridgedir, rundir, command_line)
+            self.io   = BridgeIO(args, pops, bridgedir, rundir, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
-            
 
             if self.args.module in ['easyrun','pipeline']:   self.easyrun() 
             elif self.args.module == 'analyze':              self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
@@ -48,13 +44,20 @@ class BridgePRS:
             else:                                                     modules = ['prs-single','build-model','prs-port','prs-prior'] 
             res_files = [] 
             for i,m in enumerate(modules): 
+                
+
                 self.args.module, self.args.cmd =  m, 'run'
                 if i != 1: self.io.settings.pop = self.io.settings.pop_data[0] 
                 else:      self.io.settings.pop = self.io.settings.pop_data[1] 
+               
+
                 self.io.update(self.args.module, self.args.cmd)
                 self.execute(self.io.pipeline) 
+
                 if i == 1:  self.args.model_file = str(self.io.pipeline.progress_file) 
                 else:       res_files.append(str(self.io.pipeline.progress_file)) 
+                
+                
             self.args.result_files = res_files 
             self.args.module, self.args.cmd = 'analyze','combine' 
             self.io.update(self.args.module, self.args.cmd) 
@@ -100,6 +103,7 @@ class BridgePRS:
             self.more     =   BridgeMore(self) 
             if cmd == 'result':  self.io.progress.start_minor('Plotting Results (analyze result)', self.io.settings) 
             else:                self.io.progress.start_minor('Combining Results (analyze combine)', self.io.settings) 
+            
             self.more.run(cmd, prs_results, PATH) 
             self.io.progress.end() 
             return 

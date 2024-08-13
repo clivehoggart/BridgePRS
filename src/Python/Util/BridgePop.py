@@ -5,7 +5,7 @@ from math import log
 
 #Missing Chromosomes 
 # Prefix is Required 
-# Directory 
+# Directory Incorrect 
 
 
 def bridge_debug_error(eString):
@@ -16,7 +16,7 @@ def bridge_debug_error(eString):
     sys.exit(2) 
 
 
-# Ambiguous debug_level Ref/Alt Missing snps.txt 
+# Ambiguous debug_level Ref/Alt Missing snps.txt check
 
 def bridge_pop_error(eString):
     if type(eString) in [list,tuple]:  
@@ -246,8 +246,6 @@ class BridgeData:
 
     def add_sumstats_line(self,fC,LD,snpID): 
         self.total += 1 
-        
-
         if fC not in self.s_key: 
             self.s_key[fC] = [self.prefix+str(fC)+'.out', open(self.prefix+str(fC)+'.out','w')]
             self.s_key[fC][1].write(self.header+'\n')
@@ -332,8 +330,11 @@ class BridgeData:
         if self.args.thinned_snp_file is None: self.thin_snps = '0' 
         else:                                  self.thin_snps = self.args.thinned_snp_file 
         self.rs_key, self.snp_file = {}, self.args.snp_file 
-        if self.args.snp_file is None: 
-            self.TESTS['NOSNPS'], self.snp_file, self.snp_handle  = True, self.paths['save']+'/snps.txt', open(self.paths['save']+'/snps.txt','w') 
+        if self.args.snp_file is None:
+            self.TESTS['NEWSNPS']  = True 
+            self.TESTS['NOSNPS']   = True
+            self.snp_file          = self.paths['save']+'/snps.'+self.pop_name.lower()+'_valid.txt'
+            self.snp_handle        = open(self.snp_file,'w') 
         
         if self.args.debug_level >= 1: 
             if not self.TESTS['NOSNPS']: 
@@ -408,16 +409,24 @@ class BridgeData:
         prefix_path, prefix_name = '/'.join(self.source_prefix.split('/')[0:-1]), self.source_prefix.split('/')[-1] 
         prefix_files = [f for f in os.listdir(prefix_path) if f[0:len(prefix_name)] == prefix_name] 
         
+
+        if len(prefix_files) < 5: d_files = ",".join(sorted(prefix_files)) 
+        else:                     
+            d_files = "\n                                      ".join(sorted(prefix_files[0:3]))+'\n                                            ' 
+            d_files +="\n                                            ".join(['.','.','.'])+'\n                                      ' 
+            d_files += "\n                                      ".join(sorted(prefix_files[-3::]))+'\n' 
+
         if   len(prefix_files) == 0: bridge_sumstats_error('Invalid Sumstats Prefix: '+prefix) 
         elif self.args.debug_level == 0 and len(prefix_files) > 1: self.prefix, self.suffix = self.source_prefix, self.source_suffix 
         else: 
             new_prefix_path = self.paths['save']+'/sumstats'
             if not os.path.exists(new_prefix_path): os.makedirs(new_prefix_path) 
             self.prefix, self.suffix = new_prefix_path +'/ss.'+self.pop_name+'.', '.out.gz'
-
-        if self.source_suffix: 
+        
+        if self.source_suffix == 'FILE': prefix_files = [prefix_name] 
+        elif self.source_suffix:
             suffix_files = [pf for pf in prefix_files if pf[-1*len(self.source_suffix)::] == self.source_suffix] 
-            if len(suffix_files) == 0: bridge_sumstats_error(['Incorrect prefix/suffix names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Directory: '+', '.join(prefix_files)]) 
+            if len(suffix_files) == 0: bridge_sumstats_error(['Incorrect prefix/suffix names','    prefix/suffix: '+self.prefix+', '+str(self.source_suffix),'    Candidate Files: '+d_files]) 
             else:                      prefix_files = suffix_files 
 
 
@@ -566,7 +575,13 @@ class BridgeData:
         else: 
             self.files = [phenotype_file]
             self.X_fields = ['--test.data',self.files[0],'--valid.data','0'] 
-        if self.args.module != 'check' and self.args.phenotype is None: bridge_pop_error('Phenotype field required (--phenotype)') 
+        
+
+        if self.args.phenotype is None: 
+            if self.args.module != 'check' and self.args.cmd.split('-')[0] not in ['check']: bridge_pop_error('Phenotype field required (--phenotype)') 
+
+
+
         for i,fn in enumerate(self.files): 
             with open(fn, 'rt') as f: 
                 lp = f.readline().split() 
