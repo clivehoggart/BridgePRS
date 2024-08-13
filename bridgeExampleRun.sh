@@ -4,7 +4,7 @@ src="$PWD"/src
 pop=(AFR EAS)
 fst=(0.15 0.11)
 i=1
-${src}/Bash/BridgePRS.sh $src/Rscripts\
+${src}/Bash/BridgePRS.sh $src/Rscripts \
     --strand_check 1 \
     --outdir out \
     --by_chr 1 \

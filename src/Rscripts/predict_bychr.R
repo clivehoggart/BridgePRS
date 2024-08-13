@@ -91,15 +91,15 @@ for( chr in 1:22 ){
         ids.use <- intersect( ids.use, attributes(ptr.bed)[[3]][[1]] )
     }
 #    beta.bar <- dget(paste(opt$beta.file,chr,'.Robj',sep=''))
-    
-    beta_bar_file <- paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz") 
 
-    if (!file.exists(beta_bar_file)) next 
+    beta_bar_file <- paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz")
+
+    if (!file.exists(beta_bar_file)) next
     beta.bar <- fread(beta_bar_file,data.table=FALSE)
     #beta.bar <- fread(paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz"),data.table=FALSE)
-    
-    
-    
+
+
+
     clump.ids <- unique(beta.bar$clump.id)
     beta.bar <- beta.list(beta.bar)
     names(beta.bar) <- clump.ids
@@ -159,7 +159,7 @@ if( opt$valid.data!=0 ){
         fit.valid0 <- summary(lm( valid.data[,opt$pheno.name] ~ 0 + valid.covs ))
     else
         fit.valid0 <- glm( valid.data[,opt$pheno.name] ~ 0 + valid.covs, family=family )
-    }
+}
 
 VE.test <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
 rownames(VE.test) <- colnames(pred.genome[[1]])
