@@ -1,18 +1,15 @@
 import sys,os, multiprocessing 
 from .BridgeProgress  import BridgeProgress
-from .BridgeSettings  import BridgeSettings
 from .BridgeTools     import BridgeTools
 from .BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
 
-
-
 class BridgeIO:
-        def __init__(self,args,pops,bridgedir,rundir, command_line):
-            self.args, self.pops, self.bridgedir, self.rundir, self.homepath = args, pops, bridgedir, rundir, os.path.abspath(args.outpath) 
-            self.paths = {'home': self.homepath, 'save': self.homepath+'/save', 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'} 
-            
-            self.progress = BridgeProgress(args, command_line).initialize(self.paths['home'], self.pops)  
+        def __init__(self,args, pop_data, command_line):
+            self.args, self.pop_data, self.homepath = args, pop_data, os.path.abspath(args.outpath) 
+            self.files, self.prefixes, self.lists, self.paths = {}, {}, {}, {} 
+            self.paths = {'home': self.homepath, 'save': self.homepath+'/save', 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'}  
+            self.progress = BridgeProgress(args, command_line).initialize(self.paths['home'], [n for n in pop_data.names if n != None]) 
             self.set_programs_and_defaults() 
 
 
@@ -29,7 +26,8 @@ class BridgeIO:
             elif self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac']
             self.LOC['plink'] = self.programs['plink']  
             return 
-            
+
+
         def find_which(self, name): 
             p_log, p_err = self.paths['tmp']+'/tmp.'+name+'.out', self.paths['tmp']+'/tmp.'+name+'.err' 
             os.system('which '+name+' > '+p_log+' 2> '+p_err) 
@@ -42,34 +40,36 @@ class BridgeIO:
         def update(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
-            
-            self.pipeline = BridgePipelines(self).verify_pipeline()  
-            self.settings.update_inputs(self.pipeline.input_key)
+                
+             
 
+            self.pipeline = BridgePipelines(self).verify_pipeline()  
+            for v in vars(self.args): 
+                kV = vars(self.args)[v] 
+                if v.split('_')[-1] not in ['file','prefix','files']: continue 
+                if v in ['snp_file','validation_file']:               continue 
+                if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
+                elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
+                elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
+            for k,x in self.pipeline.input_key['prefix'].items(): self.prefixes[k] = x 
+            for k,x in self.pipeline.input_key['file'].items():   self.files[k] = x 
+            if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
+            
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
-            self.settings = BridgeSettings(self)
             self.check_requirements()
-
-            if module in 'tools': 
-                if self.cmd.split('-')[0] != 'check': BridgeTools(self).apply() 
-                if self.cmd.split('-')[0] != 'check' or self.cmd.split('-')[1].upper()[0:3] in ['REQ']: self.progress.finish('Complete',FIN=True) 
-
-            if module == 'analyze': self.settings.check_analysis_data() 
-            else:                   self.settings.check_pop_data() 
-
-            if module in ['check','tools']: self.progress.finish('Complete',FIN=True) 
-            
+                        
+            if module in ['tools','analyze']: return self  
+            self.progress.show_pop_data([self.pop_data.target,self.pop_data.base]) 
+            self.progress.show_settings()     
+            if self.module == 'pipeline': return self 
+            elif self.module == 'build-model': self.pop = self.pop_data.base 
+            else:                              self.pop = self.pop_data.target 
+                
 
 
-            self.progress.show_settings(self.settings) 
-            self.progress.start_module(self.module, self.cmd, self.paths['home'])# .show_settings(self.settings) 
-            self.pipeline = BridgePipelines(self).verify_pipeline() 
-            self.settings.update_inputs(self.pipeline.input_key) 
-            
-            
-
+            self.update(self.module, self.cmd) 
             return self
 
 
@@ -95,3 +95,39 @@ class BridgeIO:
             return
 
 
+
+
+
+
+
+
+
+class BridgeCurrent2: 
+    def __init__(self,io, pop_data):
+        
+        self.pop_data = pop_data 
+        self.args, self.io, self.module, self.cmd, self.pop = io.args, io, io.args.module, io.args.cmd, None
+        
+        self.files, self.prefixes, self.lists, self.paths = {}, {}, {}, {} 
+        
+
+    def update_inputs2(self, pipeline_key):
+        for v in vars(self.args): 
+            kV = vars(self.args)[v] 
+            if v in ['config','snp_file','validation_file','sumstats_file']  or kV in [None, []]: continue 
+            if v.split('_')[-1] not in ['file','prefix','files']: continue 
+            if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
+            elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
+            elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
+            elif v.split('_')[-1] == 'path':  self.paths[v.split('_')[0]] = kV 
+       
+        for k,x in pipeline_key['prefix'].items(): self.prefixes[k] = x 
+        for k,x in pipeline_key['file'].items():   self.files[k] = x 
+        if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
+        return
+        
+    
+    def check_analysis_data(self):  
+        return  
+    
+    

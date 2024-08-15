@@ -31,12 +31,17 @@ def zip_open(fp, HEADER = False):
 
 class BridgeTools:
     def __init__(self, io):
-        self.args, self.io = io.args, io 
+        self.args, self.io, self.pop_data = io.args, io, io.pop_data
                 
         self.GT = False 
-        self.io.progress.start_module(self.io.module, self.io.cmd, self.io.paths['home'])# .show_settings(self.settings) 
     
-        if self.io.cmd == 'reformat-sumstats': self.apply = self.reformat_sumstats 
+
+
+    def apply(self): 
+        
+        if self.io.cmd == 'check-requirements':  self.io.progress.finish('Complete',FIN=True) 
+        if self.io.cmd == 'reformat-sumstats': self.reformat_sumstats() 
+        sys.exit() 
 
 
     def read_genotype_prefix(self, gt_prefix): 
@@ -50,6 +55,7 @@ class BridgeTools:
 
 
     def reformat_sumstats(self): 
+        self.io.progress.start_module(self.io.module, self.io.cmd, self.io.paths['home'])# .show_settings(self.settings) 
         if len(self.args.sumstats_prefix) != 1:    bridge_error('A Single Sumstats Prefix Is Required')
         if len(self.args.genotype_prefix) != 1:    bridge_error('A Single Genotype Prefix Is Required') 
         self.read_genotype_prefix(self.args.genotype_prefix[0]) 

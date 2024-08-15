@@ -4,77 +4,38 @@ from collections import defaultdict as dd
 # PHENO  \nMODULE_NAME
 # input_key 
 # if 'model' in fD.files and fD.files['model'] is not None: f_pairs.append(["MODEL_FILE",fD.files['model']]) 
-# progress_file
+# progress_file current
 
 class BridgePipelines:
-    def __init__(self,io,prevPop=None): 
-        self.args, self.io, self.module, self.cmd, self.settings = io.args, io, io.module, io.cmd, io.settings 
+    def __init__(self,io): 
+        self.args, self.io, self.module, self.cmd = io.args, io, io.module, io.cmd
         self.eType, self.wType, self.FIN = 'BridgePipelineError:', 'BridgePipelineWarning:', dd(bool)
-        self.input_key = dd(lambda: dd(bool)) 
-        if self.module != 'analyze': self.create(prevPop) 
-
-
-    def create(self,prevPop=None): 
-        self.commands, self.pop = [self.cmd], self.settings.pop.name 
-        if self.module in ['pipeline','easyrun']: 
-            self.pop1, self.pop2 = self.args.pop 
-            if self.module == 'pipeline' and not self.args.port: command_list = ['prs-single','prs-prior','prs-combined'] 
-            else:                                                command_list = ['prs-single','prs-prior','prs-port','prs-combined'] 
-            for i,x in enumerate(command_list):
-                if x == 'prs-single': dir1 = x+'_'+self.pop1.upper() 
-                else:                 dir1 = x+'_'+self.pop1.upper()+'-'+self.pop2.upper() 
-                if x in ['prs-single','prs-prior']: self.add_dirs(self.io.paths['home']+'/'+dir1, ['clump','beta','predict','quantify'])
-                elif x == 'prs-port':               self.add_dirs(self.io.paths['home']+'/'+dir1, ['predict','quantify'])
-                else:                               self.add_dirs(self.io.paths['home']+'/'+dir1, []) 
-                
-                
-                progress_file = self.io.paths['home']+'/'+dir1+'/bridge.'+dir1.split('_')[-1].lower()+'.'+x+'.result'
-                
-
-                if not os.path.isfile(progress_file): 
-                    w = open(progress_file,'w')  
-                    w.write('POP='+self.pop1+'\nMODULE_NAME='+x+'\n') 
-                    w.close()
-            self.add_dirs(self.io.paths['home']+'/model_'+self.pop2, ['clump','beta','predict','prior']) 
-            progress_file = self.io.paths['home']+'/model_'+self.pop2+'/bridge.'+self.pop2.lower()+'.build-model.result'
-            if not os.path.isfile(progress_file): 
-                w = open(progress_file,'w')  
-                w.write('POP='+self.pop2+'\nMODULE_NAME=build-model\n') 
-                w.close()
-            return 
-        else:
-            if self.cmd != 'run':                      self.commands = [self.cmd] 
-            elif self.module == 'prs-port':            self.commands = ['predict','quantify'] 
-            elif self.module == 'build-model':         self.commands = ['clump','beta','predict','prior']                                                                                                                                    
-            else:                                      self.commands = ['clump','beta','predict','quantify']                                                                                                     
-
-            if self.module == 'build-model': 
-                self.io.paths['run'] = self.io.paths['home']+'/model_'+self.pop 
-                self.progress_file = self.io.paths['run']+'/bridge.'+self.pop.lower()+'.'+self.module+'.result'
-            
-
-            elif self.module.split('-')[0] == 'prs': 
-                if self.module == 'prs-single':      
-                    self.io.paths['run'] = self.io.paths['home']+'/'+self.module+'_'+self.pop 
-                    self.progress_file = self.io.paths['run']+'/bridge.'+self.pop.lower()+'.'+self.module+'.result'
-                else:
-                    model_pop = self.args.model_file.split('.')[1]  
-                    self.io.paths['run'] = self.io.paths['home']+'/'+self.module+'_'+self.pop+'-'+model_pop.upper() 
-                    self.progress_file = self.io.paths['run']+'/bridge.'+self.pop.lower()+'-'+model_pop+'.'+self.module+'.result'
-            else: self.io.progress.fail('Unsupported Module') 
-            
-            self.add_dirs(self.io.paths['run'], self.commands) 
-            if not os.path.isfile(self.progress_file): 
-                w = open(self.progress_file,'w')  
-                w.write('POP='+self.pop+'\n') 
-                w.write('MODULE_NAME='+self.module+'\n')
-                w.close()
-            return  
+        self.input_key = dd(lambda: dd(bool))   
+        self.pop = self.io.pop.name 
+        self.create() 
 
 
 
-
-
+    def create(self): 
+        if    self.module in ['prs-single','build-model']: pn = self.pop  
+        elif  self.module in ['prs-port','prs-prior']:     pn = self.pop + '-' + self.args.model_file.split('.')[1].upper() 
+        else: return 
+        self.io.paths['run'] = self.io.paths['home']+'/'+self.module+'_'+pn
+        self.progress_file   = self.io.paths['run']+'/bridge.'+pn.lower()+'.'+self.module+'.result'
+        if   self.cmd != 'run':                    self.commands = [self.cmd] 
+        elif self.module == 'prs-single':          self.commands = ['clump','beta','predict','quantify']                                                                                                     
+        elif self.module == 'build-model':         self.commands = ['clump','beta','predict','prior']                                                                                                                                    
+        elif self.module == 'prs-port':            self.commands = ['predict','quantify'] 
+        elif self.module == 'prs-prior':           self.commands = ['beta','predict','quantify'] 
+        else:                                      self.commands = [] 
+        self.add_dirs(self.io.paths['run'], self.commands) 
+        if not os.path.isfile(self.progress_file): 
+            w = open(self.progress_file,'w')  
+            w.write('POP='+self.pop+'\n') 
+            w.write('MODULE_NAME='+self.module+'\n')
+            w.close()
+        return  
+        
     def add_dirs(self,parent,children,grandchildren=[]):
         if not os.path.exists(parent): os.makedirs(parent)
         for c in children:
@@ -86,9 +47,6 @@ class BridgePipelines:
                 if not os.path.exists(parent+'/'+c+'/'+g): os.makedirs(parent+'/'+c+'/'+g)
                 self.io.paths[g] = parent+'/'+c+'/'+g 
     
-
-    
-
     def verify_pipeline(self):
 
         if self.module in ['easyrun','pipeline','analyze']: return self  
@@ -102,14 +60,7 @@ class BridgePipelines:
             elif c == 'prior': self.command_strings.append('Saving SNP Priors'+JN) 
             else:            self.command_strings.append(c) 
         
-        
-        # yooo
-        #print('hi','hi','hi') 
-        #self.input_key['info']['pop'] = self.pop 
         for X1,X2 in self.progress_pair(): 
-            
-            #print(X1, X2) 
-            
             xsp = X1.split('_') 
             if len(xsp) == 3 and xsp[0] == self.pop: 
                 x_pop, x_job, x_val = xsp 
@@ -135,11 +86,8 @@ class BridgePipelines:
 
 
     def log_result(self, d): 
-        fD, fI, f_pass, f_obs = self.io.settings, self.io.settings.pop, dd(bool), [] 
+        fD, fI, f_pass, f_obs = self.io, self.io.pop, dd(bool), [] 
         np, fp, D = self.pop+'_'+d, self.io.paths['run']+'/'+d, d.upper() 
-        
-        #for line in open(fI.config,'rt'): 
-        
         f_pairs = [line.strip().split('=') for line in open(fI.config,'rt')]
         f_pairs.extend([[X1,X2] for X1,X2 in self.progress_pair() if X1.split('_')[0] != self.pop or X1.split('_')[1] != D]) 
         if fI.genopheno.VALID: 
@@ -150,7 +98,7 @@ class BridgePipelines:
         #if fI.bdata.VALID:       f_pairs.append(['ID_FILE',fI.bdata.id_file]) 
         if 'model' in fD.files and fD.files['model'] is not None: f_pairs.append(["MODEL_FILE",fD.files['model']]) 
         self.validate_path(np,fp, D) 
-        self.io.settings.prefixes[d] = fp+'/'+np  
+        self.io.prefixes[d] = fp+'/'+np  
         f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])             
         w = open(self.progress_file,'w') 
         for a,b in f_pairs: 
@@ -176,9 +124,6 @@ class BridgePipelines:
         
         f_errors, f_handle = [], open(fp+'/'+err_files[0]) 
         
-        #if D not in ['CLUMP','BETA','PREDICT']: 
-        #    err_files = ['/home/tade/Current/bridgePRS/repo/tests/pedro/quantify.stderr']
-        #    f_handle = open(err_files[0]) 
         f_lines = [lp.strip() for lp in f_handle] 
         f_handle.close()
         

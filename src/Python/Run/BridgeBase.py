@@ -8,21 +8,23 @@ from collections import defaultdict as dd
 
 class BridgeBase:
     def __init__(self, bridge):
-        self.module, self.args, self.io, self.settings, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.settings, bridge.io.progress 
-        self.pop, self.cores = self.settings.pop, str(self.args.cores) 
+        self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
+        self.pop, self.cores = self.io.pop, str(self.args.cores) 
         self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.genopheno
-        self.P, self.F = self.settings.prefixes, self.settings.files 
+        self.P, self.F = self.io.prefixes, self.io.files 
 
         self.model, self.base_paths = {}, dd(bool) 
         if self.args.platform == 'mac':     self.make_job = self.make_mac_job
         else:                               self.make_job = self.make_linux_job         
-        
+       
+
         ### GOTTA ADD EVERYTHINGTO USER SETTINGS --- GET RID OF MOST OF THE X-FIELDS ###
         ### DO AN EXAMPLE WITH --thinned snp list
         ### DO AN EXAMPLE WITH COVARIATES 
         
         ### MAKE DIFFS JUST MINOR OPTIONS IN THE JOBS DIFFS HERE CAN JUST BE MINOR OPTIONS ####
         ### MAYBE ADD USER SETTING ### combine mark 
+
         if self.module.split('-')[0] != 'prs': 
             self.clump_args = ['--clump-p1','1e-1','--clump-p2','1e-1','--clump-kb','1000','--clump-r2','0.01','--maf','0.001'] 
             self.lambda_val = '0.1,0.2,0.5,1,2,5,10,20'
@@ -31,7 +33,7 @@ class BridgeBase:
             self.lambda_val = '0.2,0.5,1,2,5,10,20,50' 
             
             if self.module.split('-')[-1] != 'single': 
-                fh = open(self.settings.files['model']) 
+                fh = open(self.io.files['model']) 
                 for line in fh: 
                     line = line.strip().split('=')
                     if len(line[0].split('_')) != 3: continue 
@@ -105,7 +107,7 @@ class BridgeBase:
         self.name, pp = name, self.io.programs['est_beta_bychr'] 
         X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump']] + self.ss.X_fields 
         X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.pop.name+'_beta','--by.chr.sumstats',self.ss.suffix,'--n.cores',str(self.args.cores)]) 
-        X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',self.ss.thin_snps])
+        X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',self.ss.max_clump_size,'--thinned.snplist',self.ss.thin_snps])
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
         X.extend(['--lambda',self.lambda_val]) 
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
@@ -136,7 +138,11 @@ class BridgeBase:
     # PRS PRIOR # 
     def prior_beta(self, name = 'beta'): 
         self.name, pp = name, self.io.programs['est_beta_InformPrior_bychr'] 
-        X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump'],'--n.cores',str(self.args.cores)] + self.ss.X_fields 
+        
+
+
+        #X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump'],'--n.cores',str(self.args.cores)] + self.ss.X_fields 
+        X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--n.cores',str(self.args.cores)] + self.ss.X_fields 
         X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.pop.name+'_beta','--by.chr.sumstats',self.ss.suffix,'--ranking','f.stat']) 
         X.extend(['--param.file',self.model['predict']+'_best_model_params.dat','--prior',self.model['prior'],'--fst',str(self.args.fst)])
         
@@ -158,7 +164,7 @@ class BridgeBase:
         opt_params = self.P['predict']+'_best_model_params.dat'
         X.extend(['--precision','TRUE','--param.file',opt_params,'--by.chr.sumstats',self.ss.suffix,'--S','1','--lambda','1']) 
         #X.extend(['--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
-        X.extend(['--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',self.ss.thin_snps]) 
+        X.extend(['--n.max.locus',str(self.ss.max_clump_size),'--thinned.snplist',self.ss.thin_snps]) 
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
         self.make_job(rJOB) 

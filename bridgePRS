@@ -6,12 +6,13 @@ import sys, os, shutil, argparse, platform, multiprocessing
 import argparse as ap
 
 from   src.Python.Util.BridgeHelp import BridgeHelp
+from   src.Python.Util.BridgeParse import BridgeParse
 from collections import Counter 
 
 
 
 bridgeHelp = BridgeHelp()
-HELP_FORMAT="%-30s %40s"
+HELP_FORMAT="%-30s %29s"
 
 # optimize easyrun web
 # restart 
@@ -22,10 +23,14 @@ class MPS(argparse.ArgumentParser):
         self.paths = ['',"/".join(os.path.abspath(sys.argv[0]).split('/')[0:-1])+'/']
         return self 
 
-    def error(self, detail=None, notes = []): #values=None,choice=None): #,settings = None):
-        if bridgeHelp.evaluate_error(detail, sys.argv) and detail is not None: sys.stderr.write(detail+'\n')  
+    def error(self, detail=None, notes = [], info=[]): #values=None,choice=None): #,settings = None):
+        if bridgeHelp.evaluate_error(detail, sys.argv) and detail is not None: 
+            sys.stderr.write('\n'+detail+'\n')  
+            if len(info) > 0: 
+                for x in info: sys.stderr.write(x+'\n\n') 
         
-        #sys.exit() 
+
+
         if len(notes) > 0:  
             if notes[0] == 'config' and notes[-1].split('-')[0] == 'INVALID': 
                 sys.stderr.write('\nError - Supplied \"'+notes[1]+'\" Does Not Exist: '+notes[2]+'\n') 
@@ -36,12 +41,10 @@ class MPS(argparse.ArgumentParser):
         sys.exit(2) 
 
     def config_key(self, F): 
-        K, fp = {}, self.valid_file(F) 
+        K, fp = {'config_name': F}, self.valid_file(F) 
         self.paths.append("/".join(fp.split('/')[0:-1])+'/')
         with open(fp, "r") as f: f_data = [ln.split('#')[0].strip().split('=') for ln in f if len(ln.split('#')[0].split('=')) == 2] 
-        for c_name, cnt in [both for both in Counter([fd[0] for fd in f_data]).items() if both[1] > 1]: self.error('\nError - Repeated Option in Configuration File: '+c_name) 
-        #sys.exit() 
-
+        for c_name, cnt in [both for both in Counter([fd[0] for fd in f_data]).items() if both[1] > 1]: self.error('\nError - Repeated Option in pop-config file '+F.split('/')[-1]+': '+c_name) 
         for k,kval in f_data:
             kx, ktail, kp, kn = k.lower(), k.lower().split('_')[-1], "/".join(kval.split('/')[0:-1]), kval.split('/')[-1]
             if ktail in ['file','path','prefix']: 
@@ -51,6 +54,7 @@ class MPS(argparse.ArgumentParser):
                 if    k_cand.split('-')[0] == 'INVALID': self.error(notes=['config',kx,kval,k_cand])  
                 else: K[kx] = k_cand
             else:     K[kx] = kval
+
         
         if 'pop' in K and 'ldpop' not in K: K['ldpop'] = K['pop']  
         k_keys = [k for k in K.keys()] 
@@ -111,15 +115,15 @@ class MPS(argparse.ArgumentParser):
         return x.upper()
 
     def help_str(self,module):
-        if module == 'prs-single':    return (HELP_FORMAT % ('Single Pop PRS',    'Ridge Regression')) 
-        if module == 'build-model':   return (HELP_FORMAT % ('Build base model','Necessary for (port/bridge)')) 
-        if module == 'prs-port':      return (HELP_FORMAT % ('Port snp-weights btwn pops','None'))  
-        if module == 'prs-prior':     return (HELP_FORMAT % ('Bridge snp-priors btwn pops','None')) 
-        if module == 'analyze':       return (HELP_FORMAT % ('Analyze One or More Results','Plots Require Matplotlib')) 
+        if module == 'pipeline':       return (HELP_FORMAT  % ('Main Program: BridgePRS','Stage1,2,Combine,Analyze')) 
+        if module == 'analyze':       return (HELP_FORMAT % ('Analyze/Combine Results:','*Plotting Requires Matplotlib')) 
+        if module == 'prs-single':    return (HELP_FORMAT % ('Subprogram: Stage1',    'Ridge Regression')) 
+        if module == 'build-model':   return (HELP_FORMAT % ('Subprogram: Base Model','Necessary for (port/bridge)')) 
+        if module == 'prs-port':      return (HELP_FORMAT % ('Subprogram: Optional Stage', 'Port snp-weights btwn pops'))  
+        if module == 'prs-prior':     return (HELP_FORMAT % ('Subprogram: Stage 2', 'Bridge snp-priors btwn pops',)) 
         if module == 'easyrun':       return (HELP_FORMAT  % ('Run bridgePRS Pipeline:','Full Program')) 
-        if module == 'pipeline':       return (HELP_FORMAT  % ('Run bridgePRS Pipeline:','Full Program')) 
         if module == 'check':         return (HELP_FORMAT  % ('Bridge Axillary Commands','None')) 
-        if module == 'tools':         return (HELP_FORMAT  % ('Bridge Axillary Tools','None'))
+        if module == 'tools':         return (HELP_FORMAT  % ('Axillary Programs: Toolbox','reformat files,check data,etc'))
 
     def sub_help(self, cmd, module=None):
         if cmd == 'run': HS =   ('Run The Following Module Commands:','') 
@@ -154,13 +158,15 @@ if __name__ == '__main__':
 
 
 
+    
     Main, Global, Run = MPS(add_help=False), MPS(add_help=False), MPS(add_help=False)  
     #Main.add_argument('-o','--outpath',             dest='outpath',      action='store',       type=str,   required= True, help='Output path for bridgePRS') 
-    Main.add_argument('-o','--outpath',             dest='outpath',      action='store',       type=str,   default=None, help='Output path for bridgePRS') 
+    #Main.add_argument('-o','--outpath',             dest='outpath',      action='store',       type=str,   default=None, help='Output path for bridgePRS') 
     Main.add_argument('--config_file','--config_files',      dest = 'config',      type=mps.config_key,     nargs = '+', metavar='', default=[], help = 'Population config files(s)') 
     
     
     system, toggle, labels = Global.add_argument_group('System'), Global.add_argument_group('Toggles'), Global.add_argument_group('Labels') 
+    system.add_argument('-o','--outpath', dest='outpath',      action='store',       type=str,   default=None, help='Output path for bridgePRS') 
     system.add_argument('--platform',     dest='platform',     action='store',       metavar = '', type=mps.find_platform,  default=mps.find_platform("NA"), help='Force platform (Linux or MacOS)') 
     system.add_argument('--cores',        dest='cores',        action='store',       type=int,                   default=0,metavar='',help='By default bridgePRS parralelized across (n-1) cores.') 
     system.add_argument('--total_cores',  dest='total_cores',  action='store',       type=int,                   metavar = '', default=multiprocessing.cpu_count(), help=argparse.SUPPRESS) 
@@ -176,77 +182,69 @@ if __name__ == '__main__':
     toggle.add_argument('--clean',      dest='clean',     action='store_true',  default=False,              help='Toggle Clean Pipeline On') 
     #toggle.add_argument('--repeat',       dest='repeat',      action='store_true',  default=False,              help='Toggle Repeat Pipeline Steps On') 
     toggle.add_argument('--noPlots',      dest='noPlots',     action='store_true',  default=False,              help='Skip Post-Pipeline Plotting Analysis') 
-    toggle.add_argument('--silent',       dest='silent',      action='store_true',  default=False,              help=ap.SUPPRESS) 
+    #toggle.add_argument('--silent',       dest='silent',      action='store_true',  default=False,              help=ap.SUPPRESS) 
     
     
     LABS = [['p','P','P-val'],['snpid','ID','SnpID'],['se','SE','Standard Error'],['n','OBS_CT','Sample Size'],['beta','BETA','Beta'],['ref','REF','Ref Allele'],['alt','A1','Alt Allele'],['maf','A1_FREQ','MAF']] 
-    for arg,d,h in LABS: labels.add_argument('--ssf-'+arg, dest ='ssf-'+arg, type = str, metavar = '', default=d, help = 'Sumstats Field: '+h+' (Default: '+d+')') 
+    for arg,d,h in LABS: 
+        labels.add_argument('--ssf-'+arg, dest ='ssf-'+arg, type = str, metavar = '', nargs='+', default=[], help = 'Sumstats Field: '+h+' (Default: '+d+')') 
     
     
     
     
     pop, run, gen, labels = Run.add_argument_group('Pop Data:'), Run.add_argument_group('Run'), Run.add_argument_group('Generated'), Run.add_argument_group('Column Labels:') 
     
-    pop.add_argument('--pop','--pops',     dest = 'pop',             type=mps.force_caps,   nargs = '+',  metavar ='',    default=[],help='Pop Name(s)') 
-    pop.add_argument('--ldpop',            dest = 'ldpop',           type=str,              nargs = '+',  metavar ='',    default=[], help=argparse.SUPPRESS) 
-    #pop.add_argument('--ld_path',          dest = 'ld_path',         type=mps.valid_path,   nargs = '+',  metavar ='',    default=[], help=argparse.SUPPRESS) 
-    pop.add_argument('--ld_path',          dest = 'ld_path',         type=mps.valid_path,   nargs = '+',  metavar ='',    default=[], help='Path to LD-Reference Panel') 
-    #pop.add_argument('--sumstats_file',  dest = 'sumstats_file',     type=mps.valid_file,   nargs = '+',  metavar ='',        default=[], help = 'path to sumstats file') 
+    pop.add_argument('--pop','--pops',     dest = 'pop',               type=mps.force_caps,   nargs = '+',  metavar ='',    default=[],help='Pop Name(s)') 
+    pop.add_argument('--ldpop',            dest = 'ldpop',             type=str,              nargs = '+',  metavar ='',    default=[], help=argparse.SUPPRESS) 
+    pop.add_argument('--ld_path',          dest = 'ld_path',           type=mps.valid_path,   nargs = '+',  metavar ='',    default=[], help='Path to LD-Reference Panel') 
     pop.add_argument('--sumstats_prefix','--sumstats_file',  dest = 'sumstats_prefix', type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to sumstats prefix') 
-    pop.add_argument('--sumstats_suffix',  dest = 'sumstats_suffix', type=str,              nargs = '+',  metavar ='',    default=[], help = 'sumstats suffix') 
-    pop.add_argument('--genotype_prefix',  dest = 'genotype_prefix', type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to genotype prefix') 
-    pop.add_argument('--phenotype_file',   dest = 'phenotype_file',  type=mps.valid_file,   nargs = '+',  metavar ='',    default=[], help = 'phenotype file') 
+    pop.add_argument('--sumstats_suffix',  dest = 'sumstats_suffix',   type=str,              nargs = '+',  metavar ='',    default=[], help = 'sumstats suffix') 
+    pop.add_argument('--genotype_prefix',  dest = 'genotype_prefix',   type=mps.valid_pref,   nargs = '+',  metavar ='',    default=[], help = 'path to genotype prefix') 
+    pop.add_argument('--phenotype_file',   dest = 'phenotype_file',    type=mps.valid_file,   nargs = '+',  metavar ='',    default=[], help = 'phenotype file') 
+    pop.add_argument('--validation_file',  dest = 'validation_file',   type=mps.valid_file,                 metavar='',     default=[],    help = 'phenotype validation file') 
+    pop.add_argument('--snp_file',         dest = 'snp_file',          type=mps.valid_file,   nargs = '+',  metavar ='',    default=[], help = 'snp qc file') 
+    pop.add_argument('--thinned_snp_file', dest = 'thinned_snp_file',  type=mps.valid_file,   nargs = '+',  metavar ='',    default=[], help = 'path to thinned snp qc file') 
+    pop.add_argument('--max_clump_size',   dest='max_clump_size',      type=int,              nargs='+',    metavar = '',   default = [], help='Max Size for Clumping') 
+    run.add_argument('--covariates',       dest='covariates',          type=str,              nargs='+',    metavar = '',   default = [],  help='Phenotype File Field(s): covariates') 
+    run.add_argument('--phenotype',        dest='phenotype',           type=str,              nargs='+',    metavar = '',   default = [],  help='Phenotype File Field: phenotype') 
     
-    gen.add_argument('--clump_prefix',      dest = 'clump_prefix', type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by clump step') 
-    gen.add_argument('--beta_prefix',       dest = 'beta_prefix', type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by beta step') 
-    gen.add_argument('--predict_prefix',    dest = 'predict_prefix', type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by predict step') 
+    gen.add_argument('--clump_prefix',      dest = 'clump_prefix',     type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by clump step') 
+    gen.add_argument('--beta_prefix',       dest = 'beta_prefix',      type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by beta step') 
+    gen.add_argument('--predict_prefix',    dest = 'predict_prefix',   type=mps.valid_pref, action = 'store', metavar='', default=None, help = 'prefix for files generated by predict step') 
 
-    run.add_argument('--phenotype',         dest='phenotype',                action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: name') 
-    run.add_argument('--covariates',        dest='covariates',   action='store',type=str,metavar='',   default=None,          help='Phenotype File Field: covariates') 
-    run.add_argument('--validation_file',   dest = 'validation_file',  type=mps.valid_file,       metavar='', default=None,    help = 'phenotype validation file') 
-    run.add_argument('--snp_file',          dest = 'snp_file',         type=mps.valid_file,      metavar='', default=None, help = 'path to snp qc file') 
-    run.add_argument('--max_clump_size',    dest='max_clump_size',   action='store',type=int , default =  '0', metavar='',  help='Max Size for Clumping') 
-    run.add_argument('--thinned_snp_file',  dest = 'thinned_snp_file', type=mps.valid_file,    metavar='', default=None, help = 'path to thinned snp qc file') 
-    run.add_argument('--model_file',        dest = 'model_file', action = 'store', type=str, default=None, metavar='',help = 'large population model file') 
-    run.add_argument('--fst',               dest='fst',          action='store',type=str,metavar='',default=0.15,help='fst value') 
+    run.add_argument('--model_file',        dest = 'model_file',    action = 'store', type=mps.valid_file, default=None, metavar='',help = 'large population model file') 
+    run.add_argument('--fst',               dest='fst',             action='store',   type=str,metavar='',default=[],help='fst value') 
     
+    # Option: PIPELINE # 
+    pipeline          = subs.add_parser('pipeline', help=mps.help_str('pipeline')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    pipeline.required = True
+    go               =  pipeline.add_parser('go',parents=[Global,Main,Run], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
+    go.add_argument('--port',       dest='port',      action='store_true',  default=False,              help=ap.SUPPRESS) 
+    check             =  pipeline.add_parser('check',parents=[Global,Main,Run], help=mps.sub_help('check'), formatter_class=mps.formatter_class)
     
-    # OPTION NEG: TOOLS # 
 
-    tools             =  subs.add_parser('tools', help=mps.help_str('tools')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    tools.required    =  True
-    reformat_sumstats           =  tools.add_parser('reformat-sumstats',parents=[Global,Main,Run], help=mps.sub_help('reformat-sumstats'), formatter_class=mps.formatter_class)
-    check_requirements          =  tools.add_parser('check-requirements',     parents=[Global,Main], help=mps.sub_help('requirements'), formatter_class=mps.formatter_class)
-    check_pop          =        tools.add_parser('check-pop',     parents=[Global,Main,Run], help=mps.sub_help('pop'), formatter_class=mps.formatter_class)
-    check_pops          =       tools.add_parser('check-pops',     parents=[Global,Main,Run], help=mps.sub_help('pops'), formatter_class=mps.formatter_class)
-    check_data    =             tools.add_parser('check-data',     parents=[Global,Main,Run], help=mps.sub_help('data'), formatter_class=mps.formatter_class)
+
+
+    
+    
     #reformat_sumstats          =  tools.add_parser('reformat_sumstats',parents=[Global,Main,Run], help=mps.sub_help('reformat_sumstats'), formatter_class=mps.formatter_class)
     #reformat_sumstats.add_argument('--snpdb',dest = 'snpdb', action = 'store', type=str, default=None, metavar='',help = 'snp_lookup') 
         
     
     # OPTION 0: CHECK # 
-    check             =  subs.add_parser('check', help=mps.help_str('check')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    check.required    = True
-    requirements      = check.add_parser('requirements',     parents=[Global,Main], help=mps.sub_help('requirements'), formatter_class=mps.formatter_class)
-    pop               = check.add_parser('pop',               parents=[Global,Main,Run], help=mps.sub_help('pop'), formatter_class = mps.formatter_class)
-    pops              = check.add_parser('pops',              parents=[Global,Main,Run], help=mps.sub_help('pops'), formatter_class = mps.formatter_class)
-    data              = check.add_parser('data',              parents=[Global,Main,Run], help=mps.sub_help('data'), formatter_class = mps.formatter_class)
+    #check             =  subs.add_parser('check', help=mps.help_str('check')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    #check.required    = True
+    #requirements      = check.add_parser('requirements',     parents=[Global,Main], help=mps.sub_help('requirements'), formatter_class=mps.formatter_class)
+    #pop               = check.add_parser('pop',               parents=[Global,Main,Run], help=mps.sub_help('pop'), formatter_class = mps.formatter_class)
+    #pops              = check.add_parser('pops',              parents=[Global,Main,Run], help=mps.sub_help('pops'), formatter_class = mps.formatter_class)
+    #data              = check.add_parser('data',              parents=[Global,Main,Run], help=mps.sub_help('data'), formatter_class = mps.formatter_class)
     
 
     # Option: EASYRUN # 
-    easyrun          = subs.add_parser('easyrun', help=mps.help_str('easyrun')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    easyrun.required = True
-    go               = easyrun.add_parser('go',parents=[Global,Main,Run], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
-     
-    
-    # Option: PIPELINE # 
-    pipeline          = subs.add_parser('pipeline', help=mps.help_str('pipeline')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
-    pipeline.required = True
-    execute               =  pipeline.add_parser('go',parents=[Global,Main,Run], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
-    execute.add_argument('--port',       dest='port',      action='store_true',  default=False,              help=ap.SUPPRESS) 
-    check             =  pipeline.add_parser('check',parents=[Global,Main,Run], help=mps.sub_help('check'), formatter_class=mps.formatter_class)
-    
-    #pop, run, gen, labels = Run.add_argument_group('Pop Data:'), Run.add_argument_group('Run'), Run.add_argument_group('Generated'), Run.add_argument_group('Column Labels:') 
+    #easyrun          = subs.add_parser('easyrun', help=mps.help_str('easyrun')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    #easyrun.required = True
+    #go               = easyrun.add_parser('go',parents=[Global,Main,Run], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
+    # Axillary   
     
 
     runOpts =  [Global, Main, Run]
@@ -257,12 +255,23 @@ if __name__ == '__main__':
         elif sn == 'prs-port':               cmds = ['run','predict','quantify'] 
         else:                                cmds = ['run','clump','beta','predict','prior'] 
         for c in cmds:      sub_parser.add_parser(c, parents = [Global, Main, Run],          help = mps.sub_help(c),formatter_class=mps.formatter_class) 
+    
 
     Analyze = MPS(add_help=False) 
     Analyze.add_argument('--result_files',  nargs='+',dest='result_files',type=str,required=True,help='One or More PRS Result Files')  
     analyze            = subs.add_parser('analyze', help=mps.help_str('analyze')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
     for p in ['result','combine']: analyze.add_parser(p, parents = [Global, Main, Analyze], help = mps.sub_help(p),formatter_class=mps.formatter_class) 
 
+    # OPTION NEG: TOOLS # 
+    tools             =  subs.add_parser('tools', help=mps.help_str('tools')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
+    tools.required    =  True
+    reformat_sumstats           =  tools.add_parser('reformat-sumstats',parents=[Global,Main,Run], help=mps.sub_help('reformat-sumstats'), formatter_class=mps.formatter_class)
+    check_requirements          =  tools.add_parser('check-requirements',     parents=[Global,Main], help=mps.sub_help('requirements'), formatter_class=mps.formatter_class)
+    check_pop          =        tools.add_parser('check-pop',     parents=[Global,Main,Run], help=mps.sub_help('pop'), formatter_class=mps.formatter_class)
+    check_pops          =       tools.add_parser('check-pops',     parents=[Global,Main,Run], help=mps.sub_help('pops'), formatter_class=mps.formatter_class)
+    check_data    =             tools.add_parser('check-data',     parents=[Global,Main,Run], help=mps.sub_help('data'), formatter_class=mps.formatter_class)
+    
+
 
 
 
@@ -271,12 +280,23 @@ if __name__ == '__main__':
 
 ########################################################################################################################################################################
 ########################################################################################################################################################################
+
+    bridgeArgs, bridgeData = BridgeParse(mps).parse()  
+
+    from src.Python.BridgePRS import BridgePRS
+    bridgePRS = BridgePRS(bridgeArgs,bridgeData,sys.argv)
+    
+    sys.exit() 
 
     args = mps.parse_args()
     if args.platform not in ['mac','linux']:  mps.error('Unrecognized platform '+args.platform+' (--platform linux/mac are supported)') 
     if args.cores <= 1: args.cores = 1 
     if args.cores > args.total_cores: args.cores = args.total_cores  
     
+
+
+    sys.exit() 
+    # Universal    
     my_vars, my_pops = {}, []  
     for v in ['pop','ldpop','ld_path','sumstats_suffix','sumstats_prefix','genotype_prefix','phenotype_file','config']: 
         if v not in vars(args) or len(vars(args)[v]) == 0: continue 
@@ -333,7 +353,7 @@ if __name__ == '__main__':
 
     
     if not os.path.isdir(args.outpath): os.makedirs(args.outpath)                                                                                                                                                                                                                                   
-    elif args.clean: shutil.            rmtree(args.outpath) 
+    elif args.clean: shutil.rmtree(args.outpath) 
     elif args.restart:
         pkT, pkB, pkA = my_pops[0], my_pops[-1], '-'.join(my_pops) 
         for f in os.listdir(args.outpath):

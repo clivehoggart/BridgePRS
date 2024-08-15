@@ -4,8 +4,8 @@ import multiprocessing, time
 LOCALTIME = time.asctime( time.localtime(time.time()) )
 
 
-# JOB optimize  fail 
-# Generated yooooo 
+# JOB optimize  fail Flags 
+# Generated yooooo printout 
 
 class BridgeProgress:
     def __init__(self,args, command_line): 
@@ -15,8 +15,7 @@ class BridgeProgress:
         self.sub_blank = '     '
         self.bk1, self.bk2 = ' ', ' ' 
         if   args.verbose:  self.active, self.loud = True, True 
-        elif args.silent: self.active, self.loud = False, False 
-        else:             self.active, self.loud = True, False 
+        else:               self.active, self.loud = True, False 
         self.args, self.command_line, self.out, = args, command_line, sys.stderr 
 
 
@@ -26,13 +25,8 @@ class BridgeProgress:
         try: self.homedir = os.path.expanduser('~') 
         except: self.HOMEDIR = False 
         self.last_line, self.run_len, self.dot_loc, self.line_loc = '', 100, 0, 0 
-        
-    
         if len(poplist) == 0:   self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         else:                   self.logfile = runpath + '/logs/bridgePRS.'+'-'.join([p.lower() for p in poplist])+'.'+self.args.module+'.'+self.args.cmd+'.log'  
-
-
-        #self.logfile = runpath + '/logs/bridgePRS.'+self.args.module+'.'+self.args.cmd+'.log' 
         self.loghandle = open(self.logfile,'w') 
         self.FILE  = True 
         self.write('BridgePRS Begins at '+LOCALTIME+' \n') 
@@ -43,8 +37,6 @@ class BridgeProgress:
 
 
     def show_requirements(self, RK, LOC, R_DATA, plink_cmd):
-
-
         self.new_bk = '            ' 
         self.write('Checking Requirements:\n') 
         cA, cX = multiprocessing.cpu_count(), self.args.cores
@@ -86,10 +78,10 @@ class BridgeProgress:
             if NOTE: self.say('%s\n', (n+'='+v+'    '+NOTE)) 
             else:    self.say('%s\n', (n+'='+v)) 
         else: 
-
             if NOTE: self.say('%25s %s\n',(' ',n+'='+v+'     '+NOTE)) 
             else:    self.say('%25s %s\n',(' ',n+'='+v)) 
         if KEEP: self.REC.write(n+'='+v+'\n') 
+        else:    self.SEC.write(n+'='+v+'\n') 
         return
 
 
@@ -97,26 +89,35 @@ class BridgeProgress:
         fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
         self.write('\nReading Population Data:\n') 
         for i, pd in enumerate(pop_data):
+            
+            if pd is None: continue 
+
+
             my_notes = [False,False,False]
             n1, n2 = pd.name, pd.ref_pop  
             ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
-            if self.args.module == 'build-model': i+=1 
-            if i == 0   and len(pop_data) == 2:     sn = 'target' 
-            elif i == 0 and len(pop_data) == 1:     sn = 'primary' 
-            elif i == 1:                            sn = 'base'                                    
-            self.tFile = self.runpath + '/save/'+n1+'.'+sn+'.config'
-            self.REC = open(self.tFile,'w')  
-            self.say('%25s\n',(sn.capitalize()+' Data:')) 
+            #if self.args.module == 'build-model': i+=1 
+            #if i == 0   and len(pop_data) == 2:     sn = 'target' 
+            #elif i == 0 and len(pop_data) == 1:     sn = 'primary' 
+            #elif i == 1:                            sn = 'base'                                    
+            
+            #print(pd.type) 
+            #print(n1) 
+            #print(sn) 
+
+
+            self.tFile = self.runpath + '/save/'+n1+'.'+pd.type+'.config'
+            self.sFile = self.runpath + '/save/'+n1+'.'+pd.type+'.source'
+            self.REC, self.SEC = open(self.tFile,'w'), open(self.sFile, 'w') 
+            self.say('%25s\n',(pd.type.capitalize()+' Data:')) 
             self.say('%25s ',('Names:')) 
             self.record_me('POP',n1, INIT=True) 
             self.record_me('LDPOP',n2) 
-            self.record_me('LD_PATH',bd.ldpath) 
-            self.record_me('FST',str(self.args.fst), KEEP=False) 
+            self.record_me('LD_PATH',bd.ld_path) 
+            #self.record_me('FST',str(self.args.fst), KEEP=False) 
             if ss.TESTS['INFER_SUFFIX']: my_notes[0] = '(WARNING: Not Given - Inferred From Directory)' 
             if ss.TESTS['NEWSNPS']:      my_notes[1] = '(WARNING: Not Given - Created Using All Snps)'
             if pt.TESTS['NOVALID']:      my_notes[2] = '(WARNING: Not Given - Created by Splitting Phenotype File)'
-            
-
             self.say('%25s ',('Sumstats:')) 
             self.record_me('SOURCE_PREFIX',ss.source_prefix,INIT=True,KEEP=False) 
             self.record_me('SOURCE_SUFFIX',ss.source_suffix,KEEP=False,NOTE=my_notes[0]) 
@@ -137,8 +138,9 @@ class BridgeProgress:
                 self.record_me('PHENOTYPE_VARIABLES',",".join(pt.header[2::]),KEEP=False) 
 
             
-            self.say('%25s\n\n','    **'+sn.capitalize()+' Config Made:'+' '+self.tFile) 
-            self.REC.close() 
+            self.say('%25s\n\n','    **'+pd.type.capitalize()+' Config Made:'+' '+self.tFile) 
+            self.REC.close()
+            self.SEC.close() 
             pd.config = self.tFile  
 
 
@@ -188,12 +190,12 @@ class BridgeProgress:
     
     
     
-    def show_settings(self,settings):
+    def show_settings(self):
         kSkip = ['pop','ldpop','files','outpath','platform','cores', 'config','prefix','file','path','module','cmd','dataset','ssf','pf','sumstats_suffix','phenotype_files'] 
         kParams, kTrue, kFalse = {}, [], [] 
         self.write('Setting Program Parameters:\n') 
-        for k in vars(settings.args): 
-            kv = vars(settings.args)[k]  
+        for k in vars(self.args): 
+            kv = vars(self.args)[k]  
             if k.split('_')[-1] in kSkip or k.split('-')[0] in kSkip or k in kSkip or k[-4::] in kSkip: continue 
             if k in ['verbose','silent','restart','noPlots','debug'] and  kv:      kTrue.append(k.upper()) 
             elif k in ['verbose','silent','restart','noPlots','debug'] and not kv: kFalse.append(k.upper()) 
@@ -253,16 +255,18 @@ class BridgeProgress:
         #for n,D in [['file',RD.files.items()],['prefix',RD.prefixes.items()]]: #,['files',RD.lists.items()]]:
         for n,D in [['file',RD.files.items()],['prefix',RD.prefixes.items()],['files',RD.lists.items()]]:
             for k,F in D: 
-                if k == 'snp': continue  
+                if k in ['snp','phenotype','validation']: continue  
                 if n != 'files' and F is not None and F not in self.obs_input: 
                     self.obs_input.append(F) 
                     rData.append([self.JOB_RANK[k], k+'_'+n,F.split(self.prepath)[-1]]) 
                 elif n == 'files' and len(F) > 0 and ','.join(F) not in self.obs_input: 
                     self.obs_input.append(','.join(F))
                     rData.append([self.JOB_RANK[k], k+'_'+n," ".join([fn.split(self.prepath)[-1] for fn in F])]) 
+
         if len(rData) == 0: return rData     
         rData.sort() 
         rN, rD = [rd[1] for rd in rData], self.condense_paths([rd[2] for rd in rData]) 
+        
         return [a+'='+b for a,b in zip(rN, rD)]
        
 
@@ -358,7 +362,7 @@ class BridgeProgress:
         if self.FILE: self.loghandle.write(outformat % outtuple)
 
     
-    def printout(self, outstring): 
+    def quikout(self, outstring): 
         if self.active: 
             self.out.write(outstring+'\n') 
             self.out.flush()  
@@ -367,7 +371,7 @@ class BridgeProgress:
 
 
 
-    def record(self, outformat, out_list): 
+    def record2(self, outformat, out_list): 
         pL = [] 
         if out_list[0][0] != 'FIN': 
             

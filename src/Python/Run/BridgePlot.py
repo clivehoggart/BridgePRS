@@ -13,6 +13,7 @@ try:
 except: pass 
 
 # bar Result 
+# print 
 
 
 def combine_error(eString):
@@ -24,7 +25,6 @@ def combine_error(eString):
 ##########################################################################################################################################
 ##########################################################################################################################################
 
- # Rank print pdf 
 
 def zip_open(fp, HEADER = True):                                                                                                                                                                                                                                                       
     if fp.split('.')[-1] == 'gz': gf = gzip.open(fp, 'rt')                                                                                                                                                                                                                              
@@ -212,9 +212,11 @@ class BridgePlot:
 
 
     def analyze_snp_dists(self, method, method2):
-        base_scores, base_key, self.DATA_KEY['LEN']['target'] = self.load_base_scores(self.data[method].SS['PREFIX'], self.data[method].SS['SUFFIX']) 
+        
+        base_scores, base_key, self.DATA_KEY['LEN']['target'] = self.load_base_scores(self.data[method].SS['PREFIX'], self.data[method].SS['SUFFIX'], idx=0) 
         self.draw_manhattan(base_scores, 'Target GWAS')
-        if self.MODEL: model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX']) 
+        model_scores, model_key = None, 'NA' 
+        if self.MODEL: model_scores, model_key, self.DATA_KEY['LEN']['model'] = self.load_base_scores(self.model_key['SUMSTATS_PREFIX'],self.model_key['SUMSTATS_SUFFIX'], idx=1) 
         else:          model_scores, model_key = None, 'NA' 
         self.draw_manhattan(model_scores, 'Model GWAS') 
 
@@ -342,20 +344,21 @@ class BridgePlot:
 
 
 
-    def load_base_scores(self, f_prefix, suffix): 
+    def load_base_scores(self, f_prefix, suffix, idx=0): 
         
 
 
         path   = "/".join(f_prefix.split('/')[0:-1])
         prefix = f_prefix.split('/')[-1] 
-        c_names = [vars(self.args)[x] for x in ['ssf-snpid','ssf-p','ssf-beta']]
+        
+
+
+        c_names = [vars(self.args)[x][idx] for x in ['ssf-snpid','ssf-p','ssf-beta']]
         full_len, full_scores, full_key    = 0, {}, {} 
         for f in os.listdir(path): 
             
 
             if prefix in f and suffix in f:  
-                
-
                 chr_key, chr_snps = {}, [] 
                 chr_name = int(f.split(prefix)[1].split(suffix)[0]) 
                 H, gf = zip_open(path+'/'+f)

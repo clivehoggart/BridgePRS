@@ -15,12 +15,11 @@ def combine_error(eString):
 ##########################################################################################################################################
 ##########################################################################################################################################
 
-# bridgeSummary analyze_snp_dists  pdf  print() 
-
+# bridgeSummary analyze_snp_dists  pdf  print() settings current
 
 class BridgeMore:
     def __init__(self, bridge):
-        self.module, self.args, self.io, self.settings, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.settings, bridge.io.progress 
+        self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
         
     def run(self, cmd, prs_results, path): 
         
@@ -47,7 +46,7 @@ class BridgeMore:
             results.extend(self.run_combine(results, comboPath)) 
             if self.args.noPlots: sys.stderr.write('\nSkipping Plotting Step!\n') 
             else: 
-                self.io.progress.start_minor('Plotting Results', self.io.settings) 
+                self.io.progress.start_minor('Plotting Results', self.io) 
                 self.mega_plot(results, comboPath, path) 
                 
     def run_combine(self, res, comboPath):
@@ -118,7 +117,7 @@ class BridgeMore:
 
 class BridgeCombine: 
     def __init__(self, bridge, path):  
-        self.pop, self.module, self.args, self.io, self.settings, self.progress = bridge.pop, bridge.io.module, bridge.args, bridge.io, bridge.io.settings, bridge.io.progress 
+        self.pop, self.module, self.args, self.io, self.progress = bridge.pop, bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
         self.path, self.FIN = path, False 
         if not os.path.exists(self.path): os.makedirs(self.path) 
         else:                             self.finish() 
