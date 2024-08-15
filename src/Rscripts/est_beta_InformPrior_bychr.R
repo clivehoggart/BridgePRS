@@ -8,8 +8,6 @@ options(stringsAsFactors=FALSE)
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,
                 help="Function File Path", metavar="character"),
-    make_option(c("-c", "--clump.stem"), type="character",
-                help="Clump stem", metavar="character"),
     make_option(c("--prior"), type="character",
                 help="Prior stem", metavar="character"),
     make_option(c("-s", "--sumstats"), type="character",
