@@ -80,7 +80,6 @@ if( opt$by.chr.sumstats==0 ){
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
 
-    sumstats.n <- sumstats[,opt$sumstats.nID]
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
     sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
@@ -103,9 +102,8 @@ if( opt$by.chr.sumstats==0 ){
         lambda <- params$lambda.opt
         p <- params$p.opt
         S <- params$S.opt
-        N <- median(sumstats.n)
         out <- data.frame(S,lambda,p,N)
-        colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
+        colnames(out) <- c("S.opt","lambda.opt","p.opt")
         write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
     }
 }
@@ -136,7 +134,6 @@ for( chr in 1:22 ){
                 lambda <- params$lambda.opt
                 p <- params$p.opt
                 S <- params$S.opt
-                N <- median(sumstats.n)
                 out <- data.frame(S,lambda,p)
                 colnames(out) <- c("S.opt","lambda.opt","p.opt")
                 write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
