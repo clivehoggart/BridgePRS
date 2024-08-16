@@ -102,7 +102,7 @@ if( opt$by.chr.sumstats==0 ){
         lambda <- params$lambda.opt
         p <- params$p.opt
         S <- params$S.opt
-        out <- data.frame(S,lambda,p,N)
+        out <- data.frame(S,lambda,p)
         colnames(out) <- c("S.opt","lambda.opt","p.opt")
         write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
     }
