@@ -69,10 +69,12 @@ class BridgePlot:
 
         self.args, self.pop, self.fig_names  = args, pop, fig_names 
         self.fig, self.axes, self.ax_index, self.fs1, self.fs2 = matplotlib.pyplot.gcf(), [], 0, 25, 22 
-        
-
         self.names = [bR.name.split('-')[-1] for bR in BR] 
         self.data  = {bR.name.split('-')[-1]: bR for bR in BR}                                                                                                                                                                                                                           
+        self.col_headers = BR[0].SL  
+
+
+
 
 
     # SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP SETUP #
@@ -113,6 +115,9 @@ class BridgePlot:
         plt.suptitle(tString, fontweight='bold', fontsize=22) 
         if self.TYPE == 'MEGA': plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
         else:                   plt.subplots_adjust(left=0.04, bottom=0.05, right=0.95, top=0.93,wspace=0.02,hspace=0.001) 
+        
+
+
         for fn in self.fig_names: 
             if fn.split('.')[-1] == 'pdf': plt.savefig(".".join(fn.split('.')[0:-1])+'.png',dpi=200) 
             plt.savefig(fn,dpi=200) 
@@ -198,12 +203,34 @@ class BridgePlot:
 
     def add_pred_scatter(self, method): 
         self.ax_index += 1 
+    
+
         X = self.data[method].preds['prs'] 
         Y = self.data[method].preds['pheno'] 
         ax = self.axes[self.ax_index] 
         self.ax_index += 1 
         
-        ax.scatter(X,Y, alpha=0.5) 
+
+        try:    ax.scatter(X,Y, alpha=0.5) 
+        except TypeError: 
+            Xm, Ym, Xp, Yp = [], [], [], []     
+            for x,y in zip(X,Y): 
+                
+                if x != "NA" and y != "NA": 
+                    Xp.append(x) 
+                    Yp.append(y) 
+                elif y == 'NA': Xm.append(x) 
+                elif x == 'NA': Ym.append(y) 
+                else:           continue 
+            
+            ax.scatter(Xp, Yp, alpha= 0.5) 
+            xMin, xMax = ax.get_xlim() 
+            yMin, yMax = ax.get_ylim() 
+
+            if len(Xm) > 0: ax.scatter(Xm, [yMin for x in Xm], color = 'orange', alpha=0.6) 
+            if len(Ym) > 0: ax.scatter([xMin for y in Ym], Ym,  color = 'orange', alpha=0.6) 
+
+
         self.get_lims(ax, BORDER=4, xLab = 'PRS\n('+method+')', yLab = 'Phenotype')
         ax.set_xlim(self.xMin - self.xSpan/20.0, self.xMax + self.xSpan/20.0) 
         ax.set_ylim(self.yMin - self.ySpan/10.0, self.yMax + self.ySpan/10.0) 
@@ -288,9 +315,10 @@ class BridgePlot:
     def draw_manhattan(self, scores, Tx): 
         ax = self.axes[self.ax_index] 
         self.ax_index += 1 
-        if scores is None: 
+        if scores is None or len(scores) == 0:  
             ax.axis('off') 
             return
+        
         chromosomes = sorted(scores.keys())
         maxY, minY, xticks, xlabs, p_offset = 0, 100,  [] , [], 0 
         for ci,c in enumerate(chromosomes):
@@ -350,14 +378,15 @@ class BridgePlot:
 
         path   = "/".join(f_prefix.split('/')[0:-1])
         prefix = f_prefix.split('/')[-1] 
+        c_cands = [] 
+        c_cands.append([self.col_headers[x.upper()][0] for x in ['ssf-snpid','ssf-p','ssf-beta']])
+        c_cands.append([self.col_headers[x.upper()][1] for x in ['ssf-snpid','ssf-p','ssf-beta']])
+        if 'ssf-snpid' in vars(self.args) and len(vars(self.args)['ssf-snpid']) > 0: c_cands.append([vars(self.args)[x][idx] for x in ['ssf-snpid','ssf-p','ssf-beta']])
+
         
 
-
-        c_names = [vars(self.args)[x][idx] for x in ['ssf-snpid','ssf-p','ssf-beta']]
         full_len, full_scores, full_key    = 0, {}, {} 
         for f in os.listdir(path): 
-            
-
             if prefix in f and suffix in f:  
                 chr_key, chr_snps = {}, [] 
                 chr_name = int(f.split(prefix)[1].split(suffix)[0]) 
@@ -366,18 +395,27 @@ class BridgePlot:
                 if 'POS' in HK:   pk = HK['POS'] 
                 elif 'pos' in HK: pk = HK['POS'] 
                 else:             pk = None 
-                SPB = [HK[cn] for cn in c_names] 
-                for line in gf: 
-                    line = line.split() 
-                    snp, pv, beta = [float(line[k]) if i > 0 else line[k] for i,k in enumerate(SPB)]
-                    if pk is None: pos = 0 
-                    else:          pos = int(line[pk])  
-                    chr_snps.append([pos, snp, pv, beta]) 
-                    chr_key[snp] = [pv, beta, pos] 
-            
-                full_scores[chr_name] = sorted(chr_snps)  
-                full_key[chr_name] = chr_key 
-                full_len += len(chr_snps) 
+                
+
+                j = 0 
+                while j < len(c_cands): 
+                    c_names = c_cands[j] 
+                    try: 
+                        SPB = [HK[cn] for cn in c_names] 
+                        break 
+                    except: j+= 1 
+                if len(SPB) == 3: 
+                    for line in gf: 
+                        line = line.split() 
+                        snp, pv, beta = [float(line[k]) if i > 0 else line[k] for i,k in enumerate(SPB)]
+                        if pk is None: pos = 0 
+                        else:          pos = int(line[pk])  
+                        chr_snps.append([pos, snp, pv, beta]) 
+                        chr_key[snp] = [pv, beta, pos] 
+                
+                    full_scores[chr_name] = sorted(chr_snps)  
+                    full_key[chr_name] = chr_key 
+                    full_len += len(chr_snps) 
 
         return full_scores,  full_key, full_len 
 

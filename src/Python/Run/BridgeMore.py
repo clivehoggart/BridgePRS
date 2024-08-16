@@ -29,7 +29,6 @@ class BridgeMore:
         
 
 
-
         if len(pop_names) > 1: combine_error('Cannot combine across different populations: '+",".join(pop_names)+'\n') 
         else:                  self.pop = pop_names[0] 
         if cmd == 'result':    self.single_plot(results, path) 
@@ -62,6 +61,9 @@ class BridgeMore:
     
 
     def single_plot(self, BR, path): 
+        
+        
+
         br, method = BR[0], BR[0].name.split('-')[-1] 
         self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.pdf']).setup(BR[0].name.split('-')[-1]) 
         self.bPlot.full_var_bars()
@@ -71,11 +73,14 @@ class BridgeMore:
         self.bPlot.add_summary_table(method)  
         self.bPlot.add_logo(2) 
         self.bPlot.finish() 
+        
+
         return 
 
 
     
     def mega_plot(self, BR, path, sPath): 
+        
         plot_names = [path+'/bridgePRS-combo.pdf', sPath+'/bridgeSummary.'+self.source_lower+'.pdf'] 
         self.bPlot = BridgePlot(self.args, BR, self.pop, plot_names).setup(TYPE='MEGA') 
         self.bPlot.full_var_bars()

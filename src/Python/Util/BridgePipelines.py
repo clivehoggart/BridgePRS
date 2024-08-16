@@ -101,9 +101,23 @@ class BridgePipelines:
         self.io.prefixes[d] = fp+'/'+np  
         f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])             
         w = open(self.progress_file,'w') 
+        
+        SS_VIEW, SSF_VIEW = False, False 
+
         for a,b in f_pairs: 
+            
+                            
             if a not in f_obs: w.write(a+'='+b+'\n') 
             f_obs.append(a) 
+            if a.split('_')[0] == 'SUMSTATS': SS_VIEW=True
+            if a[0:3]          == 'SSF':      SSF_VIEW = True 
+
+        
+        if SS_VIEW and not SSF_VIEW: 
+            for v in vars(self.args): 
+                if v.split('-')[0].upper() == 'SSF': 
+                    w.write(v.upper()+'='+",".join(vars(self.args)[v])+'\n') 
+
         w.close() 
         return 
 

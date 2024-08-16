@@ -227,11 +227,17 @@ class BridgeParse:
 
 
     def system_tests(self,args): 
+            
+        if args.cmd == None: self.mps.error('Module: '+args.module+' needs a command')  
+
         if args.platform not in ['mac','linux']:  self.mps.error('Unrecognized platform '+args.platform+' (--platform linux/mac are supported)')                                                                                     
-        if args.cores <= 1: args.cores = 1                                                                                                                                                                                      
-        elif args.cores > args.total_cores: args.cores = (args.total_cores-1) 
+        
+        if args.cores == 0: args.cores = args.total_cores - 1
+        elif (args.cores < 1) or (args.cores > args.total_cores): args.cores = 1 
+        
+        #elif args.cores > args.total_cores: args.cores = (args.total_cores-1) 
         if args.outpath is None: 
-            if args.module not in 'tools': mps.error('-o [--outpath is required]')                                                                                                                                    
+            if args.module not in 'tools': self.mps.error('-o [--outpath is required]')                                                                                                                                    
             else: args.outpath = 'out' 
         return 
     
@@ -253,6 +259,7 @@ class BridgeParse:
             if len(opts) == 0: opts = POP_DEFAULTS[p] 
             pop1[p], pop2[p] = opts[0], opts[-1] 
             if p in ['ssf-snpid','ssf-p','ssf-beta']: vars(args)[p] = [opts[0], opts[-1]] 
+            elif p == 'fst':                          vars(args)[p] = opts[0]  
             else:                                     delattr(args, p) 
         c_names = [c.pop('config_name').split('/')[-1] for c in args.config] 
         if len(c_names) > 0: 

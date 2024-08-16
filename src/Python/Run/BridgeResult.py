@@ -7,13 +7,16 @@ class BridgeResult:
         self.name, self.pop, self.SYNTHETIC   = name, pop, SYN
 
     def read_file(self, res): 
-        f, X, self.output, self.paths, self.SS, self.PT = open(res), dd(bool), dd(bool), dd(bool), dd(bool), dd(bool) 
+        
+
+        f, X, self.output, self.paths, self.SS, self.PT, self.SL = open(res), dd(bool), dd(bool), dd(bool), dd(bool), dd(bool), dd(bool) 
         for line in f: 
             a,b = line.strip().split('=') 
             a_init, a_tail = a.split('_')[0], a.split('_')[-1] 
             if len(a.split('_')) == 3 and a_tail == 'PREFIX': self.paths[a.split('_')[1]] = b 
             elif a_init in ['GENOTYPE','PHENOTYPE']:          self.PT[a_tail] = b 
             elif a_init in ['SUMSTATS','SNP']:                self.SS[a_tail] = b 
+            elif a.split('-')[0] == 'SSF':                    self.SL[a] = b.split(',') 
             else:                                             X[a] = b  
         f.close() 
         self.pop, self.ldpop, self.name, self.modelpath, self.ldpath = X['POP'], X['LDPOP'], X['MODULE_NAME'], X['MODEL_FILE'], X['LDPATH']
@@ -49,7 +52,8 @@ class BridgeOutput:
     def __init__(self, RULE):
         self.RULE = RULE
     
-    def read(self, F):  
+    def read(self, F): 
+        self.hasNA = False
         f = open(F,'rt') 
         if self.RULE == 'VAR':
             rows = [[x.strip('\"').strip('\%') for x in lp.strip().split(',')] for lp in f.readlines()] 
@@ -58,8 +62,18 @@ class BridgeOutput:
         else:
             self.K, header = dd(list), ['sample_id' if x == '---' else x for x in f.readline().split()]
             hk = [True if i > 0 and h.split('.')[-1] != 'allele' else False for i,h  in enumerate(header)]
-            for line in f: 
-                line = [float(x) if hk[i] else x for i,x in enumerate(line.split())]  
+            for lp in f: 
+                lp = lp.split() 
+                try: line = [float(x) if hk[i] else x for i,x in enumerate(lp)] 
+                except ValueError: 
+                    self.hasNA = True
+                    line = [] 
+                    for i,x in enumerate(lp): 
+                        if hk[i]: 
+                            try: line.append(float(x)) 
+                            except ValueError: line.append(x) 
+                        else: line.append(x)  
+
                 if self.RULE == 'WEIGHT': 
                     self.K[line[0]] = line[-1] 
                 elif self.RULE == 'PRED':

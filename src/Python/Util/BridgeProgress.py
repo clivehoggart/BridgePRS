@@ -10,6 +10,7 @@ LOCALTIME = time.asctime( time.localtime(time.time()) )
 class BridgeProgress:
     def __init__(self,args, command_line): 
         self.obs_input = [] 
+        self.topics = 0  
         self.status = None  
         self.INIT, self.active, self.loud, self.HOMEDIR = True, True, False, True 
         self.sub_blank = '     '
