@@ -45,12 +45,6 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
-    make_option(c("--sumstats.nID"), type="character", default="OBS",
-                help="N. obs column name", metavar="character"),
-    make_option(c("--sumstats.seID"), type="character", default="SE",
-                help="SE column name", metavar="character"),
-    make_option(c("--sumstats.frqID"), type="character", default="FRQ",
-                help="Freq column name", metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--by.chr"), type="numeric", default=1,
@@ -87,10 +81,6 @@ if( opt$by.chr.sumstats==0 ){
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
 
     sumstats.n <- sumstats[,opt$sumstats.nID]
-    sumstats.se <- sumstats[,opt$sumstats.seID]
-    sumstats.frq <- sumstats[,opt$sumstats.frqID]
-    sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
-                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
     sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
     colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
     sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
@@ -141,19 +131,14 @@ for( chr in 1:22 ){
 
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''), data.table=FALSE )
         if( chr==1 ){
-            sumstats.n <- sumstats[,opt$sumstats.nID]
-            sumstats.se <- sumstats[,opt$sumstats.seID]
-            sumstats.frq <- sumstats[,opt$sumstats.frqID]
-            sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
-                              sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
             if( !is.null(opt$param.file) ){
                 params <- read.table( opt$param.file, header=TRUE)
                 lambda <- params$lambda.opt
                 p <- params$p.opt
                 S <- params$S.opt
                 N <- median(sumstats.n)
-                out <- data.frame(S,lambda,p,N)
-                colnames(out) <- c("S.opt","lambda.opt","p.opt","N")
+                out <- data.frame(S,lambda,p)
+                colnames(out) <- c("S.opt","lambda.opt","p.opt")
                 write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
             }
         }

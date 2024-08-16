@@ -138,7 +138,6 @@ for( chr in 1:22 ){
         }
     }
 }
-
 if( opt$valid.data!=0 ){
     VE.valid <- matrix(ncol=n.thresh,nrow=ncol(pred.genome[[1]]))
     rownames(VE.valid) <- colnames(pred.genome[[1]])

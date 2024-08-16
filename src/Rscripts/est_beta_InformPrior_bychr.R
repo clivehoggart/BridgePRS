@@ -8,6 +8,8 @@ options(stringsAsFactors=FALSE)
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,
                 help="Function File Path", metavar="character"),
+    make_option(c("-c", "--clump.stem"), type="character",
+                help="Clump stem", metavar="character"),
     make_option(c("--prior"), type="character",
                 help="Prior stem", metavar="character"),
     make_option(c("-s", "--sumstats"), type="character",
@@ -33,14 +35,12 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
-    make_option(c("--sumstats.nID"), type="character", default="OBS",
-                help="N. obs column name", metavar="character"),
-    make_option(c("--sumstats.seID"), type="character", default="SE",
-                help="SE column name", metavar="character"),
-    make_option(c("--sumstats.frqID"), type="character", default="FRQ",
-                help="Freq column name", metavar="character"),
     make_option(c("--sumstats.P"), type="character", default="P",
                 help="P-value column name", metavar="character"),
+    make_option(c("--N.pop1"), type="numeric",
+                help="GWAS N pop 1", metavar="numeric"),
+    make_option(c("--N.pop2"), type="numeric",
+                help="GWAS N pop 2", metavar="numeric"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--param.file"), type="character", default=NULL,
@@ -68,15 +68,12 @@ write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 params <- read.table( opt$param.file, header=TRUE)
 lambda.prior <- params$lambda.opt
 S.prior <- params$S.opt
-n.prior <- params$N
 
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
-    sumstats.n <- sumstats[,opt$sumstats.nID]
-    sumstats.se <- sumstats[,opt$sumstats.seID]
-    sumstats.frq <- sumstats[,opt$sumstats.frqID]
-    sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
-                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+#    sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
+#                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+    sigma2 <- 0.5
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
@@ -99,7 +96,7 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
+    w.prior <- round( opt$N.pop1 * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / opt$N.pop2, 2 )
 }
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
 
@@ -117,19 +114,16 @@ for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumstats <- fread( paste(opt$sumstats,chr,opt$by.chr.sumstats,sep=''),
                           data.table=FALSE )
-        sumstats.n <- sumstats[,opt$sumstats.nID]
         if( chr==1 ){
-            sumstats.n <- sumstats[,opt$sumstats.nID]
-            sumstats.se <- sumstats[,opt$sumstats.seID]
-            sumstats.frq <- sumstats[,opt$sumstats.frqID]
-            sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
-                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+#            sigma2 <- median( 2*sumstats.n * sumstats.se * sumstats.se *
+#                      sumstats.frq * (1-sumstats.frq), na.rm=TRUE )
+            sigma2 <- 0.5
             snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
             allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
             allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
             beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
             p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
-            w.prior <- round( n.prior * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / median(sumstats.n), 2 )
+            w.prior <- round( opt$N.pop1 * (1-as.numeric(opt$fst)) * c(10,5,2,1,0.5,0.2,0.1) / opt$N.pop2, 2 )
        }
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr)]
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
@@ -166,7 +160,7 @@ for( chr in 1:22 ){
                                                   w.prior=w.prior, sumstats=sumstats,
                                                   X.bed=ptr.bed, bim=bim,
                                                   ld.ids=ld.ids, by.chr=0,
-                                                  sumstats.n=median(sumstats.n),
+                                                  N.pop2=N.pop2,
                                                   lambda.prior0=lambda.prior,
                                                   S.prior0=S.prior, ranking=opt$ranking,
                                                   sigma2=sigma2,

@@ -401,7 +401,7 @@ read.fit.clump <- function( clump.i, sumstats, ld.ids,
 
 read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                      beta.prior, lambda.ext, w.prior,
-                                     precision=FALSE, by.chr, sumstats.n,
+                                     precision=FALSE, by.chr, N.pop2,
                                      ranking, sigma2,
                                      lambda.prior0, S.prior0, strand.check ){
     chr <- beta.prior$chr[1]
@@ -429,11 +429,11 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             }
             if( ranking=="pv.ftest" ){
                 pv.target <- f.test( sumstats$BETA, ref.stats$ld,
-                                    ref.stats$af, sumstats.n, sigma2 )
+                                    ref.stats$af, N.pop2, sigma2 )
             }
             if( ranking=="thinned.pv.ftest" ){
                 pv.target <- f.test.diag( sumstats$BETA, ref.stats$ld,
-                                         ref.stats$af, sumstats.n, sigma2 )
+                                         ref.stats$af, N.pop2, sigma2 )
             }
             if( ranking=="pv.minP" ){
                 pv.target <- min(sumstats$P) * ref.stats$n.eff
