@@ -160,7 +160,7 @@ for( chr in 1:22 ){
                                                   w.prior=w.prior, sumstats=sumstats,
                                                   X.bed=ptr.bed, bim=bim,
                                                   ld.ids=ld.ids, by.chr=0,
-                                                  N.pop2=N.pop2,
+                                                  N.pop2=opt$N.pop2,
                                                   lambda.prior0=lambda.prior,
                                                   S.prior0=S.prior, ranking=opt$ranking,
                                                   sigma2=sigma2,
