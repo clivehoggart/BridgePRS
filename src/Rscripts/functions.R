@@ -499,7 +499,7 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
                                             lambda0=lambda.prior0,
                                             lambda1=lambda.prior,
                                             w.prior=w.prior[i],
-                                            n=sumstats.n, precision=precision,
+                                            n=N.pop2, precision=precision,
                                             ranking=ranking, sigma2=sigma2 )
                 beta.bar[,i] <- tmp[[1]]
                 colnames(beta.bar)[i] <- paste('beta.bar',w.prior[i],sep="_")
