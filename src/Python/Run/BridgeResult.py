@@ -16,7 +16,7 @@ class BridgeResult:
             if len(a.split('_')) == 3 and a_tail == 'PREFIX': self.paths[a.split('_')[1]] = b 
             elif a_init in ['GENOTYPE','PHENOTYPE']:          self.PT[a_tail] = b 
             elif a_init in ['SUMSTATS','SNP']:                self.SS[a_tail] = b 
-            elif a.split('-')[0] == 'SSF':                    self.SL[a] = b.split(',') 
+            elif a.split('_')[0] == 'SSFIELD':                self.SL[a_tail] = b.split(',') 
             else:                                             X[a] = b  
         f.close() 
         self.pop, self.ldpop, self.name, self.modelpath, self.ldpath = X['POP'], X['LDPOP'], X['MODULE_NAME'], X['MODEL_FILE'], X['LDPATH']

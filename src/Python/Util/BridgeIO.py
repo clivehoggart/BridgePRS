@@ -1,24 +1,27 @@
 import sys,os, multiprocessing 
-from .BridgeProgress  import BridgeProgress
-from .BridgeTools     import BridgeTools
-from .BridgePipelines import BridgePipelines
+
+from .BridgePops import BridgePops 
+from .Bridge_IO.BridgeProgress  import BridgeProgress
+from .Bridge_IO.BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
 
+
+
 class BridgeIO:
-        def __init__(self,args, pop_data, command_line):
-            self.args, self.pop_data, self.homepath = args, pop_data, os.path.abspath(args.outpath) 
+        def __init__(self, mps, command_line):
+            self.args, self.pop_data = BridgePops(mps).parse() 
+            self.homepath = os.path.abspath(self.args.outpath) 
             self.files, self.prefixes, self.lists, self.paths = {}, {}, {}, {} 
             self.paths = {'home': self.homepath, 'save': self.homepath+'/save', 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'}  
-            self.progress = BridgeProgress(args, command_line).initialize(self.paths['home'], [n for n in pop_data.names if n != None]) 
+            self.progress = BridgeProgress(self.args, command_line).initialize(self.paths['home'], [n for n in self.pop_data.names if n != None]) 
             self.set_programs_and_defaults() 
-
 
         def set_programs_and_defaults(self):
             self.ROUNDS, self.FOUND, self.LOC, self.programs= 0, dd(bool), dd(lambda: 'NA'), {} 
             try:    
                 import matplotlib, matplotlib.pyplot
                 self.FOUND['matplotlib'] = True 
-            except: self.args.noPlots = True 
+            except: self.args.noplots = True
             for f in os.listdir(self.args.rpath):     self.programs[f.split('.')[0]] = self.args.rpath+'/'+f 
             for f in os.listdir(self.args.plinkpath): self.programs[f.split('.')[0]] = self.args.plinkpath+'/'+f 
             self.find_which('plink') 
@@ -40,9 +43,6 @@ class BridgeIO:
         def update(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
-                
-             
-
             self.pipeline = BridgePipelines(self).verify_pipeline()  
             for v in vars(self.args): 
                 kV = vars(self.args)[v] 
@@ -98,36 +98,3 @@ class BridgeIO:
 
 
 
-
-
-
-
-class BridgeCurrent2: 
-    def __init__(self,io, pop_data):
-        
-        self.pop_data = pop_data 
-        self.args, self.io, self.module, self.cmd, self.pop = io.args, io, io.args.module, io.args.cmd, None
-        
-        self.files, self.prefixes, self.lists, self.paths = {}, {}, {}, {} 
-        
-
-    def update_inputs2(self, pipeline_key):
-        for v in vars(self.args): 
-            kV = vars(self.args)[v] 
-            if v in ['config','snp_file','validation_file','sumstats_file']  or kV in [None, []]: continue 
-            if v.split('_')[-1] not in ['file','prefix','files']: continue 
-            if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
-            elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
-            elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
-            elif v.split('_')[-1] == 'path':  self.paths[v.split('_')[0]] = kV 
-       
-        for k,x in pipeline_key['prefix'].items(): self.prefixes[k] = x 
-        for k,x in pipeline_key['file'].items():   self.files[k] = x 
-        if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
-        return
-        
-    
-    def check_analysis_data(self):  
-        return  
-    
-    

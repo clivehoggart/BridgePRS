@@ -105,7 +105,16 @@ class BridgeBase:
 
     def run_beta(self, name = 'beta'): 
         self.name, pp = name, self.io.programs['est_beta_bychr'] 
+        
+        #print(self.ss.X_fields) 
+        
+        #self.ss.X_fields = ['--sumstats.allele0ID', 'REF', '--sumstats.allele1ID', 'A1', '--sumstats.betaID', 'BETA', '--sumstats.frqID', 'A1_FREQ', '--sumstats.nID', 'OBS_CT', '--sumstats.seID', 'SE', '--sumstats.snpID', 'ID']
+        #self.ss.X_fields = ['--sumstats.allele0ID', 'REF', '--sumstats.allele1ID', 'A1', '--sumstats.betaID', 'BETA', '--sumstats.snpID', 'ID']
+        
+        # REMOVE A1_FREQ, OBS_CT, SE 
+
         X = ['--bfile',self.bd.prefix,'--ld.ids',self.bd.id_file,'--sumstats',self.ss.prefix, '--clump.stem',self.P['clump']] + self.ss.X_fields 
+
         X.extend(['--beta.stem',self.io.paths['beta']+'/'+self.pop.name+'_beta','--by.chr.sumstats',self.ss.suffix,'--n.cores',str(self.args.cores)]) 
         X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',self.ss.max_clump_size,'--thinned.snplist',self.ss.thin_snps])
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
@@ -148,10 +157,19 @@ class BridgeBase:
         
         X.extend(['--sumstats.P',self.ss.fields['P']]) 
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
+        X.extend(['--N.pop1',str(self.ss.model_size), '--N.pop2', str(self.ss.pop_size)]) 
+        
         # HMMMM ??? # 
         #alt_opts = ['S', 'n.max.locus', 'thinned.snplist']
         #X.extend(['--S','0,0.25,0.5,0.75,1','--n.max.locus',str(self.args.max_clump_size),'--thinned.snplist',str(self.args.thinned_snplist)])
         rJOB = ['Rscript','--vanilla',pp,'--fpath',self.io.programs['functions']] + X
+        
+        #for x in rJOB: 
+        #    print(x, type(x)) 
+        #
+        #print(" ".join(rJOB)) 
+
+
         self.make_job(rJOB) 
         return 
 
@@ -176,7 +194,7 @@ class BridgeBase:
         #  predict requires beta [ but not for port - that only needs the model ] 
         # quantify requires -> [predict and beta ] and for port it only needs predict 
 
-
+        # frqid 
 
 
 

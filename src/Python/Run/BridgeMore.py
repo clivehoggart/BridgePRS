@@ -43,7 +43,7 @@ class BridgeMore:
 
             comboPath = path + '/prs-combined_'+self.source_upper  
             results.extend(self.run_combine(results, comboPath)) 
-            if self.args.noPlots: sys.stderr.write('\nSkipping Plotting Step!\n') 
+            if self.args.noplots: sys.stderr.write('\nSkipping Plotting Step!\n') 
             else: 
                 self.io.progress.start_minor('Plotting Results', self.io) 
                 self.mega_plot(results, comboPath, path) 

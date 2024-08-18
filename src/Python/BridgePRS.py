@@ -2,7 +2,7 @@
 
 import sys
 from .Util.BridgeIO       import BridgeIO
-from .Util.BridgeTools    import BridgeTools
+from .Run.BridgeTools    import BridgeTools
 #from .Util.BridgeProgress import BridgeProgress
 from .Run.BridgeBase      import BridgeBase
 from .Run.BridgeMore      import BridgeMore
@@ -20,17 +20,22 @@ def bridge_error(eString):
 
 
 class BridgePRS:
-        def __init__(self,args,pop_data,command_line):
-            self.args  = args 
+    #def __init__(self,args,pop_data,command_line):
+        def __init__(self, mps, command_line): 
+
+            #print(mps, command_line) 
+            
+            self.io   = BridgeIO(mps, command_line) 
+            self.args = self.io.args 
             try: 
                 import matplotlib
             except: 
-                if not self.args.noPlots: 
+                if not self.args.noplots: 
                     bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
 
             
 
-            self.io   = BridgeIO(args, pop_data, command_line)
+            #self.io   = BridgeIO(args, pop_data, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
 
             if self.args.module in ['tools']: BridgeTools(self.io).apply() 
@@ -93,7 +98,7 @@ class BridgePRS:
 
         def collate(self, cmd): 
             self.base.close_all() 
-            if cmd == 'quantify' and not self.args.noPlots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
+            if cmd == 'quantify' and not self.args.noplots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
             return 
 
 

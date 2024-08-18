@@ -75,14 +75,16 @@ class BridgeProgress:
 
             
     def record_me(self, n,v, INIT=False, KEEP=True, NOTE=False): 
+        
+        
         if INIT: 
-            if NOTE: self.say('%s\n', (n+'='+v+'    '+NOTE)) 
-            else:    self.say('%s\n', (n+'='+v)) 
+            if NOTE: self.say('%s\n', (n+'='+str(v)+'    '+NOTE)) 
+            else:    self.say('%s\n', (n+'='+str(v))) 
         else: 
-            if NOTE: self.say('%25s %s\n',(' ',n+'='+v+'     '+NOTE)) 
-            else:    self.say('%25s %s\n',(' ',n+'='+v)) 
-        if KEEP: self.REC.write(n+'='+v+'\n') 
-        else:    self.SEC.write(n+'='+v+'\n') 
+            if NOTE: self.say('%25s %s\n',(' ',n+'='+str(v)+'     '+NOTE)) 
+            else:    self.say('%25s %s\n',(' ',n+'='+str(v))) 
+        if KEEP: self.REC.write(n+'='+str(v)+'\n') 
+        else:    self.SEC.write(n+'='+str(v)+'\n') 
         return
 
 
@@ -97,16 +99,6 @@ class BridgeProgress:
             my_notes = [False,False,False]
             n1, n2 = pd.name, pd.ref_pop  
             ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
-            #if self.args.module == 'build-model': i+=1 
-            #if i == 0   and len(pop_data) == 2:     sn = 'target' 
-            #elif i == 0 and len(pop_data) == 1:     sn = 'primary' 
-            #elif i == 1:                            sn = 'base'                                    
-            
-            #print(pd.type) 
-            #print(n1) 
-            #print(sn) 
-
-
             self.tFile = self.runpath + '/save/'+n1+'.'+pd.type+'.config'
             self.sFile = self.runpath + '/save/'+n1+'.'+pd.type+'.source'
             self.REC, self.SEC = open(self.tFile,'w'), open(self.sFile, 'w') 
@@ -124,6 +116,7 @@ class BridgeProgress:
             self.record_me('SOURCE_SUFFIX',ss.source_suffix,KEEP=False,NOTE=my_notes[0]) 
             self.record_me('SUMSTATS_PREFIX',ss.prefix) 
             self.record_me('SUMSTATS_SUFFIX',ss.suffix) 
+            self.record_me('SUMSTATS_SIZE',ss.pop_size) 
             self.say('%25s ',('QC-Snps:')) 
             self.record_me('SNP_FILE',ss.snp_file,NOTE=my_notes[1],INIT=True) 
             self.say('%25s ',('Genotype/Phenotype:')) 

@@ -379,9 +379,11 @@ class BridgePlot:
         path   = "/".join(f_prefix.split('/')[0:-1])
         prefix = f_prefix.split('/')[-1] 
         c_cands = [] 
-        c_cands.append([self.col_headers[x.upper()][0] for x in ['ssf-snpid','ssf-p','ssf-beta']])
-        c_cands.append([self.col_headers[x.upper()][1] for x in ['ssf-snpid','ssf-p','ssf-beta']])
-        if 'ssf-snpid' in vars(self.args) and len(vars(self.args)['ssf-snpid']) > 0: c_cands.append([vars(self.args)[x][idx] for x in ['ssf-snpid','ssf-p','ssf-beta']])
+        
+
+        c_cands.append([self.col_headers[x.upper()][0] for x in ['ID','P','BETA']])
+        c_cands.append([self.col_headers[x.upper()][-1] for x in ['ID','P','BETA']])
+        #if 'ssf-snpid' in vars(self.args) and len(vars(self.args)['ssf-snpid']) > 0: c_cands.append([vars(self.args)[x][idx] for x in ['ssf-snpid','ssf-p','ssf-beta']])
 
         
 

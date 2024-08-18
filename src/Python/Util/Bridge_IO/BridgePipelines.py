@@ -100,23 +100,28 @@ class BridgePipelines:
         self.validate_path(np,fp, D) 
         self.io.prefixes[d] = fp+'/'+np  
         f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])             
+        
+
+
+
         w = open(self.progress_file,'w') 
         
-        SS_VIEW, SSF_VIEW = False, False 
 
-        for a,b in f_pairs: 
-            
-                            
+        SSF_KEY, SSF_VIEW = dd(list), False  
+        for a,b in f_pairs:  
             if a not in f_obs: w.write(a+'='+b+'\n') 
-            f_obs.append(a) 
-            if a.split('_')[0] == 'SUMSTATS': SS_VIEW=True
-            if a[0:3]          == 'SSF':      SSF_VIEW = True 
-
+            f_obs.append(a)
+            if a.split('_')[0] == 'SSFIELD': SSF_VIEW = True
         
-        if SS_VIEW and not SSF_VIEW: 
-            for v in vars(self.args): 
-                if v.split('-')[0].upper() == 'SSF': 
-                    w.write(v.upper()+'='+",".join(vars(self.args)[v])+'\n') 
+        try: 
+            if not SSF_VIEW: 
+                for pop in [self.io.pop_data.target, self.io.pop_data.base]: 
+                    if pop is not None: 
+                        for k,v in pop.sumstats.fields.items(): SSF_KEY[k].append(v) 
+
+            for k,V in SSF_KEY.items(): 
+                w.write('SSFIELD_'+k+'='+",".join(V)+'\n') 
+        except: pass 
 
         w.close() 
         return 
