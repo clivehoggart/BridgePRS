@@ -23,7 +23,9 @@ class SumStats:
         self.mps, self.pop, self.fields, self.debug_level, self.savepath = mps, pop, pop.field_key, pop.args.debug_level, pop.paths['save']   
         self.source_prefix, self.source_suffix, self.pop_size = pop.sumstats_prefix, pop.sumstats_suffix, pop.sumstats_size
         self.snp_file, self.max_clump_size, self.thinned_snp_file = pop.snp_file, pop.max_clump_size, pop.thinned_snp_file      
-       
+
+        
+        if pop.sumstats_size is None and pop.args.module in ['pipeline', 'build-model']: self.mps.error('SumstatsError: Missing Argument (SUMSTATS_SIZE=), Required For This Module') 
 
         if self.thinned_snp_file is None:     self.thin_snps = '0' 
         if self.max_clump_size   is None: self.max_clump_size = '0' 

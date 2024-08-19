@@ -1,10 +1,8 @@
 import sys,os, multiprocessing 
-
 from .BridgePops import BridgePops 
 from .Bridge_IO.BridgeProgress  import BridgeProgress
 from .Bridge_IO.BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
-
 
 
 class BridgeIO:
@@ -29,7 +27,6 @@ class BridgeIO:
             elif self.args.platform == 'mac' and self.args.plinkpath.split('/')[-1] == 'Xtra': self.programs['plink'] = self.programs['plink_mac']
             self.LOC['plink'] = self.programs['plink']  
             return 
-
 
         def find_which(self, name): 
             p_log, p_err = self.paths['tmp']+'/tmp.'+name+'.out', self.paths['tmp']+'/tmp.'+name+'.err' 
@@ -66,9 +63,6 @@ class BridgeIO:
             if self.module == 'pipeline': return self 
             elif self.module == 'build-model': self.pop = self.pop_data.base 
             else:                              self.pop = self.pop_data.target 
-                
-
-
             self.update(self.module, self.cmd) 
             return self
 

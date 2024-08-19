@@ -2,8 +2,12 @@
 
 import os, sys
 from collections import defaultdict as dd
-from .BridgeResult import BridgeResult
-from .BridgePlot import BridgePlot
+from .Bridge_Run.BridgeResult import BridgeResult 
+from .Bridge_Run.BridgePlot   import BridgePlot 
+
+
+#from .BridgeResult import BridgeResult
+#from .BridgePlot import BridgePlot
 
 
 def combine_error(eString):
@@ -17,23 +21,101 @@ def combine_error(eString):
 
 # bridgeSummary analyze_snp_dists  pdf  print() settings current
 
+class BridgeRun: 
+    def __init__(self, bridge):
+        self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
+        
+    
+    def analyze(self, cmd, results_files, path): 
+
+        self.results_files = results_files 
+        self.results = [BridgeResult().read_file(r) for r in results_files] 
+        pop_names = list(set([r.pop for r in self.results])) 
+        if len(pop_names) > 1: combine_error('Cannot combine across different populations: '+",".join(pop_names)+'\n') 
+        else:                  self.pop = pop_names[0]  
+
+        if cmd == 'result': 
+            if len(self.results) == 1: 
+                self.progress.start_minor('Analyzing/Plotting Single PRS Results (analyze result)', self.io) 
+                self.single_plot(self.results, path) 
+            
+            else: 
+
+
+
+        if cmd == 'combine':  
+            try:    self.source = results_files[-1].split('/')[-1].split('.')[1].lower()  
+            except: self.source = self.pop.lower() 
+
+            self.comboPath = path + '/prs-combined_'+self.source.upper() 
+            self.io.progress.start_minor('Combining The Results (analyze combine)', self.io)     
+            self.results.extend(self.pred_combine(self.results, path)) 
+            if self.args.noplots: sys.stderr.write('\nSkipping Plotting Step!\n') 
+            else: 
+                self.io.progress.start_minor('Plotting Results', self.io) 
+                self.multi_plot(self.results, self.comboPath, path) 
+            
+
+    def pred_combine(self, res, path): 
+        prsR =      [r for r in res if r.name == 'prs-single'] 
+        prsBridge = [r for r in res if r.name == 'prs-prior'] 
+        if len(prsR) != 1 or len(prsBridge) != 1: combine_error('Exactly one run for prs-single and prs-bridge required') 
+        combine = BridgeCombine(self, self.comboPath) 
+        if combine.FIN:     self.io.progress.write('SKIPPING-JOB') 
+        else:               combine.run(prsR[0], prsBridge[0]) 
+        self.io.progress.end() 
+        return BridgeResult().read_combo(combine)
+
+    
+
+    def multi_plot(self, BR, path, sPath):  
+        plot_names = [path+'/bridgePRS-combo.pdf', sPath+'/bridgeSummary.'+self.source.lower()+'.pdf'] 
+        self.bPlot = BridgePlot(self.args, BR, self.pop, plot_names).setup(TYPE='MEGA') 
+        self.bPlot.full_var_bars()
+        self.bPlot.add_pred_scatter('weighted')  
+        self.bPlot.add_model(BR[1].modelpath) # SNPS = True) 
+        self.bPlot.analyze_snp_dists('single','weighted') #,MODEL=True)  
+        self.bPlot.add_summary_table('single')  
+        self.bPlot.add_logo(2) 
+        self.bPlot.finish() 
+        return 
+
+         
+    def single_plot(self, BR, path): 
+        br, method = BR[0], BR[0].name.split('-')[-1] 
+        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.pdf']).setup(BR[0].name.split('-')[-1]) 
+        self.bPlot.full_var_bars()
+        self.bPlot.add_pred_scatter(method) 
+        if method != 'single': self.bPlot.add_model(br.modelpath)
+        self.bPlot.analyze_snp_dists(method, method) #,MODEL=True)  
+        self.bPlot.add_summary_table(method)  
+        self.bPlot.add_logo(2) 
+        self.bPlot.finish() 
+        return 
+
+
+
+
+
+
+
+
+
+
+
+
+
 class BridgeMore:
     def __init__(self, bridge):
         self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
         
     def run(self, cmd, prs_results, path): 
-        
-
         results = [BridgeResult().read_file(r) for r in prs_results] 
         pop_names = list(set([r.pop for r in results])) 
-        
-
-
         if len(pop_names) > 1: combine_error('Cannot combine across different populations: '+",".join(pop_names)+'\n') 
         else:                  self.pop = pop_names[0] 
         if cmd == 'result':    self.single_plot(results, path) 
-        else:
-            
+        else: 
             try: 
                 self.source_lower = prs_results[-1].split('/')[-1].split('.')[1] 
                 self.source_upper = self.source_lower.upper() 
@@ -48,74 +130,44 @@ class BridgeMore:
                 self.io.progress.start_minor('Plotting Results', self.io) 
                 self.mega_plot(results, comboPath, path) 
                 
-    def run_combine(self, res, comboPath):
-        prsR =      [r for r in res if r.name == 'prs-single'] 
-        prsBridge = [r for r in res if r.name == 'prs-prior'] 
-        if len(prsR) != 1 or len(prsBridge) != 1: combine_error('Exactly one run for prs-single and prs-bridge required') 
-        combine = BridgeCombine(self, comboPath) 
-        if combine.FIN:     self.io.progress.write('SKIPPING-JOB') 
-        else:               combine.run(prsR[0], prsBridge[0]) 
-        self.io.progress.end() 
-        return BridgeResult().read_combo(combine)
-
     
 
-    def single_plot(self, BR, path): 
-        
-        
-
-        br, method = BR[0], BR[0].name.split('-')[-1] 
-        self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.pdf']).setup(BR[0].name.split('-')[-1]) 
-        self.bPlot.full_var_bars()
-        self.bPlot.add_pred_scatter(method) 
-        if method != 'single': self.bPlot.add_model(br.modelpath)
-        self.bPlot.analyze_snp_dists(method, method) #,MODEL=True)  
-        self.bPlot.add_summary_table(method)  
-        self.bPlot.add_logo(2) 
-        self.bPlot.finish() 
-        
-
-        return 
 
 
-    
-    def mega_plot(self, BR, path, sPath): 
-        
-        plot_names = [path+'/bridgePRS-combo.pdf', sPath+'/bridgeSummary.'+self.source_lower+'.pdf'] 
-        self.bPlot = BridgePlot(self.args, BR, self.pop, plot_names).setup(TYPE='MEGA') 
-        self.bPlot.full_var_bars()
-        self.bPlot.add_pred_scatter('weighted')  
-        self.bPlot.add_model(BR[1].modelpath) # SNPS = True) 
-        self.bPlot.analyze_snp_dists('single','weighted') #,MODEL=True)  
-        self.bPlot.add_summary_table('single')  
-        self.bPlot.add_logo(2) 
-        self.bPlot.finish() 
-        return 
-
-         
 
 
-    
-    def run_plotter(self, BR, path, summaryPath = None, cols =1): 
-        self.bPlot = BridgePlot(self.args, self.pop, prefix = path, summaryPath = summaryPath).setup(cols) 
-        
-        for i,br in enumerate(BR): 
-            self.bPlot.set_result(br,i) 
-            if i < 3: 
-                self.bPlot.add_prs() 
-                self.bPlot.add_table(my_key = 'Ridge') 
-            else: 
-                z=3
-                #JOB2: Plotting Results...1000 0 dict_keys(['names', 'pheno', 'prs.Stage1', 'prs.Stage2', 'prs.Stages1+2', 'prs.weighted', 'prs']) prs
-                self.bPlot.add_prs('prs.Stages1+2', my_title = 'prs-combined') 
-                self.bPlot.add_table(my_key = 'Stage1+2') 
-                
-                self.bPlot.add_prs('prs.weighted', my_title = 'prs-weighted') 
-                self.bPlot.add_table(my_key = 'Weighted') 
-        self.bPlot.finish_plot() 
-        return 
 
-         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -80,12 +80,14 @@ class BridgeOutput:
                     for i,x in enumerate(line): self.K[header[i]].append(x) 
         f.close() 
         return self 
-    
+   
+
     def create_var_key(self, V):
-        
         try: self.frac, self.val, self.interval, self.devs =  V['Frac'], V['Est'], [V['2.5'],V['97.5']], [V['cv.dev'], V['cv.dev.sd']]
         except KeyError:  self.frac, self.val, self.interval, self.devs =  1, V['Est'], [V['2.5'],V['97.5']], [V['cv.dev'], V['cv.dev.sd']]
         return self 
+
+
 
     def process(self, cands =[]): 
         if len(cands) == 0: 
@@ -97,9 +99,6 @@ class BridgeOutput:
                 for i in range(len(cand_dicts)): 
                     if k == 'pheno':  cand_dicts[i][k] = V 
                     elif k == cands[i]:  cand_dicts[i]['prs'] = V 
-                    
-                    #if k.split('.')[0] != 'prs': cand_dicts[i][k] = V 
-                    #elif k == cands[i]:          cand_dicts[i]['prs'] = V 
             return cand_dicts 
         elif self.RULE == 'VAR': 
             MK, FK = {'Stage1': 'single', 'Stage2': 'prior',  'Stage1+2': 'combine', 'Weighted': 'weighted'}, dd(float)  
@@ -107,21 +106,6 @@ class BridgeOutput:
             VK = [self.K[c] for c in cands] 
             VK[-1]['Frac'] = FK 
     
-                
-        
-            # ' combined' 
-
-            #MK = {'prs.Stages1+2': 'Stage1+2', 'prs.weighted': 'Weighted'} 
-            #VK = [self.K[MK[c]] for c in cands] 
-            #VK = [self.K[c] for c in cands]
-            #print(cands)
-            #print(self.K.keys()) 
-
-            #sys.exit() 
-
-
-            
-            
             return [BridgeOutput(self.RULE).create_var_key(vk) for vk in VK] 
         else: return([None, self.K]) 
 

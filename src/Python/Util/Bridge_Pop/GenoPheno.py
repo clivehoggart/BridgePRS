@@ -69,8 +69,8 @@ class GenoPheno:
             if validation_file is not None:     self.files = [phenotype_file, validation_file]
             else:                               self.files = self.split_phenotype_file(self.parent.paths['save'],phenotype_file) 
             self.X_fields = ['--test.data',self.files[0],'--valid.data',self.files[1]]
-        else: 
-            self.files = [P['phenotype_file']]
+        else:
+            self.files = [phenotype_file] 
             self.X_fields = ['--test.data',self.files[0],'--valid.data','0'] 
         for i,fn in enumerate(self.files): 
             with open(fn, 'rt') as f: 

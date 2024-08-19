@@ -1,11 +1,4 @@
-#!/usr/bin/env python3 
-
 import sys  
-#from ..Util.BridgeProgress import BridgeProgress
-#from ..Util.BridgeIO import BridgeIO
-
-
-
 
 
 def bridge_error(eString):
@@ -22,9 +15,6 @@ def bridge_error(eString):
 class BridgeJobs:
         def __init__(self,bridge):
             self.args, self.progress = bridge.args, bridge.io.progress 
-            
-
-
         def run(self, job_target, job_args, job_comment = None, job_marker = 5): 
             self.progress.mark(1) 
             if len(job_args) == 0:                                   
@@ -43,7 +33,6 @@ class BridgeJobs:
 
 
         def q_serial(self,job_target,job_args,job_comment=None,job_marker=5): 
-            
             self.progress.mark(5) 
             for j,(job_key,job_vals) in enumerate(job_args):
                 if j % 4 == 0: self.progress.mark(1) 

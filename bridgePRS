@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 ########################################################################################################################################################################
+
 
 import sys, os, shutil, argparse, platform, multiprocessing             
 import argparse as ap
@@ -200,7 +200,7 @@ if __name__ == '__main__':
 
     
     twopop = Pipeline.add_argument_group('Required') 
-    twopop.add_argument('--config_files',      dest = 'config',     type=mps.config_key,     nargs = 2, default = [], metavar='', help = 'Two Pop Config Files Required: Target and Base')     
+    twopop.add_argument('--config_files',      dest = 'config',     type=mps.config_key,     nargs = 2, required=True, metavar='', help = 'Two Pop Config Files Required: Target and Base')     
     twopop.add_argument('-o', '--out',      dest ='outpath',     type=str,     action='store', metavar='', help='Output Path For Pipeline Run') 
 
     twopop.add_argument('--phenotype',        dest='phenotype',     type=str,     default=None, metavar='',help='Phenotype Name (Must Match Phenotype File(s))') 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     
 
     onepop = OnePop.add_argument_group('Required') 
-    onepop.add_argument('--config_file',      dest = 'config',      type=mps.config_key,     nargs = 1, metavar='', default = [], required=True, help = 'One Population Config File Is Required') 
+    onepop.add_argument('--config_file',      dest = 'config',      type=mps.config_key,     nargs = 1, metavar='',required=True, help = 'One Population Config File Is Required') 
     onepop.add_argument('-o', '--out',      dest ='outpath',     type=str,     action='store', metavar='', help='Output Path For Pipeline Run') 
     
     onerun = OnePop.add_argument_group('Generated Or Subprogram Specific')  
@@ -309,24 +309,4 @@ if __name__ == '__main__':
 
     
     from src.Python.BridgePRS import BridgePRS
-
-    
     bridgePRS = BridgePRS(mps, sys.argv) 
-
-    #bridgeArgs, bridgeData = BridgeParse(mps).parse()  
-
-    
-    #bridgePRS = BridgePRS(mps, sys.argv) 
-
-    #bridgePRS = BridgePRS(bridgeArgs,bridgeData,sys.argv)
-    
-    #sys.exit() 
-
-    #args = mps.parse_args()
-    #if args.platform not in ['mac','linux']:  mps.error('Unrecognized platform '+args.platform+' (--platform linux/mac are supported)') 
-    #if args.cores <= 1: args.cores = 1 
-    #if args.cores > args.total_cores: args.cores = args.total_cores  
-    
-
-
-    #sys.exit() 

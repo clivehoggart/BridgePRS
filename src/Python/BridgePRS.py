@@ -2,11 +2,14 @@
 
 import sys
 from .Util.BridgeIO       import BridgeIO
-from .Run.BridgeTools    import BridgeTools
+from .Util.BridgeRun      import BridgeRun 
+from .Util.Bridge_Run.BridgeJobs import BridgeJobs 
+from .Util.Bridge_Run.BridgeBase import BridgeBase
+
 #from .Util.BridgeProgress import BridgeProgress
-from .Run.BridgeBase      import BridgeBase
-from .Run.BridgeMore      import BridgeMore
-from .Run.BridgeJobs      import BridgeJobs
+#from .Run.BridgeBase      import BridgeBase
+#from .Run.BridgeMore      import BridgeMore
+#from .Run.BridgeJobs      import BridgeJobs
 
 
 
@@ -20,33 +23,20 @@ def bridge_error(eString):
 
 
 class BridgePRS:
-    #def __init__(self,args,pop_data,command_line):
         def __init__(self, mps, command_line): 
-
-            #print(mps, command_line) 
-            
             self.io   = BridgeIO(mps, command_line) 
             self.args = self.io.args 
-            try: 
-                import matplotlib
-            except: 
-                if not self.args.noplots: 
-                    bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
-
-            
-
-            #self.io   = BridgeIO(args, pop_data, command_line)
             self.io.initialize(self.args.module, self.args.cmd)                         
-
-            if self.args.module in ['tools']: BridgeTools(self.io).apply() 
-
-
-            if self.args.module in ['easyrun','pipeline']:   self.easyrun() 
-            elif self.args.module == 'analyze':              self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
-            else:                                            self.execute(self.io.pipeline) 
+            #try: 
+            #    import matplotlib
+            #except: 
+            #    if not self.args.noplots: 
+            #        bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
+            if   self.args.module == 'tools':     BridgeRun(self).apply() 
+            elif self.args.module == 'pipeline':  self.easyrun() 
+            elif self.args.module == 'analyze':   self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
+            else:                                 self.execute(self.io.pipeline) 
          
-
-        
         def easyrun(self): 
             if self.args.module == 'pipeline' and not self.args.port: modules = ['prs-single','build-model','prs-prior'] 
             else:                                                     modules = ['prs-single','build-model','prs-port','prs-prior'] 
@@ -59,15 +49,10 @@ class BridgePRS:
                 self.execute(self.io.pipeline) 
                 if i == 1:  self.args.model_file = str(self.io.pipeline.progress_file) 
                 else:       res_files.append(str(self.io.pipeline.progress_file)) 
-                
-                
             self.args.result_files = res_files 
             self.args.module, self.args.cmd = 'analyze','combine' 
             self.io.update(self.args.module, self.args.cmd)
             self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
-
-
-
 
         def execute(self,pl):
             self.jobs, self.base = BridgeJobs(self), BridgeBase(self) 
@@ -77,36 +62,22 @@ class BridgePRS:
                     self.io.progress.write('SKIPPING-JOB')
                     continue 
                 else:
-                    if command == 'clump':     
-                        self.jobs.run(self.base.run_clump, [[['chromosome'],[k]] for k in self.io.pop.chromosomes])
-                    elif command == 'beta':      
-                        self.jobs.run(self.base.run_beta, [[[],[]]]) 
-                    elif command == 'predict':   
-                        self.jobs.run(self.base.run_predict,  [[[],[]]]) 
-                    elif command == 'quantify':  
-                        self.jobs.run(self.base.run_quantify,  [[[],[]]])       
-                    elif command == 'prior':     
-                        self.jobs.run(self.base.run_prior,  [[[],[]]]) 
+                    if command == 'clump':     self.jobs.run(self.base.run_clump, [[['chromosome'],[k]] for k in self.io.pop.chromosomes])
+                    elif command == 'beta':      self.jobs.run(self.base.run_beta, [[[],[]]]) 
+                    elif command == 'predict':   self.jobs.run(self.base.run_predict,  [[[],[]]]) 
+                    elif command == 'quantify':  self.jobs.run(self.base.run_quantify,  [[[],[]]])       
+                    elif command == 'prior':     self.jobs.run(self.base.run_prior,  [[[],[]]]) 
                     pl.log_result(command)  
                     self.io.progress.end(RD=self.io) 
             
-            self.collate(pl.commands[-1]) 
+
+            if command == 'quantify' and not self.args.noplots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
             self.io.progress.finish() 
-            return
-
-
-
-        def collate(self, cmd): 
-            self.base.close_all() 
-            if cmd == 'quantify' and not self.args.noplots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
             return 
 
 
         def analyze(self, cmd, prs_results, PATH):
-            self.more     =   BridgeMore(self) 
-            if cmd == 'result':  self.io.progress.start_minor('Plotting Results (analyze result)', self.io) 
-            else:                self.io.progress.start_minor('Combining Results (analyze combine)', self.io)             
-            self.more.run(cmd, prs_results, PATH) 
+            self.run  = BridgeRun(self).analyze(cmd, prs_results, PATH) 
             self.io.progress.end() 
             return 
 

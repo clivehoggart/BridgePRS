@@ -62,31 +62,35 @@ class BridgePops:
         args = self.mps.parse_args()
         self.system_tests(args) 
         self.setup_paths(args) 
-        if args.module == 'pipeline' or args.module.split('-')[0] in ['prs','build']:
-                if args.module == 'pipeline':                      self.parse_two_pops(args) 
-                else:                                              self.parse_one_pop(args) 
+        
+        self.target, self.base, self.names = None, None, [None, None] 
+        if args.module == 'pipeline' or args.module.split('-')[0] in ['prs','build']: self.parse_pop_configs(args)         
+
+
+                #if args.module == 'pipeline':                      self.parse_two_pops(args) 
+                #else:                                              self.parse_one_pop(args) 
+        elif args.module == 'analyze': return args, self 
+
+
         else: 
+            
+            print(args.module) 
+
             print('hmmm') 
             sys.exit() 
-        self.arglen = str(len(vars(args)))
+        #self.arglen = str(len(vars(args)))
         return args, self 
 
-    def parse_two_pops(self,args): 
-        if len(args.config) != 2: self.mps.error('IOError:  BridgePRS Pipeline Requires Two Pop Config Files, Target and Base')  
-        self.target = BridgePop(self.mps, args.config[0], args, self.paths, 'target') 
-        self.base   = BridgePop(self.mps, args.config[1], args, self.paths, 'target', self.target) 
-        self.names = [self.target.name, self.base.name] 
-        if self.target.sumstats.pop_size is None or self.base.sumstats.pop_size is None: self.mps.error('Target and Base Sumstats Size (SUMSTATS_SIZE=) is Required for Pipeline') 
-        return
 
-    def parse_one_pop(self, args): 
-        if len(args.config) != 1:      self.mps.error('IOError:  BridgePRS Single-Population Analysis Requires One Pop Config File')  
-        if args.module == 'build-model':     
-            self.base, self.target = BridgePop(self.mps, args.config[0], args, self.paths, 'base'), None
-            self.names = [self.base.name] 
-        else:                                
-            self.target, self.base = BridgePop(self.mps, args.config[0], args, self.paths, 'target'), None
-            self.names  = [self.target.name] 
+    def parse_pop_configs(self, args): 
+        if args.module == 'build-model': self.base   = BridgePop(self.mps, args.config[0], args, self.paths, 'base') 
+        else:                            self.target = BridgePop(self.mps, args.config[0], args, self.paths, 'target') 
+        if len(args.config) == 2:        self.base = BridgePop(self.mps, args.config[1], args, self.paths, 'base', self.target) 
+        self.names = [x.name for x in [self.target, self.base] if x is not None] 
+        return 
+        
+        
+
 
 
 
@@ -167,7 +171,9 @@ class BridgePop:
             elif v is not None or prevPop is None:       vars(self)[k] = v 
             elif k.split('_')[0] != 'sumstats': vars(self)[k] = vars(prevPop)[k] 
             else:                             vars(self)[k] = v 
-            
+    
+
+
         self.bdata = BData(self, mps).load_panel()
         
 

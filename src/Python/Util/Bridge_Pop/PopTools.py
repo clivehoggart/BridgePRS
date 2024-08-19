@@ -20,19 +20,12 @@ def compare_alleles(g1, g2):
 	except: pass                                                                                                                                                                                                        
 	return 'INVALID'         
 
-
 def warn(eString): 
     if type(eString) in [list,tuple]:  
         sys.stderr.write('BridgePopWarning: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
     else: sys.stderr.write('BridgePopWarning: '+eString+'\n')
     return 
-
-
-
-
-
-
 
 def bridge_debug_error2(eString):
     if type(eString) in [list,tuple]:  
