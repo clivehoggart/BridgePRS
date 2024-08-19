@@ -483,7 +483,6 @@ class DataTable:
         tp = self.data[method] 
         mk = dd(lambda: 'NA') 
         if pd.MODEL: mk = self.plot.model_key
-        
         p_lens = [len(open(pf).readlines())-1 for pf in tp.PT['FILES'].split(',')]
         p_name, p_type = tp.PT['FIELD-NAME'], tp.PT['TYPE'] 
 

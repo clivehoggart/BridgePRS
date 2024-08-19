@@ -230,10 +230,6 @@ if __name__ == '__main__':
     for t in ['verbose','restart','clean','noplots']: toggle.add_argument('--'+t, dest=t, action='store_true', default=False, help = 'Toggle '+t.capitalize()+' Mode On') 
    
 
-    
-
-
-
     pop  = Pop.add_argument_group('Pop Data:') 
     pop  =  Pop.add_argument_group('Population Args') 
     pop.add_argument('--pop','--pops',                       dest = 'pop',               type=mps.force_caps,   nargs = '+',  metavar ='',    default=[], help='Pop Name(s)') 
@@ -289,6 +285,8 @@ if __name__ == '__main__':
 
     Tools = MPS(add_help=False) 
     Tools.add_argument('-o, --out',      dest ='outpath',     type=str,     action='store', metavar='', help='Output Path For Toolbox Result') 
+    #Tools.add_argument('--config_files',      dest = 'config',     type=mps.config_key, default=[], nargs = 2,  metavar='', help = 'Two Pop Config Files Required: Target and Base')     
+    
     tools               =  subs.add_parser('tools', help=mps.help_str('tools')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
     tools.required      =  True
     reformat_sumstats   =  tools.add_parser('reformat-sumstats',parents=[Global,Tools,Pop], help=mps.sub_help('reformat-sumstats'), formatter_class=mps.formatter_class)

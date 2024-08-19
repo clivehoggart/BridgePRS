@@ -60,10 +60,15 @@ class BridgePops:
 
     def parse(self): 
         args = self.mps.parse_args()
+        argnames = [v for v in vars(args)] 
         self.system_tests(args) 
         self.setup_paths(args) 
         
         self.target, self.base, self.names = None, None, [None, None] 
+
+        if 'config' in argnames and len(vars(args)['config']) > 0: self.parse_pop_configs(args) 
+        return args, self 
+
         if args.module == 'pipeline' or args.module.split('-')[0] in ['prs','build']: self.parse_pop_configs(args)         
 
 
@@ -114,7 +119,7 @@ class BridgePops:
         return
                         
 
-    def create_directory_structure(self,args): 
+    def create_directory_structure2(self,args): 
         f_prev = dd(list) 
         for f in [f for f in os.listdir(args.outpath) if os.path.isdir(args.outpath+'/'+f)]: 
             ns, fp, fn = f.split('_')[-1].split('-'), f.split('-')[0], f.split('_')[0] 

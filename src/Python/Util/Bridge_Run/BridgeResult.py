@@ -8,7 +8,6 @@ class BridgeResult:
 
     def read_file(self, res): 
         
-
         f, X, self.output, self.paths, self.SS, self.PT, self.SL = open(res), dd(bool), dd(bool), dd(bool), dd(bool), dd(bool), dd(bool) 
         for line in f: 
             a,b = line.strip().split('=') 

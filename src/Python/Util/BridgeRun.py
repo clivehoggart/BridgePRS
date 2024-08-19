@@ -38,11 +38,6 @@ class BridgeRun:
             if len(self.results) == 1: 
                 self.progress.start_minor('Analyzing/Plotting Single PRS Results (analyze result)', self.io) 
                 self.single_plot(self.results, path) 
-            
-            else: 
-
-
-
         if cmd == 'combine':  
             try:    self.source = results_files[-1].split('/')[-1].split('.')[1].lower()  
             except: self.source = self.pop.lower() 
