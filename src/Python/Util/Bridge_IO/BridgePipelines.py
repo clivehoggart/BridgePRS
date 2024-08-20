@@ -10,7 +10,6 @@ class BridgePipelines:
     def __init__(self,io): 
         self.args, self.io, self.module, self.cmd = io.args, io, io.module, io.cmd
         self.eType, self.wType, self.FIN = 'BridgePipelineError:', 'BridgePipelineWarning:', dd(bool)
-        self.input_key = dd(lambda: dd(bool))   
         self.pop = self.io.pop.name 
         self.create() 
 
@@ -65,15 +64,16 @@ class BridgePipelines:
             if len(xsp) == 3 and xsp[0] == self.pop: 
                 x_pop, x_job, x_val = xsp 
                 if x_val == 'FIN':      self.FIN[x_job] = True  
-                elif x_val == 'PREFIX': self.input_key['prefix'][x_job.lower()] = X2 
-                elif x_val == 'FILE':   self.input_key['file'][x_job.lower()]   = X2 
-                else:                   self.io.progress.fail('Bad Key',ETYPE=self.eType)                   
-            elif len(xsp) == 2: 
-                if xsp[-1] == 'FILE': self.input_key['file'][xsp[0].lower()] = X2 
-                elif xsp[0] == 'FIELD': 
-                    f_type, f_name = xsp[1].split('-') 
-                    if f_type == 'PHENO': self.input_key['pf-'+f_name.lower()] = X2  
-                    else:                 self.io.progress.fail(['Bad Ftype',f_type],ETYPE=self.eType)  
+                elif x_val not in ['PREFIX','FILE']: self.io.progress.fail('Bad Key',ETYPE=self.eType) 
+                #elif x_val == 'PREFIX': self.input_key['prefix'][x_job.lower()] = X2 
+                #elif x_val == 'FILE':   self.input_key['file'][x_job.lower()]   = X2 
+                #else:                   self.io.progress.fail('Bad Key',ETYPE=self.eType)                   
+            #elif len(xsp) == 2: 
+            #    if xsp[-1] == 'FILE': self.input_key['file'][xsp[0].lower()] = X2 
+            #    elif xsp[0] == 'FIELD': 
+            #        f_type, f_name = xsp[1].split('-') 
+            #        if f_type == 'PHENO': self.input_key['pf-'+f_name.lower()] = X2  
+            #        else:                 self.io.progress.fail(['Bad Ftype',f_type],ETYPE=self.eType)  
         return self
 
     
@@ -86,46 +86,31 @@ class BridgePipelines:
 
 
     def log_result(self, d): 
-        fD, fI, f_pass, f_obs = self.io, self.io.pop, dd(bool), [] 
-        np, fp, D = self.pop+'_'+d, self.io.paths['run']+'/'+d, d.upper() 
-        f_pairs = [line.strip().split('=') for line in open(fI.config,'rt')]
-        f_pairs.extend([[X1,X2] for X1,X2 in self.progress_pair() if X1.split('_')[0] != self.pop or X1.split('_')[1] != D]) 
-        if fI.genopheno.VALID: 
-            f_pairs.append(['PHENOTYPE_FILES',",".join(fI.genopheno.files)])
-            for x,y in fI.genopheno.fields.items():  f_pairs.append(['PHENOTYPE_FIELD-'+x,y]) 
-            f_pairs.append(['PHENOTYPE_TYPE',fI.genopheno.type]) 
-        #if fI.sumstats.VALID:    f_pairs.append(['SNP_FILE',fI.sumstats.snp_file])
-        #if fI.bdata.VALID:       f_pairs.append(['ID_FILE',fI.bdata.id_file]) 
-        if 'model' in fD.files and fD.files['model'] is not None: f_pairs.append(["MODEL_FILE",fD.files['model']]) 
-        self.validate_path(np,fp, D) 
-        self.io.prefixes[d] = fp+'/'+np  
-        f_pairs.extend([[self.pop+'_'+D+'_PREFIX',fp+'/'+np],[self.pop+'_'+D+'_FIN','TRUE']])             
+        pop = self.io.pop
+        prefix, path = self.pop+'_'+d, self.io.paths['run']+'/'+d 
+
+        f_pairs = [x for x in self.progress_pair()] + [line.strip().split('=') for line in open(pop.config,'rt')]
+        if pop.sumstats.VALID: f_pairs.extend([['SSFIELD_'+k,v] for k,v in pop.sumstats.fields.items()]) 
+        if pop.genopheno.VALID: 
+            f_pairs.append(['PHENOTYPE_FILES',",".join(pop.genopheno.files)])
+            for x,y in pop.genopheno.fields.items():  f_pairs.append(['PHENOTYPE_FIELD-'+x,y]) 
+            f_pairs.append(['PHENOTYPE_TYPE',pop.genopheno.type]) 
+ 
+        self.validate_path(prefix, path, d.upper()) 
+        pop.gen[d] = path+'/'+prefix 
+        for k,v in pop.gen.items(): 
+            if k in ['model']: f_pairs.append([k.upper()+'_FILE',v]) 
+            else:              f_pairs.extend([[self.pop+'_'+k.upper()+'_PREFIX',v],[self.pop+'_'+k.upper()+'_FIN','TRUE']])             
+
+
         
-
-
-
-        w = open(self.progress_file,'w') 
-        
-
-        SSF_KEY, SSF_VIEW = dd(list), False  
-        for a,b in f_pairs:  
+        f_obs, w = [], open(self.progress_file,'w') 
+        for a,b in f_pairs: 
             if a not in f_obs: w.write(a+'='+b+'\n') 
             f_obs.append(a)
-            if a.split('_')[0] == 'SSFIELD': SSF_VIEW = True
-        
-        try: 
-            if not SSF_VIEW: 
-                for pop in [self.io.pop_data.target, self.io.pop_data.base]: 
-                    if pop is not None: 
-                        for k,v in pop.sumstats.fields.items(): SSF_KEY[k].append(v) 
-
-            for k,V in SSF_KEY.items(): 
-                w.write('SSFIELD_'+k+'='+",".join(V)+'\n') 
-        except: pass 
-
         w.close() 
+        
         return 
-
 
 
     def validate_path(self, np, fp, D): 

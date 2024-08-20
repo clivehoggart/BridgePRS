@@ -1,17 +1,8 @@
-#!/usr/bin/env python3
-
 import sys
 from .Util.BridgeIO       import BridgeIO
 from .Util.BridgeRun      import BridgeRun 
 from .Util.Bridge_Run.BridgeJobs import BridgeJobs 
 from .Util.Bridge_Run.BridgeBase import BridgeBase
-
-#from .Util.BridgeProgress import BridgeProgress
-#from .Run.BridgeBase      import BridgeBase
-#from .Run.BridgeMore      import BridgeMore
-#from .Run.BridgeJobs      import BridgeJobs
-
-
 
 def bridge_error(eString):
     if type(eString) in [list,tuple]:
@@ -69,8 +60,6 @@ class BridgePRS:
                     elif command == 'prior':     self.jobs.run(self.base.run_prior,  [[[],[]]]) 
                     pl.log_result(command)  
                     self.io.progress.end(RD=self.io) 
-            
-
             if command == 'quantify' and not self.args.noplots: self.analyze('result',[self.io.pipeline.progress_file], PATH = self.io.paths['run'])
             self.io.progress.finish() 
             return 

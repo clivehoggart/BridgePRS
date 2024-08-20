@@ -24,6 +24,20 @@ class MPS(argparse.ArgumentParser):
         self.paths = ['',"/".join(os.path.abspath(sys.argv[0]).split('/')[0:-1])+'/']
         return self 
 
+
+    def multi_line_error(self, eString, FLATLINE=False): 
+        if type(eString) in [list,tuple]:                                                                                                                                                                                       
+            sys.stderr.write('\nBridgeInputError: '+eString[0]+'\n')                                                                                                                                                              
+            for es in eString[1::]: sys.stderr.write('                  '+es+'\n')                                                                                                                                               
+        else: sys.stderr.write('BridgeInputError: '+eString+'\n')                                                                                                                                                               
+        print('\n') 
+        if not FLATLINE: self.print_help() 
+        sys.exit(2)        
+
+
+
+
+
     def error(self, detail=None, notes = [], info=[]): #values=None,choice=None): #,settings = None):
         if bridgeHelp.evaluate_error(detail, sys.argv) and detail is not None: 
             sys.stderr.write('\n'+detail+'\n')  
@@ -37,6 +51,10 @@ class MPS(argparse.ArgumentParser):
         print('\n') 
         self.print_help() 
         sys.exit(2) 
+
+
+
+
 
 
 
@@ -75,29 +93,46 @@ class MPS(argparse.ArgumentParser):
                 K['sumstats_suffix'] = '__FILE__' 
         
         
-        if 'sumstats_prefix' in K and 'sumstats_suffix' not in K: K['sumstats_suffix'] = False 
+        if 'sumstats_prefix' in K and 'sumstats_suffix' not in K: K['sumstats_suffix'] = None 
         for k in ['pop','ldpop','ld_path','sumstats_prefix']: 
             if k not in K: self.error('ConfigFileError: config file '+Fn+' is missing a required argument\n                 please add following line to config file: '+k.upper()+'=<'+k.lower()+'>') 
-            else: C[k] = K.pop(k) 
+            else: C[k] = K.pop(k)
+
+        ssf_names, ssf_vals, ssf_indivs = ['snpid','ref','alt','p','beta'], ['_NA_','_NA_','_NA_','_NA_','_NA_'], [k for k in K.keys() if k.split('-')[0] == 'ssf'] 
+        if 'sumstats_fields' in K: 
+            ssf_vals = K.pop('sumstats_fields').split(',') 
+            if len(ssf_vals) != 5:  self.error('ConfigFileError: Invalid SUMSTATS_FIELDS entry in '+Fn+'\n                 Five comma separated values required for snp_id,ref_allele,alt,pval,effect_size\n                 Example: ID,REF,A1,P,BETA') 
         
+        for k in ssf_indivs: 
+            if k.split('-')[-1] in ssf_names: 
+                k_idx = ssf_names.index(k.split('-')[-1])
+                ssf_vals[k_idx] = K.pop(k) 
         
+        if '_NA_' in ssf_vals: 
+            F_NEED = [ssf_names[i].upper() for i,k in enumerate(ssf_vals) if k == '_NA_'] 
+            self.error('ConfigFileError: Missing The Following Sumstats Field(s): '+", ".join(F_NEED)+'\n                 Please add missing field name(s) individually [eg: SSF-'+F_NEED[0]+'=<FIELD_NAME>],\n                 Or as five ordered and comma separated values [eg: SUMSTATS_FIELDS=ID,REF,A1,P,BETA]') 
+        C['sumstats_fields'] = ','.join(ssf_vals)  
         for k in ['snp_file','thinned_snp_file','max_clump_size','covariates']: 
             if k in K: C[k] = K.pop(k)
             else:      C[k] = None 
 
-        for k in ['sumstats_suffix','sumstats_fields','sumstats_size','genotype_prefix','phenotype_file','validation_file']: 
+        for k in ['sumstats_suffix','sumstats_size','genotype_prefix','phenotype_file','validation_file']: 
             if k in K: C[k] = K.pop(k) 
             else: 
-                if k == 'sumstats_fields': 
-                    self.config_warning(Fn,'is missing sumstats_fields, using defaults: ID,REF,A1,P,BETA') 
-                    C[k] = 'ID,REF,A1,P,BETA'
-                else:
-                    C[k], C['MISSING'][k] = None, True 
-                    if   k == 'sumstats_suffix':   self.config_warning(Fn,'is missing sumstats_suffix, attempting to infer from filesystem') 
-                    elif k == 'sumstats_size':   self.config_warning(Fn,'is missing sumstats_size, required for stage-2') 
-                    else:                        continue 
+                #if k == 'sumstats_fields': 
+                #    self.config_warning(Fn,'is missing sumstats_fields, using defaults: ID,REF,A1,P,BETA') 
+                #    C[k] = 'ID,REF,A1,P,BETA'
+                #else:
+                C[k], C['MISSING'][k] = None, True 
+                if   k == 'sumstats_suffix':   self.config_warning(Fn,'is missing sumstats_suffix, attempting to infer from filesystem') 
+                elif k == 'sumstats_size':   self.config_warning(Fn,'is missing sumstats_size, required for stage-2') 
+                else:                        continue 
+   
+
         if len(C['sumstats_fields'].split(',')) != 5: 
             self.error('ConfigFileError: Invalid Entry For sumstats_fields, five comma separated values are required\n                 For snp_id, ref_allele, alt_allele, pvalue, and effect_size\n                 Example: ID,REF,A1,P,BETA') 
+        
+
         for k in K:  self.error('Unrecognized Field in Config File: '+k+'\n             Hint: Remove or Comment Out Line: '+k.upper()+'='+K[k]) 
         return C 
 

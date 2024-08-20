@@ -75,8 +75,6 @@ class BridgeProgress:
 
             
     def record_me(self, n,v, INIT=False, KEEP=True, NOTE=False): 
-        
-        
         if INIT: 
             if NOTE: self.say('%s\n', (n+'='+str(v)+'    '+NOTE)) 
             else:    self.say('%s\n', (n+'='+str(v))) 
@@ -92,10 +90,7 @@ class BridgeProgress:
         fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
         self.write('\nReading Population Data:\n') 
         for i, pd in enumerate(pop_data):
-            
             if pd is None: continue 
-
-
             my_notes = [False,False,False]
             n1, n2 = pd.name, pd.ref_pop  
             ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
@@ -130,59 +125,74 @@ class BridgeProgress:
                 if i == 0: self.record_me('VALIDATION_FILE',pt.files[1],NOTE=my_notes[2])
                 self.record_me('CHROMOSOMES',','.join(pd.chromosomes),KEEP=False)  
                 self.record_me('PHENOTYPE_VARIABLES',",".join(pt.header[2::]),KEEP=False) 
-
             
+            self.record_me('DECLARED_PHENOTYPE',str(self.args.phenotype),KEEP=False) 
+            if self.args.debug_level > 0: 
+                pk, pn = ss.pop.type, ss.pop.name
+                g1, g2 = [], [] 
+                if self.args.phenotype is not None: 
+                    self.record_me('PHENOTYPE_CLASS',str(pt.type),KEEP=False) 
+                    eR = min(ss.WT),max(ss.WT)                                                                                                                                                                                    
+                    eStr = 'Effect Size Range: '+str(eR[0])+', '+str(eR[1])                                                                                                                                                 
+                    self.record_me('EFFECT_SIZE_RANGE',str(round(eR[0],3))+','+str(round(eR[1],3)), KEEP=False) 
+                    if pt == 'binary' and eR[0] > 0:  self.fail('Truncated Effect Size Range Found (odds-ratio). Please use log(odds) for binary traits') 
+            
+                    for nk,n in [['MATCH','Matching'],['SWAPREF','Ref/Alt Swap'],['REVCOMP','Reverse Complement'],['INVALID','Invalid Bases']]:                                                                                 
+                        if ss.CK[nk] > 0 :        g1.append(str(ss.CK[nk])+' ('+n+')')                                                                                                                                            
+                        if ss.CK['GENO_'+nk] > 0: g2.append(str(ss.CK['GENO_'+nk])+' ('+n+')')                                                                                                                                    
+                    if i == 0:                                                                                                                                                                                                 
+                        g0 = str(min(ss.snp_list_len, ss.genome_snps))+' (Total),'
+                        self.record_me('GWAS_Variants','['+g0+' '+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
+                    else:                                                                                                                                                                                                       
+                        self.record_me('Shared_Variants','['+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
             self.say('%25s\n\n','    **'+pd.type.capitalize()+' Config Made:'+' '+self.tFile) 
             self.REC.close()
             self.SEC.close() 
             pd.config = self.tFile  
+        return                            
 
 
 
-    
-    def show_pop_data2(self, pop_data): 
-        fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
-        self.write('\nReading Population Data:\n') 
-        for i, pd in enumerate(pop_data):
-            n1, n2 = pd.name, pd.ref_pop  
-            ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
-            if self.args.module == 'build-model': i+=1
-            if i == 0: 
-                if len(pop_data) == 1: self.tFile = self.runpath + '/save/primary.'+n1+'.config'
-                else:                  self.tFile = self.runpath + '/save/target.'+n1+'.config'
-                self.REC = open(self.tFile,'w')  
-                if bd.ldpath.split('/')[-1].split('_')[0] != '1000G': self.record(fs2, [['Target Source:'],['POP',n1], ['LDPATH',bd.ldpath],['LDPOP',n2]])  
-                else: self.record(fs1, [['Target Source:'],['POP',n1], ['LDPOP',n2]])  
-            else: 
-                self.tFile = self.runpath + '/save/base.'+n1+'.config'
-                self.REC = open(self.tFile,'w')  
-                if bd.ldpath.split('/')[-1].split('_')[0] != '1000G': self.record(fs2, [['Base Source:'],['POP',n1], ['LDPATH',bd.ldpath],['LDPOP',n2]])  
-                else: self.record(fs1, [['Base Source:'],['POP',n1], ['LDPOP',n2]])  
-            if ss.VALID: 
-                if ss.TESTS['INFER_SUFFIX']: self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix, 'WARNING: Not Given - Inferred From Directory']]) 
-                else:                        self.record(fs1, [['Sumstats:'],['SOURCE',ss.source_prefix], ['SOURCE_SUFFIX',ss.source_suffix]])         
-                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX',ss.prefix], ['SUMSTATS_SUFFIX',ss.suffix]]) 
-                if ss.TESTS['NOSNPS']:       self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total),'WARNING Not Given - Created Using All Snps']])
-                else:                        self.record(fs1, [['QC-Snps:'],['SNP_FILE',ss.snp_file],['TOTAL',str(ss.total)]]) 
-            else:                            
-                self.record(fs1, [['Sumstats:'],['SUMSTATS_PREFIX','None'], ['SUMSTATS_SUFFIX','None']]) 
-            if pt.VALID: 
-                self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX',pt.genotype_prefix]])  
-                self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILE',pt.files[0]],['VARIABLES',",".join(pt.header[2::])]]) #,['FIN',self.tFile,i],['']])
-                if i == 0:
-                    if pt.TESTS['NOVALID']: self.record(fs1, [['Phenotypes:'],['VALIDATION_FILE',pt.files[1]],['(WARNING: Not Given - Created by Splitting Phenotype File)']]) #,['FIN',self.tFile,i],['']])
-                    else: self.record(fs0, [['Phenotypes:'],['VALIDATION_FILE',pt.files[1]]]) 
-            else: 
-                self.record(fs0, [['Genotypes:'],['GENOTYPE_PREFIX','None']])  
-                self.record(fs1, [['Phenotypes:'],['PHENOTYPE_FILES','None'],['VARIABLES','None']]) #['FIN',self.tFile,i],['']])
-            
-            
-            self.record(fs0, [['Chromosomes:'],['FOUND',','.join(pd.chromosomes)]]) 
-            self.record(fs0, [['FIN', self.tFile, i]])  
-            pd.config = self.tFile  
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     def show_settings(self):
         kSkip = ['pop','ldpop','files','outpath','platform','cores', 'config','prefix','file','path','module','cmd','dataset','ssf','pf','sumstats_suffix','phenotype_files'] 
@@ -234,34 +244,43 @@ class BridgeProgress:
             if len(rJ) > 0: 
                 if self.status is None and self.topics == 0: self.write(self.bk2+'Previously Generated: '+", ".join(rJ)+'\n') 
                 elif self.status == 'major':                 self.write(self.bk1+'Previously Generated: '+", ".join(rJ)+'\n') 
-                else: 
-                    print('zzzerror', self.status, self.topics, topic) 
-                    sys.exit() 
         self.status = 'minor' 
         self.topics += 1 
         self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
         return self 
 
     
-    def reveal_new_data(self, RD): 
-        rData = [] 
-        if RD is None: return rData 
-        #for n,D in [['file',RD.files.items()],['prefix',RD.prefixes.items()]]: #,['files',RD.lists.items()]]:
-        for n,D in [['file',RD.files.items()],['prefix',RD.prefixes.items()],['files',RD.lists.items()]]:
-            for k,F in D: 
-                if k in ['snp','phenotype','validation']: continue  
-                if n != 'files' and F is not None and F not in self.obs_input: 
-                    self.obs_input.append(F) 
-                    rData.append([self.JOB_RANK[k], k+'_'+n,F.split(self.prepath)[-1]]) 
-                elif n == 'files' and len(F) > 0 and ','.join(F) not in self.obs_input: 
-                    self.obs_input.append(','.join(F))
-                    rData.append([self.JOB_RANK[k], k+'_'+n," ".join([fn.split(self.prepath)[-1] for fn in F])]) 
 
-        if len(rData) == 0: return rData     
+
+    def reveal_new_data(self, io=None): 
+        
+        rData = [] 
+        if io is None: return [] 
+        elif io.pop is None:
+            return [] 
+            print(io.args) 
+            print() 
+            print('reveal_new_data in progress') 
+            print('here') 
+            print('yes')
+            sys.exit() 
+        else:
+            for k,P in io.pop.gen.items(): 
+                if P in self.obs_input: continue 
+                self.obs_input.append(P) 
+                if k in ['clump','beta','predict','quantify','prior']: rData.append([self.JOB_RANK[k], k+'_prefix',P.split(self.prepath)[-1]]) 
+                elif k in ['model','result']:                          rData.append([0, k+'_file',P.split(self.prepath)[-1]]) 
+                else: 
+                    print()
+                    print('cant reveal') 
+                    print(k,P) 
+
+        if len(rData) == 0: return rData 
         rData.sort() 
         rN, rD = [rd[1] for rd in rData], self.condense_paths([rd[2] for rd in rData]) 
-        
         return [a+'='+b for a,b in zip(rN, rD)]
+
+
        
 
 
@@ -299,14 +318,25 @@ class BridgeProgress:
             self.status = None  
         return 
         
+    def finish(self,MSG=None, FIN=False):
+        #self.end(NOTE) 
+        if MSG is not None:  self.write(MSG+'\n') 
+        if self.status == 'minor': self.write('...Complete\n') 
+        if FIN: sys.exit() 
+
+    # ERRORS ERRORS ERRORS ERRORS ERRORS ERRORS ERRORS ERRORS ERRORS # 
 
     
+
+
     def warn(self, MSG, WTYPE = 'BridgeWarning:'): 
         EB = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
         if type(MSG) not in [list,tuple]: self.write('\n'+WTYPE+' '+MSG) 
         else: 
             self.write('\n'+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
             for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+
+
 
 
 
@@ -321,15 +351,27 @@ class BridgeProgress:
 
 
 
-    def finish(self,MSG=None, FIN=False):
-        #self.end(NOTE) 
-        if MSG is not None:  self.write(MSG+'\n') 
-        if self.status == 'minor': self.write('...Complete\n') 
-        if FIN: sys.exit() 
 
 
 
-    # Shell WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     # WRITING WRITING WRITING WRITING WRITING # WRITING WRITING WRITING WRITING WRITING # 
     def write(self, outstring, DOTS = False): 
         if self.active: 
@@ -363,34 +405,6 @@ class BridgeProgress:
         if self.FILE: self.loghandle.write(outstring+'\n')
     
 
-
-
-    def record2(self, outformat, out_list): 
-        pL = [] 
-        if out_list[0][0] != 'FIN': 
-            
-            for T in out_list: 
-                if len(T) > 1 and T[0] not in ['TOTAL','VARIABLES','FOUND'] and T[1] != 'None': self.REC.write(T[0]+'='+T[1]+'\n')        
-                if len(T) == 1:   pL.append(T[0]) 
-                elif len(T) == 2: pL.append(T[0]+'='+self.homeshrink(T[1])) 
-                elif len(T) == 3: 
-                    tp = T[0]+'='+T[1].split(self.prepath)[-1] 
-                    my_blank = ' '.join(['' for x in range(40-len(tp))]) 
-                    pL.append(tp+ my_blank+' ('+T[2]+')')
-                else: continue 
-            outtuple = tuple(pL) 
-        else:
-            FIN, t_name, t_idx = out_list[0] 
-            self.REC.close() 
-            if t_idx == 0: outtuple = tuple(['    **Target Config Made:',t_name+'\n']) 
-            if t_idx == 1: outtuple =  tuple(['   **Base Config Made:',t_name+'\n']) 
-        if self.active:
-            self.out.write(outformat % outtuple) 
-            self.out.flush()  
-        if self.FILE: 
-            self.loghandle.write(outformat % outtuple)
-         
-
     def mark(self,dots=1):
         if self.line_loc >   110:    return 
         elif self.line_loc >  80:    dl = 1
@@ -400,13 +414,15 @@ class BridgeProgress:
         mark_string = '.'.join(['' for x in range(dl+1)])  
         self.write(mark_string, DOTS = True)  
 
-        
+
+
+
+
     # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE 
     # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE # RCODE RCODE RCODE RCODE 
     def start_rJob(self, RJ, job_name): 
         rPaths, rCols, rSave, rOne, rVal = [], [], [], [], [] 
         self.new_bk = self.sub_blank+'           ' 
-        #self.sub_blank = ' '
         if job_name == 'clump':    rInit,rJ = RJ[0:1], RJ[1::] 
         elif RJ[1] != '--vanilla': rInit,rJ = RJ[0:2], RJ[2::] 
         else:                      rInit,rJ = RJ[0:3], RJ[3::] 
@@ -472,12 +488,10 @@ class BridgeProgress:
                 if bi > 2:  b = "*/"+"/".join(b_fields[bi-1::])
                 LP[n] = [a,b] 
         return K, LP   
-    
+   
+
     def show_local(self, K, LP): 
         my_len = 0
-        
-     
-
         for i,k in enumerate(K):
             if k not in LP: continue 
             a,b = LP[k]

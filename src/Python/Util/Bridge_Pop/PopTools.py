@@ -20,12 +20,40 @@ def compare_alleles(g1, g2):
 	except: pass                                                                                                                                                                                                        
 	return 'INVALID'         
 
+
+
 def warn(eString): 
     if type(eString) in [list,tuple]:  
         sys.stderr.write('BridgePopWarning: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
     else: sys.stderr.write('BridgePopWarning: '+eString+'\n')
     return 
+
+
+def flat_warn(eString): 
+    if type(eString) in [list,tuple]:  
+        sys.stderr.write('BridgePopWarning: '+eString[0]+'\n')
+        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
+    else: sys.stderr.write('BridgePopWarning: '+eString+'\n')
+    return 
+
+
+def get_chr_strs(itbl):                                                                                                                                                                                           
+    c_int, c_str = [], []                                                                                                                                                                                               
+    for c in itbl:                                                                                                                                                                                                      
+        try:               c_int.append(int(c))                                                                                                                                                                         
+        except ValueError: c_str.append(c)                                                                                                                                                                              
+    return [str(c) for c in sorted(c_int) + sorted(c_str)]                                                                                                                                                              
+                                                                
+
+
+
+
+
+
+
+
+
 
 def bridge_debug_error2(eString):
     if type(eString) in [list,tuple]:  

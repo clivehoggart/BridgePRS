@@ -5,14 +5,16 @@ from collections import defaultdict as dd
 ##########################################################################################################################################
 ##########################################################################################################################################
 
+# check 
+
 
 class BridgeBase:
     def __init__(self, bridge):
         self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
         self.pop, self.cores = self.io.pop, str(self.args.cores) 
         self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.genopheno
-        self.P, self.F = self.io.prefixes, self.io.files 
-
+       
+        self.P = self.io.pop.gen 
         self.model, self.base_paths = {}, dd(bool) 
         if self.args.platform == 'mac':     self.make_job = self.make_mac_job
         else:                               self.make_job = self.make_linux_job         
@@ -33,18 +35,19 @@ class BridgeBase:
             self.lambda_val = '0.2,0.5,1,2,5,10,20,50' 
             
             if self.module.split('-')[-1] != 'single': 
-                fh = open(self.io.files['model']) 
+                fh = open(self.io.pop.gen['model']) 
                 for line in fh: 
                     line = line.strip().split('=')
-                    if len(line[0].split('_')) != 3: continue 
-                    x1,x2,x3 = line[0].split('_') 
-                    y = line[1] 
-                    if x3 != 'PREFIX': continue 
-                    self.model[x2.lower()] = y 
+                    if len(line) != 2: continue 
+                    elif line[0] == 'SUMSTATS_SIZE': self.model['pop_size'] = str(int(line[1])) 
+                    elif len(line[0].split('_')) == 3 and line[0].split('_')[-1] == 'PREFIX': self.model[line[0].split('_')[1].lower()] = line[1]
+                    else: continue 
                 fh.close()  
+                try:        self.model['pop_size'] = str(int(self.model['pop_size'])) 
+                except:     self.model['pop_size'] = '50000'    
                 if self.module.split('-')[-1] == 'prior': self.run_beta  = self.prior_beta
-
-
+                 
+            
 
 
 
@@ -157,7 +160,12 @@ class BridgeBase:
         
         X.extend(['--sumstats.P',self.ss.fields['P']]) 
         X.extend(['--by.chr', str(int(self.bd.BYCHR)), '--strand.check', '1'])
-        X.extend(['--N.pop1',str(self.ss.model_size), '--N.pop2', str(self.ss.pop_size)]) 
+        
+
+
+        #X.extend(['--N.pop1',str(self.ss.model_size), '--N.pop2', str(self.ss.pop_size)]) 
+        
+        X.extend(['--N.pop1',str(self.model['pop_size']), '--N.pop2', str(self.ss.pop_size)]) 
         
         # HMMMM ??? # 
         #alt_opts = ['S', 'n.max.locus', 'thinned.snplist']

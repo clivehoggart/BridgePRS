@@ -15,7 +15,7 @@ class BridgeResult:
             if len(a.split('_')) == 3 and a_tail == 'PREFIX': self.paths[a.split('_')[1]] = b 
             elif a_init in ['GENOTYPE','PHENOTYPE']:          self.PT[a_tail] = b 
             elif a_init in ['SUMSTATS','SNP']:                self.SS[a_tail] = b 
-            elif a.split('_')[0] == 'SSFIELD':                self.SL[a_tail] = b.split(',') 
+            elif a.split('_')[0] == 'SSFIELD':                self.SL[a_tail] = b  
             else:                                             X[a] = b  
         f.close() 
         self.pop, self.ldpop, self.name, self.modelpath, self.ldpath = X['POP'], X['LDPOP'], X['MODULE_NAME'], X['MODEL_FILE'], X['LDPATH']
@@ -29,8 +29,9 @@ class BridgeResult:
         return self
         
     def read_combo(self, combo): 
-        #cands = ['prs.Stages1+2','prs.weighted'] 
-        cands = ['Stage1+2','Weighted'] 
+        
+
+        cands = ['Stage1+2','Weighted']
         for k,f in combo.key.items(): 
             if 'var_explained' in f:    varexp         =   BridgeOutput('VAR').read(f).process(cands) 
             elif 'preds' in f:          preds          =   BridgeOutput('PRED').read(f).process(cands)            

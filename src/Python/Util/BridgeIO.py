@@ -4,12 +4,10 @@ from .Bridge_IO.BridgeProgress  import BridgeProgress
 from .Bridge_IO.BridgePipelines import BridgePipelines
 from collections import defaultdict as dd 
 
-
 class BridgeIO:
         def __init__(self, mps, command_line):
             self.args, self.pop_data = BridgePops(mps).parse() 
-            self.homepath = os.path.abspath(self.args.outpath) 
-            self.files, self.prefixes, self.lists, self.paths = {}, {}, {}, {} 
+            self.pop, self.homepath = None, os.path.abspath(self.args.outpath) 
             self.paths = {'home': self.homepath, 'save': self.homepath+'/save', 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'}  
             self.progress = BridgeProgress(self.args, command_line).initialize(self.paths['home'], [n for n in self.pop_data.names if n != None]) 
             self.set_programs_and_defaults() 
@@ -40,25 +38,15 @@ class BridgeIO:
         def update(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
+            if self.pop is not None: self.pop.validate_args(self.args, module, cmd, self.progress)  
             self.pipeline = BridgePipelines(self).verify_pipeline()  
-            for v in vars(self.args): 
-                kV = vars(self.args)[v] 
-                if v.split('_')[-1] not in ['file','prefix','files']: continue 
-                if v in ['snp_file','validation_file']:               continue 
-                if v.split('_')[-1] == 'file':     self.files[v.split('_')[0]] = kV 
-                elif v.split('_')[-1] == 'prefix': self.prefixes[v.split('_')[0]] = kV 
-                elif v.split('_')[-1] == 'files':  self.lists[v.split('_')[0]] = kV 
-            for k,x in self.pipeline.input_key['prefix'].items(): self.prefixes[k] = x 
-            for k,x in self.pipeline.input_key['file'].items():   self.files[k] = x 
-            if self.pop is not None: self.pop.validate(self.files, self.prefixes, self.lists) 
-            
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.check_requirements()
-                        
-            if module in ['tools','analyze']: return self  
+            if module in ['tools','analyze']: return self 
             self.progress.show_pop_data([self.pop_data.target,self.pop_data.base]) 
+            
             self.progress.show_settings()     
             if self.module == 'pipeline': return self 
             elif self.module == 'build-model': self.pop = self.pop_data.base 

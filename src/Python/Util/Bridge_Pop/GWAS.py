@@ -117,21 +117,25 @@ class SumStats:
         chr_cands = [fc.split(prefix_name)[-1] for fc in file_cands] 
         if self.source_suffix: 
             try: 
-                chr_cands = [cx.split(self.source_suffix)[0] for cx in file_cands] 
+                chr_cands = [cx.split(self.source_suffix)[0] for cx in chr_cands] 
                 chr_ints =  [int(cx) for cx in chr_cands]
                 if len(list(set(chr_ints))) == len(file_cands) and len(file_cands) < 25: return [[cr,prefix_path+'/'+cf]  for cr,cf in zip(chr_ints, file_cands)] 
-                ptools.warn('Sumstats Prefix/Suffix Does Not Produce Unique Files With Numerical Chromsomes, Attempting To Infer Filenames...') 
-            except: 
-                ptools.warn('Sumstats Prefix/Suffix Does Not Produce Unique Files With Numerical Chromsomes, Attempting To Infer Filenames...')  
-        self.TESTS['INFER_SUFFIX'] = True 
+            except: pass
+            p_warn = ['Supplied Sumstats Prefix/Suffix For Pop "'+self.pop.name+'" Does Not Produce Unique Numerical Chromsomes',' Attempting To Infer Correct Prefix/Suffix...'] 
+        else: p_warn = ['Sumstats Suffix Not Supplied for Pop "'+self.pop.name+'"',' Attempting to Infer Correct Prefix/Suffix...'] 
         try: 
             new_prefix, new_suffix = ptools.get_prefix_suffix(file_cands)             
             chr_ints = [int(pf.split(new_suffix)[0].split(new_prefix)[-1]) for pf in file_cands] 
             self.source_prefix, self.source_suffix        = prefix_path+'/'+new_prefix, new_suffix 
-            if len(list(set(chr_ints))) == len(file_cands) and len(file_cands) < 25: return [[cr,prefix_path+'/'+cf]  for cr,cf in zip(chr_ints, file_cands)] 
+            if len(list(set(chr_ints))) == len(file_cands) and len(file_cands) < 25: 
+                p_warn[-1]+= '...........FOUND! Using Valid Prefix|Suffix Pair: '+new_prefix+'|'+new_suffix
+                ptools.warn(p_warn) 
+                return [[cr,prefix_path+'/'+cf]  for cr,cf in zip(chr_ints, file_cands)] 
         except: pass 
-        self.mps.error('ConfigFileError: Sumstats Prefix/Suffix Supplied Does not Produce Unique Filenames with Numerical Chromosomes') 
+        
+        ptools.warn([p_warn[0],p_warn[1]+'...FAILED']) 
 
+        self.mps.error('ConfigFileError: Invalid Sumstats Prefix|Suffix Pair: '+prefix_name+'|'+str(self.source_suffix)) 
 
     def load_sumstats_files(self): 
         self.s_key  = {} 
