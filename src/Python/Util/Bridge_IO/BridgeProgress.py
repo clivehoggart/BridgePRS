@@ -36,6 +36,7 @@ class BridgeProgress:
         for jb,ji in [['clump',1],['beta',2],['predict',3],['quantify',4],['prior',4],['result',5]]: self.JOB_RANK[jb] = ji 
         return self 
 
+    # SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING SHOWING  # 
 
     def show_requirements(self, RK, LOC, R_DATA, plink_cmd):
         self.new_bk = '            ' 
@@ -68,12 +69,6 @@ class BridgeProgress:
         return 
 
 
-
-
-
-
-
-            
     def record_me(self, n,v, INIT=False, KEEP=True, NOTE=False): 
         if INIT: 
             if NOTE: self.say('%s\n', (n+'='+str(v)+'    '+NOTE)) 
@@ -89,18 +84,19 @@ class BridgeProgress:
     def show_pop_data(self, pop_data): 
         fs0, fs1, fs2 = '%30s  %-40s\n', '%30s  %-75s  %-25s\n', '%30s  %-22s  %-50s  %15s\n' 
         self.write('\nReading Population Data:\n') 
-        for i, pd in enumerate(pop_data):
-            if pd is None: continue 
+        for i, p in enumerate(pop_data):
+            if p is None: continue 
             my_notes = [False,False,False]
-            n1, n2 = pd.name, pd.ref_pop  
-            ss, bd, pt = pd.sumstats, pd.bdata, pd.genopheno 
-            self.tFile = self.runpath + '/save/'+n1+'.'+pd.type+'.config'
-            self.sFile = self.runpath + '/save/'+n1+'.'+pd.type+'.source'
+            
+
+            bd, ss, pt = p.bdata, p.sumstats, p.genopheno 
+            self.tFile = self.runpath + '/save/'+p.name+'.'+p.type+'.config'
+            self.sFile = self.runpath + '/save/'+p.name+'.'+p.type+'.source'
             self.REC, self.SEC = open(self.tFile,'w'), open(self.sFile, 'w') 
-            self.say('%25s\n',(pd.type.capitalize()+' Data:')) 
+            self.say('%25s\n',(p.type.capitalize()+' Data:')) 
             self.say('%25s ',('Names:')) 
-            self.record_me('POP',n1, INIT=True) 
-            self.record_me('LDPOP',n2) 
+            self.record_me('POP',p.name, INIT=True) 
+            self.record_me('LDPOP',p.ref_pop) 
             self.record_me('LD_PATH',bd.ld_path) 
             #self.record_me('FST',str(self.args.fst), KEEP=False) 
             if ss.TESTS['INFER_SUFFIX']: my_notes[0] = '(WARNING: Not Given - Inferred From Directory)' 
@@ -111,6 +107,7 @@ class BridgeProgress:
             self.record_me('SOURCE_SUFFIX',ss.source_suffix,KEEP=False,NOTE=my_notes[0]) 
             self.record_me('SUMSTATS_PREFIX',ss.prefix) 
             self.record_me('SUMSTATS_SUFFIX',ss.suffix) 
+            self.record_me('SUMSTATS_FIELDS',",".join([p.field_key[k] for k in ['ID','REF','ALT','P','BETA']]))
             self.record_me('SUMSTATS_SIZE',ss.pop_size) 
             self.say('%25s ',('QC-Snps:')) 
             self.record_me('SNP_FILE',ss.snp_file,NOTE=my_notes[1],INIT=True) 
@@ -123,7 +120,7 @@ class BridgeProgress:
                 self.record_me('GENOTYPE_PREFIX',pt.genotype_prefix,INIT=True)  
                 self.record_me('PHENOTYPE_FILE',pt.files[0])  
                 if i == 0: self.record_me('VALIDATION_FILE',pt.files[1],NOTE=my_notes[2])
-                self.record_me('CHROMOSOMES',','.join(pd.chromosomes),KEEP=False)  
+                self.record_me('CHROMOSOMES',','.join(p.chromosomes),KEEP=False)  
                 self.record_me('PHENOTYPE_VARIABLES',",".join(pt.header[2::]),KEEP=False) 
             
             self.record_me('DECLARED_PHENOTYPE',str(self.args.phenotype),KEEP=False) 
@@ -145,53 +142,12 @@ class BridgeProgress:
                         self.record_me('GWAS_Variants','['+g0+' '+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
                     else:                                                                                                                                                                                                       
                         self.record_me('Shared_Variants','['+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
-            self.say('%25s\n\n','    **'+pd.type.capitalize()+' Config Made:'+' '+self.tFile) 
+            self.say('%25s\n\n','    **'+p.type.capitalize()+' Config Made:'+' '+self.tFile) 
             self.REC.close()
             self.SEC.close() 
-            pd.config = self.tFile  
+            p.config = self.tFile  
+            p.info   = self.sFile  
         return                            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     
     def show_settings(self):
@@ -215,45 +171,11 @@ class BridgeProgress:
         except: pass 
         self.write('\n') 
         return 
-    
-    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # 
-    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # wtf 
-    
-    
-    
-    
-    def start_module(self, module, cmd, runpath):
-        #self.module, self.cmd, self.runpath = module, cmd, runpath
-        self.bk1 = '  ' 
-        self.start_heading = 'Begin Module: ' 
-        
-        if module in ['prs-single','stage1']:   self.write(self.bk1+self.start_heading+' Stage1: '+module+'\n') 
-        elif module in ['prs-port','stage1.5']: self.write(self.bk1+self.start_heading+' Stage1.5: '+module+'\n') 
-        elif module in ['prs-prior','stage2']:  self.write(self.bk1+self.start_heading+' Stage2: '+module+'\n') 
-        else:                                       self.write(self.bk1+self.start_heading+' '+module+'\n') 
-        
-        self.topic, self.status, self.topics  = 'major', 'major', 0 
-        #self.write(self.start_heading+self.module+' '+cmd+'\n') 
-        #self.sub_blank = ' '
-        return self
-    
-    def start_minor(self,topic,RD = None, block_len = 10):
-        if self.status == 'minor': self.end(RD) 
-        else: 
-            rJ = self.reveal_new_data(RD)
-            if len(rJ) > 0: 
-                if self.status is None and self.topics == 0: self.write(self.bk2+'Previously Generated: '+", ".join(rJ)+'\n') 
-                elif self.status == 'major':                 self.write(self.bk1+'Previously Generated: '+", ".join(rJ)+'\n') 
-        self.status = 'minor' 
-        self.topics += 1 
-        self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
-        return self 
-
-    
+   
 
 
-    def reveal_new_data(self, io=None): 
-        
+
+    def show_new_data(self, io=None): 
         rData = [] 
         if io is None: return [] 
         elif io.pop is None:
@@ -284,6 +206,63 @@ class BridgeProgress:
        
 
 
+
+
+    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # 
+    # MODULE MODULE MODULE MODULE MODULE MODULE # MODULE MODULE MODULE MODULE MODULE MODULE # wtf 
+    
+    
+    
+    
+    def start_module(self, module, cmd, runpath):
+        self.bk1 = '  ' 
+        self.start_heading = 'Begin Module: ' 
+        if module in ['prs-single','stage1']:   self.write(self.bk1+self.start_heading+' Stage1: '+module+'\n') 
+        elif module in ['prs-port','stage1.5']: self.write(self.bk1+self.start_heading+' Stage1.5: '+module+'\n') 
+        elif module in ['prs-prior','stage2']:  self.write(self.bk1+self.start_heading+' Stage2: '+module+'\n') 
+        else:                                       self.write(self.bk1+self.start_heading+' '+module+'\n') 
+        self.topic, self.status, self.topics  = 'major', 'major', 0 
+        return self
+    
+    def start_minor(self,topic,RD = None, block_len = 10):
+        if self.status == 'minor': self.end(RD) 
+        else: 
+            rJ = self.show_new_data(RD)
+            if len(rJ) > 0: 
+                if self.status is None and self.topics == 0: self.write(self.bk2+'Previously Generated: '+", ".join(rJ)+'\n') 
+                elif self.status == 'major':                 self.write(self.bk1+'Previously Generated: '+", ".join(rJ)+'\n') 
+        self.status = 'minor' 
+        self.topics += 1 
+        self.write(self.sub_blank+'JOB'+str(self.topics)+': '+topic+'...')
+        return self 
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def condense_paths(self, X): 
         X = [self.homeshrink(x) for x in X] 
         if len(X) < 2: return X 
@@ -309,7 +288,7 @@ class BridgeProgress:
 
     
     def end(self,RD=None): 
-        rJ = self.reveal_new_data(RD)
+        rJ = self.show_new_data(RD)
         if self.status == 'minor':
             dl = max(self.run_len - self.line_loc, 1) 
             cl = '.'.join(['' for x in range(dl)])+'Complete' 
@@ -398,7 +377,7 @@ class BridgeProgress:
         if self.FILE: self.loghandle.write(outformat % outtuple)
 
     
-    def quikout(self, outstring): 
+    def quikout2(self, outstring): 
         if self.active: 
             self.out.write(outstring+'\n') 
             self.out.flush()  
