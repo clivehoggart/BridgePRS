@@ -83,15 +83,14 @@ class BridgeOutput:
    
 
     def create_var_key(self, V):
-        try: self.frac, self.val, self.interval, self.devs =  V['Frac'], V['Est'], [V['2.5'],V['97.5']], [V['cv.dev'], V['cv.dev.sd']]
-        except KeyError:  self.frac, self.val, self.interval, self.devs =  1, V['Est'], [V['2.5'],V['97.5']], [V['cv.dev'], V['cv.dev.sd']]
+        try: self.frac, self.val, self.interval =  V['Frac'], V['Est'], [V['2.5'],V['97.5']]
+        except KeyError:  self.frac, self.val, self.interval =  1, V['Est'], [V['2.5'],V['97.5']] 
         return self 
 
 
 
     def process(self, cands =[]): 
         
-        print(cands, self.RULE)  
 
         if len(cands) == 0: 
             if self.RULE != 'VAR': return self.K 
