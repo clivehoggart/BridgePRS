@@ -90,6 +90,9 @@ class BridgeOutput:
 
 
     def process(self, cands =[]): 
+        
+        print(cands, self.RULE)  
+
         if len(cands) == 0: 
             if self.RULE != 'VAR': return self.K 
             else:                  return self.create_var_key(self.K[[z for z in self.K.keys()][0]])

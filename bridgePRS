@@ -25,16 +25,9 @@ class MPS(argparse.ArgumentParser):
         return self 
 
 
-    def multi_line_error(self, eString, FLATLINE=False): 
-        if type(eString) in [list,tuple]:                                                                                                                                                                                       
-            sys.stderr.write('\nBridgeInputError: '+eString[0]+'\n')                                                                                                                                                              
-            for es in eString[1::]: sys.stderr.write('                  '+es+'\n')                                                                                                                                               
-        else: sys.stderr.write('BridgeInputError: '+eString+'\n')                                                                                                                                                               
-        print('\n') 
-        if not FLATLINE: self.print_help() 
-        sys.exit(2)        
 
 
+    
 
 
 
@@ -44,33 +37,54 @@ class MPS(argparse.ArgumentParser):
             if len(info) > 0: 
                 for x in info: sys.stderr.write(x+'\n\n') 
         if len(notes) > 0:  
-            if notes[0] == 'config' and notes[-1].split('-')[0] == 'INVALID': 
-                sys.stderr.write('\nError - Supplied \"'+notes[1]+'\" Does Not Exist: '+notes[2]+'\n') 
-            else: 
-                print(notes) 
-        print('\n') 
+            if notes[0] == 'config' and notes[-1].split('-')[0] == 'INVALID': sys.stderr.write('\nError - Supplied \"'+notes[1]+'\" Does Not Exist: '+notes[2]+'\n') 
+            else:                                                             print(notes) 
+        sys.stderr.write('\n') 
         self.print_help() 
         sys.exit(2) 
 
+    def fail(self, MSG, ETYPE = 'BridgeInputError:'): 
+        EB = ' '.join(['' for x in range(len(ETYPE))])+'  '
+        if type(MSG) not in [list,tuple]: sys.stderr.write('\n'+ETYPE+' '+MSG)
+        else:
+            sys.stderr.write('\n'+ETYPE+' '+MSG[0]+'\n')
+            for es in MSG[1::]:   sys.stderr.write(EB+es+'\n')
+            sys.stderr.write('\n')
+        self.print_help() 
+        sys.exit() 
+
+    
+
+    def config_error(self, s1=None, s2 = None): 
+        sys.stderr.write('InvalidConfigFile: '+self.Fn+'\n') 
+        if s1 is not None: sys.stderr.write('                   '+s1+'\n') 
+        if s2 is not None: sys.stderr.write('                   '+s2+'\n') 
+        sys.stderr.write('\n') 
+        #sys.stderr.write('Please See bridgePRS tools make-config for more help\n') 
+        self.print_help() 
+        sys.exit() 
 
 
 
 
 
-
-    def config_warning(self, Fn, statement): 
-        sys.stderr.write('ConfigFileWarning: '+Fn+' '+statement+'\n')
+    def config_warning(self, s1='', s2=None): 
+        sys.stderr.write('ConfigFileWarning: '+self.Fn+' '+s1+'\n')
+        if s2 is not None: sys.stderr.write('                   '+s2+'\n') 
         return 
         
 
 
 
     def config_key(self, F): 
-        Fn = F.split('/')[-1] 
+        if 'Fn' in vars(self): PREV=True 
+        else:                  PREV=False 
+        self.Fn = F.split('/')[-1] 
         C, K, fp = {'config_name': F, 'MISSING': dd(bool)}, {}, self.valid_file(F) 
         self.paths.append("/".join(fp.split('/')[0:-1])+'/')
+        
         with open(fp, "r") as f: f_data = [ln.split('#')[0].strip().split('=') for ln in f if len(ln.split('#')[0].split('=')) == 2] 
-        for c_name, cnt in [both for both in Counter([fd[0] for fd in f_data]).items() if both[1] > 1]: self.error('\nError - Repeated Option in pop-config file '+Fn+': '+c_name) 
+        for c_name, cnt in [both for both in Counter([fd[0] for fd in f_data]).items() if both[1] > 1]: self.config_error('Repeated Option: '+c_name) 
         for k,kval in f_data:
             kx, ktail, kp, kn = k.lower(), k.lower().split('_')[-1], "/".join(kval.split('/')[0:-1]), kval.split('/')[-1]
             if ktail in ['file','path','prefix']: 
@@ -81,27 +95,41 @@ class MPS(argparse.ArgumentParser):
                 else: K[kx] = k_cand
             else:     K[kx] = kval
 
-       
 
-        if 'pop' in K and 'ldpop' not in K: K['ldpop'] = K['pop']  
-        k_keys = [k for k in K.keys()] 
-        if 'sumstats_file' in k_keys:                                                                       
+        if 'sumstats_file' in K:                                                                       
             ss_file = K['sumstats_file'] 
-            if    'sumstats_prefix' in k_keys or 'sumstats_suffix' in k_keys: self.error('ConfigFileError: Incompatibility In Configuration File: sumstats_file is not compatible with sumstats_prefix/sumstats_suffix')
-            else: 
-                K['sumstats_prefix'] = K.pop('sumstats_file') 
-                K['sumstats_suffix'] = '__FILE__' 
-        
-        
-        if 'sumstats_prefix' in K and 'sumstats_suffix' not in K: K['sumstats_suffix'] = None 
+            if    'sumstats_prefix' in K or 'sumstats_suffix' in K: self.config_error('Incompatible Arguments','sumstats_file not compatible with sumstats_prefix/sumstats_suffix')
+            else:  K['sumstats_prefix'], K['sumstats_suffix'] = K.pop('sumstats_file'), '__FILE__'
+         
+         
+        #if 'pop' in K and 'ldpop' not in K: K['ldpop'] = K['pop']  
+        #if 'sumstats_prefix' in K and 'sumstats_suffix' not in K: K['sumstats_suffix'] = None 
         for k in ['pop','ldpop','ld_path','sumstats_prefix']: 
-            if k not in K: self.error('ConfigFileError: config file '+Fn+' is missing a required argument\n                 please add following line to config file: '+k.upper()+'=<'+k.lower()+'>') 
+            if k not in K: self.config_error('Is missing a required argument','please add to config file: '+k.upper()+'=<'+k.lower()+'>') 
             else: C[k] = K.pop(k)
+        
+       
+        for k in ['sumstats_suffix','sumstats_size','validation_file']: 
+            if k in K: C[k] = K.pop(k) 
+            else:
+                C[k], C['MISSING'][k] = None, True                 
+                if   k == 'sumstats_suffix':   self.config_warning('is missing sumstats_suffix, attempting to infer from filesystem') 
+                elif k == 'sumstats_size':     self.config_warning('is missing sumstats_size, required for stage-2') 
+                else:                          continue 
+
+        for k in ['genotype_prefix','phenotype_file']: 
+            if k in K:  C[k] = K.pop(k) 
+            elif PREV:  C[k] = self.lastConfig[k] 
+            else:       self.config_error('Is missing a required leading argument','please add to config file: '+k.upper()+'=<'+k.lower()+'>') 
+
+
+        ## FIELD PARSE ## 
 
         ssf_names, ssf_vals, ssf_indivs = ['snpid','ref','alt','p','beta'], ['_NA_','_NA_','_NA_','_NA_','_NA_'], [k for k in K.keys() if k.split('-')[0] == 'ssf'] 
         if 'sumstats_fields' in K: 
             ssf_vals = K.pop('sumstats_fields').split(',') 
-            if len(ssf_vals) != 5:  self.error('ConfigFileError: Invalid SUMSTATS_FIELDS entry in '+Fn+'\n                 Five comma separated values required for snp_id,ref_allele,alt,pval,effect_size\n                 Example: ID,REF,A1,P,BETA') 
+            if len(ssf_vals) != 5:  self.config_error('Invalid sumstats_fields entry. Five comma separated values required','Example: SUMSTATS_FIELDS=ID,REF,ALT,PV,BETA') 
+
         
         for k in ssf_indivs: 
             if k.split('-')[-1] in ssf_names: 
@@ -116,24 +144,13 @@ class MPS(argparse.ArgumentParser):
             if k in K: C[k] = K.pop(k)
             else:      C[k] = None 
 
-        for k in ['sumstats_suffix','sumstats_size','genotype_prefix','phenotype_file','validation_file']: 
-            if k in K: C[k] = K.pop(k) 
-            else: 
-                #if k == 'sumstats_fields': 
-                #    self.config_warning(Fn,'is missing sumstats_fields, using defaults: ID,REF,A1,P,BETA') 
-                #    C[k] = 'ID,REF,A1,P,BETA'
-                #else:
-                C[k], C['MISSING'][k] = None, True 
-                if   k == 'sumstats_suffix':   self.config_warning(Fn,'is missing sumstats_suffix, attempting to infer from filesystem') 
-                elif k == 'sumstats_size':   self.config_warning(Fn,'is missing sumstats_size, required for stage-2') 
-                else:                        continue 
-   
 
         if len(C['sumstats_fields'].split(',')) != 5: 
             self.error('ConfigFileError: Invalid Entry For sumstats_fields, five comma separated values are required\n                 For snp_id, ref_allele, alt_allele, pvalue, and effect_size\n                 Example: ID,REF,A1,P,BETA') 
+        for k in K:  self.error('Unrecognized Field in Config File: '+k+'\n             Hint: Remove or Comment Out Line: '+k.upper()+'='+K[k]) 
         
 
-        for k in K:  self.error('Unrecognized Field in Config File: '+k+'\n             Hint: Remove or Comment Out Line: '+k.upper()+'='+K[k]) 
+        self.lastConfig = C 
         return C 
 
 
@@ -243,7 +260,7 @@ if __name__ == '__main__':
     
 
     onepop = OnePop.add_argument_group('Required') 
-    onepop.add_argument('--config_file',      dest = 'config',      type=mps.config_key,     nargs = 1, metavar='',required=True, help = 'One Population Config File Is Required') 
+    onepop.add_argument('--config_file',      dest = 'config',      type=mps.config_key,     nargs = 1, required=True, help = 'One Population Config File Is Required') 
     onepop.add_argument('-o', '--out',      dest ='outpath',     type=str,     action='store', metavar='', help='Output Path For Pipeline Run') 
     
     onerun = OnePop.add_argument_group('Generated Or Subprogram Specific')  

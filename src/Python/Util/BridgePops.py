@@ -6,6 +6,7 @@ from .Bridge_Pop.GenoPheno import GenoPheno
 from .Bridge_Pop.GWAS import SumStats 
 from .Bridge_Pop import PopTools as ptools  
 
+# multi_line_error
 
 class BridgePops: 
     def __init__(self,mps):
@@ -64,7 +65,8 @@ class BridgePops:
                             sys.exit() 
 
                         else: continue 
-
+                else: 
+                    print('wtf') 
 
                     continue 
 
@@ -83,6 +85,14 @@ class BridgePop:
         self.sumstats_fields = [pf.strip() for pf in P['sumstats_fields'].split(',')] 
         self.field_key       = {a: A for a,A in zip(['ID','REF','ALT','P','BETA'],self.sumstats_fields)}
         self.gen = {} 
+        
+        self.name, self.ref_pop = P.pop('pop'), P.pop('ldpop') 
+       
+        for k,v in P.items(): vars(self)[k] = v
+
+        
+
+
         for k,v in P.items(): 
             if k == 'pop':           self.name = v 
             elif k == 'ldpop':       self.ref_pop = v 
@@ -90,11 +100,13 @@ class BridgePop:
             elif v is not None or prevPop is None:       vars(self)[k] = v 
             elif k.split('_')[0] != 'sumstats': vars(self)[k] = vars(prevPop)[k] 
             else:                             vars(self)[k] = v  
+        
+
         self.bdata = BData(self, mps).load_panel()
         self.genopheno = GenoPheno(self, mps, args.phenotype).load()    
         self.sumstats  = SumStats(self, mps).load(self.genopheno, prevPop) 
         self.verify_chromosomes() 
-
+        self.validate_args(args, args.module, args.cmd, mps) 
 
     def validate_args(self, args, module, cmd, progress): 
         self.gen, mInputs, mGen = {}, [], [] 
@@ -129,7 +141,7 @@ class BridgePop:
         if len(valid_chromosomes) == 0: my_error.append('The Following Chromosomes Are Found in both sources: None') 
         else:                           my_error.append('The Following Chromosomes Are Found in both sources: '+",".join(valid_chromosomes)) 
         my_error.append('Note: A one-to-one mapping is required, consider changing sumstats or ld-panel chromosome names')  
-        self.mps.multi_line_error(my_error) 
+        self.mps.fail(my_error) 
         return 
 
 
