@@ -227,7 +227,7 @@ if( opt$valid.data!=0 ){
         # TADE - NEED THE PHENOTYPE AND COLUMN NAMES FOR DOWNSTREAM ANALYSIS #
         out <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1, prs.ridge2,
                           prs.ridge, prs.weighted )
-        colnames(out) <- c('---','pheno','Stage1','Stage2','Stages1+2','Weighted')
+        colnames(out) <- c('IID','pheno','Stage1','Stage2','Stages1+2','Weighted')
 
         # TADE - NEED THE COLUMN NAMES FOR DOWNSTREAM
         #write.table( out,paste0(opt$outfile,"_weighted_combined_preds.dat"),col.names=FALSE, row.names=FALSE, quote=FALSE )
@@ -265,7 +265,7 @@ if( opt$valid.data!=0 ){
         # TADE - Adding Single Stage Preds for single stage #
         data <- data.frame( target[  ,opt$pheno.name], prs.ridge1, covs )
         my_data <- data.frame( target$IID, target[,opt$pheno.name], prs.ridge1)
-        colnames(my_data) <- c('---','pheno','prs')
+        colnames(my_data) <- c('IID','pheno','prs')
         write.table( my_data, paste0(opt$outfile,"_preds.dat"), row.names = FALSE, quote=FALSE)
 
     }
