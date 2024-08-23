@@ -20,7 +20,7 @@ calc_ve <- function(prs, myfit) {
         cvsd <- myfit$cvsd[ptr.min]
     }
 
-    c(b$t0, ci$normal[-1], cvm, cvsd)
+    c(b$t0, ci$normal[-1])#, cvm, cvsd)
 }
 
 var_explained <- function(data, ptr, fam = "gaussian") {
@@ -238,7 +238,7 @@ if( opt$valid.data!=0 ){
 
         out <- rbind(  VE.ridge1, VE.ridge2, VE.ridge, VE.ridge.w )
         out <- data.frame( c('Stage1','Stage2','Stage1+2','Weighted'), c(probM.ridge,1), out )
-        colnames(out) <- c('---','Prob','Est','2.5%','97.5%','cv.dev','cv.dev.sd')
+        colnames(out) <- c('---','Prob','Est','2.5%','97.5%')
         print(out)
         write.csv( out, paste0(opt$outfile,"_weighted_combined_var_explained.txt"),
                   row.names=FALSE, quote=FALSE )
@@ -255,7 +255,7 @@ if( opt$valid.data!=0 ){
     }
     if( is.null(opt$pred2) ){
         out <- rbind( VE.ridge1 )
-        colnames(out) <- c('Est','2.5%','97.5%','cv.dev','cv.dev.sd')
+        colnames(out) <- c('Est','2.5%','97.5%')
         rownames(out) <- c('Ridge')
         print(out)
 
