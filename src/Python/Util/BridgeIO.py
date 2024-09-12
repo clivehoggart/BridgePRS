@@ -6,11 +6,11 @@ from collections import defaultdict as dd
 
 class BridgeIO:
         def __init__(self, mps, command_line):
-            self.args, self.pop_data = BridgePops(mps).parse() 
-            self.pop, self.homepath = None, os.path.abspath(self.args.outpath) 
-            self.paths = {'home': self.homepath, 'save': self.homepath+'/save', 'logs': self.homepath+'/logs', 'tmp': self.homepath+'/tmp'}  
+            self.pop_data, self.pop = BridgePops(mps).parse(), None 
+            self.args, self.paths = self.pop_data.args, self.pop_data.paths  
             self.progress = BridgeProgress(self.args, command_line).initialize(self.paths['home'], [n for n in self.pop_data.names if n != None]) 
-            self.set_programs_and_defaults() 
+            self.pop_data.set_progress(self.progress) 
+            self.set_programs_and_defaults()
 
         def set_programs_and_defaults(self):
             self.ROUNDS, self.FOUND, self.LOC, self.programs= 0, dd(bool), dd(lambda: 'NA'), {} 
@@ -39,14 +39,15 @@ class BridgeIO:
             self.module, self.cmd = module, cmd 
             self.progress.start_module(self.module, self.cmd, self.paths['home']) 
             if self.pop is not None: self.pop.validate_args(self.args, module, cmd, self.progress)  
-            self.pipeline = BridgePipelines(self).verify_pipeline()  
+            self.pipeline = BridgePipelines(self).verify_pipeline(self.pop)   
 
         def initialize(self, module, cmd): 
             self.module, self.cmd = module, cmd 
             self.check_requirements()
             if module in ['tools','analyze']: return self 
-            self.progress.show_pop_data([self.pop_data.target,self.pop_data.base]) 
             
+            self.pop_data.load_from_configs() 
+            self.progress.show_pop_data([self.pop_data.target,self.pop_data.base]) 
             self.progress.show_settings()     
             if self.module == 'pipeline': return self 
             elif self.module == 'build-model': self.pop = self.pop_data.base 

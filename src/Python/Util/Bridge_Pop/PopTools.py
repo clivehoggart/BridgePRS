@@ -1,13 +1,9 @@
 import sys, os, gzip, shutil
 from collections import defaultdict as dd
 from collections import Counter as cc 
-#import BridgeTools 
 
 
 
-#from .BridgePop      import BridgePop
-
-# model_file
 REV_COMP =  {'A': 'T', 'C': 'G','G': 'C', 'T': 'A'}
 NUM_STRS =  ['1','2','3','4','5','6','7','8','9','0'] 
 
@@ -22,7 +18,7 @@ def compare_alleles(g1, g2):
 
 
 
-def warn(eString): 
+def warn2(eString): 
     if type(eString) in [list,tuple]:  
         sys.stderr.write('BridgePopWarning: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
@@ -30,7 +26,7 @@ def warn(eString):
     return 
 
 
-def flat_warn(eString): 
+def flat_warn2(eString): 
     if type(eString) in [list,tuple]:  
         sys.stderr.write('BridgePopWarning: '+eString[0]+'\n')
         for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
@@ -54,31 +50,6 @@ def get_chr_strs(itbl):
 
 
 
-
-def bridge_debug_error2(eString):
-    if type(eString) in [list,tuple]:  
-        sys.stderr.write('BridgeDebugError: '+eString[0]+'\n')
-        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
-    else: sys.stderr.write('BridgeDebugError: '+eString+'\n')
-    sys.exit(2) 
-
-
-# Ambiguous debug_level Ref/Alt Missing snps.txt check printout
-
-def bridge_pop_error2(eString):
-    if type(eString) in [list,tuple]:  
-        sys.stderr.write('\nBridgePopError: '+eString[0]+'\n')
-        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
-    else: sys.stderr.write('\nBridgePopError: '+eString+'\n')
-    sys.exit(2) 
-
-
-def bridge_sumstats_error2(eString): 
-    if type(eString) in [list,tuple]:  
-        sys.stderr.write('\nBridgeSumstatsError: '+eString[0]+'\n')
-        for es in eString[1::]: sys.stderr.write('                 '+es+'\n')
-    else: sys.stderr.write('\nBridgeSumstatsError: '+eString+'\n')
-    sys.exit(2) 
 
 
 

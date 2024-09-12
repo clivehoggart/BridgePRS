@@ -21,7 +21,25 @@ def combine_error(eString):
 class BridgeRun: 
     def __init__(self, bridge):
         self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
-        
+
+
+    def apply(self): 
+
+        if self.io.cmd == 'check-requirements': 
+            self.progress.finish('Complete') 
+            sys.exit() 
+        elif self.io.cmd[0:9] == 'check-pop': 
+            self.progress.write('\nChecking Population Data:\n\n')  
+            pop_args, pop_data = self.io.pop_data.load_from_args(self.args)  
+            self.progress.show_pop_data([pop_data.target,pop_data.base]) 
+            self.progress.write('Population Data Verified:\n')
+            self.progress.write('           Target Config Created: '+pop_data.target.config+'\n')
+            if pop_data.base is not None: 
+                self.progress.write('           Base Config Created:   '+pop_data.base.config+'\n')
+
+
+
+
     def analyze(self, cmd, results_files, path): 
         self.results_files = results_files 
         self.results = [BridgeResult().read_file(r) for r in results_files] 
@@ -65,7 +83,6 @@ class BridgeRun:
         plot_names = [path+'/bridgePRS-combo.pdf', sPath+'/bridgeSummary.'+self.source.lower()+'.pdf'] 
         self.bPlot = BridgePlot(self.args, BR, self.pop, plot_names).setup(TYPE='MEGA') 
         self.bPlot.fill_in('single','weighted') 
-        
         return 
 
          
@@ -73,14 +90,6 @@ class BridgeRun:
         br, method = BR[0], BR[0].name.split('-')[-1] 
         self.bPlot = BridgePlot(self.args, BR, self.pop, [path+'/bridgePRS-'+method+'.pdf']).setup(BR[0].name.split('-')[-1]) 
         self.bPlot.fill_in(method, method) 
-
-        #self.bPlot.full_var_bars()
-        #self.bPlot.add_pred_scatter(method) 
-        #if method != 'single': self.bPlot.add_model(br.modelpath)
-        #self.bPlot.analyze_snp_dists(method, method) #,MODEL=True)  
-        #self.bPlot.add_summary_table(method)  
-        #self.bPlot.add_logo(2) 
-        #self.bPlot.finish() 
         return 
 
 

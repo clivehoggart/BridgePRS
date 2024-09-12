@@ -13,12 +13,12 @@ class BridgeBase:
         self.module, self.args, self.io, self.progress = bridge.io.module, bridge.args, bridge.io, bridge.io.progress 
         self.pop, self.cores = self.io.pop, str(self.args.cores) 
         self.bd, self.ss, self.pt = self.pop.bdata, self.pop.sumstats, self.pop.genopheno
-       
         self.P = self.io.pop.gen 
         self.model, self.base_paths = {}, dd(bool) 
         if self.args.platform == 'mac':     self.make_job = self.make_mac_job
         else:                               self.make_job = self.make_linux_job         
        
+
 
         ### GOTTA ADD EVERYTHINGTO USER SETTINGS --- GET RID OF MOST OF THE X-FIELDS ###
         ### DO AN EXAMPLE WITH --thinned snp list
@@ -32,8 +32,15 @@ class BridgeBase:
             self.lambda_val = '0.1,0.2,0.5,1,2,5,10,20'
         else:                                  
             self.clump_args = ['--clump-p1','1e-2','--clump-p2','1e-1','--clump-kb','1000','--clump-r2','0.01','--maf','0.001'] 
-            self.lambda_val = '0.2,0.5,1,2,5,10,20,50' 
+            if self.pop.clump_value is not None: 
+                try: cval = float(self.pop.clump_value)
+                except: cval = 0.1 
+                if cval > 0.5: cval = 0.5 
+                cval2 = cval*2 
+                if cval2 > 0.6: cval2 = 0.6
+                self.clump_args = ['--clump-p1',str(cval),'--clump-p2',str(cval2),'--clump-kb','1000','--clump-r2','0.01','--maf','0.001'] 
             
+            self.lambda_val = '0.2,0.5,1,2,5,10,20,50'   
             if self.module.split('-')[-1] != 'single': 
                 fh = open(self.io.pop.gen['model']) 
                 for line in fh: 
@@ -100,8 +107,11 @@ class BridgeBase:
         else:                       X = ['--bfile',self.bd.map[chromosome],'--extract', self.ss.snp_file, '--keep', self.bd.id_file] + self.bd.X_fields + self.clump_args
         rJOB = [pp,'--clump',self.ss.map[chromosome],'--out',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)] + X 
         self.make_job(rJOB, SILENT = (chromosome != '1')) 
-        rJOB = ['gzip','-f',self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)+'.clumped'] 
-        self.make_job(rJOB, SILENT = True) 
+        fname = self.io.paths['clump']+'/'+self.pop.name+'_clump_'+str(chromosome)+'.clumped' 
+        if os.path.exists(fname): 
+            rJOB = ['gzip','-f',fname] 
+            self.make_job(rJOB, SILENT = True) 
+
         return 
 
         
@@ -109,6 +119,7 @@ class BridgeBase:
     def run_beta(self, name = 'beta'): 
         self.name, pp = name, self.io.programs['est_beta_bychr'] 
         
+
         #print(self.ss.X_fields) 
         
         #self.ss.X_fields = ['--sumstats.allele0ID', 'REF', '--sumstats.allele1ID', 'A1', '--sumstats.betaID', 'BETA', '--sumstats.frqID', 'A1_FREQ', '--sumstats.nID', 'OBS_CT', '--sumstats.seID', 'SE', '--sumstats.snpID', 'ID']

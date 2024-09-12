@@ -9,9 +9,9 @@ from collections import Counter as cc
 
 
 class GenoPheno: 
-    def __init__(self, pop, mps, phenotype): 
+    def __init__(self, pop, phenotype): 
 
-        self.parent, self.mps, self.paths, self.pop_name, self.pop_type = pop, mps, pop.paths, pop.name, pop.type 
+        self.parent, self.mps, self.progress, self.paths, self.pop_name, self.pop_type = pop, pop.mps, pop.progress, pop.paths, pop.name, pop.type 
         self.genotype_prefix, self.phenotype_file, self.validation_file = self.parent.genotype_prefix, self.parent.phenotype_file, self.parent.validation_file
         self.phenotype, self.covariates = phenotype, self.parent.covariates 
         self.TESTS, self.VALID, self.BYCHR = dd(bool), False, False 
@@ -30,7 +30,7 @@ class GenoPheno:
         for f in [x for x in os.listdir(g_path) if x[0:len(g_prefix)] == g_prefix]:
             if f.split('.')[-1] in ['bed','bim','fam']: CK[".".join(f.split('.')[0:-1])]+=1                                                                                                                                                                                   
         cands = [k for k,v in CK.items() if v == 3]
-        if len(cands) == 0: bridge_pop_error('Invalid genotype data prefix '+self.genotype_prefix) 
+        if len(cands) == 0: self.mps.error('Invalid genotype data prefix '+self.genotype_prefix) 
         if len(cands) == 1:
             self.genotype_prefix = "/".join(self.genotype_prefix.split('/')[0:-1])+'/'+cands[0]
             self.BYCHR = False 

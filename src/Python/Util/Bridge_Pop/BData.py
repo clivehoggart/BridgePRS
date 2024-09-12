@@ -6,8 +6,8 @@ from . import PopTools as ptools
 
 
 class BData: 
-    def __init__(self, pop, mps):
-        self.parent, self.mps = pop, mps 
+    def __init__(self, pop):
+        self.parent, self.mps, self.progress = pop, pop.mps, pop.progress 
         self.ld_pop, self.ld_path = self.parent.ref_pop, self.parent.ld_path
         self.X_fields = ['--clump-field',self.parent.field_key['P'], '--clump-snp-field',self.parent.field_key['ID']] 
         self.map = dd(list) 

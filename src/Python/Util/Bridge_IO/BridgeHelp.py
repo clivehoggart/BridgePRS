@@ -2,7 +2,6 @@ import sys, os
 from collections import defaultdict as dd
 
 
-# web
 
 
 class BridgeHelp:

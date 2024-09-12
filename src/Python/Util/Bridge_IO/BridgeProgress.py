@@ -88,7 +88,6 @@ class BridgeProgress:
             if p is None: continue 
             my_notes = [False,False,False]
             
-
             bd, ss, pt = p.bdata, p.sumstats, p.genopheno 
             self.tFile = self.runpath + '/save/'+p.name+'.'+p.type+'.config'
             self.sFile = self.runpath + '/save/'+p.name+'.'+p.type+'.source'
@@ -98,7 +97,7 @@ class BridgeProgress:
             self.record_me('POP',p.name, INIT=True) 
             self.record_me('LDPOP',p.ref_pop) 
             self.record_me('LD_PATH',bd.ld_path) 
-            #self.record_me('FST',str(self.args.fst), KEEP=False) 
+            if p.clump_value is not None: self.record_me('CLUMP_VALUE',p.clump_value) 
             if ss.TESTS['INFER_SUFFIX']: my_notes[0] = '(WARNING: Not Given - Inferred From Directory)' 
             if ss.TESTS['NEWSNPS']:      my_notes[1] = '(WARNING: Not Given - Created Using All Snps)'
             if pt.TESTS['NOVALID']:      my_notes[2] = '(WARNING: Not Given - Created by Splitting Phenotype File)'
@@ -139,9 +138,9 @@ class BridgeProgress:
                         if ss.CK['GENO_'+nk] > 0: g2.append(str(ss.CK['GENO_'+nk])+' ('+n+')')                                                                                                                                    
                     if i == 0:                                                                                                                                                                                                 
                         g0 = str(min(ss.snp_list_len, ss.genome_snps))+' (Total),'
-                        self.record_me('GWAS_Variants','['+g0+' '+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
+                        self.record_me('GWAS_Variants','['+g0+' '+", ".join(g1)+']', KEEP=False) 
                     else:                                                                                                                                                                                                       
-                        self.record_me('Shared_Variants','['+", ".join(g1)+']', KEEP=False) #str(min(ss.snp_list_len,ss.genome_snps)), KEEP=False)
+                        self.record_me('Shared_Variants','['+", ".join(g1)+']', KEEP=False) 
             self.say('%25s\n\n','    **'+p.type.capitalize()+' Config Made:'+' '+self.tFile) 
             self.REC.close()
             self.SEC.close() 
@@ -237,6 +236,21 @@ class BridgeProgress:
         return self 
 
     
+    def start_warning(self, m1, m2=None, WTYPE = 'BridgeWarning: '):
+        ws = "".join([' ' for x in range(len(WTYPE)+1)]) 
+        if m2 is not None: 
+            self.write('\n'+WTYPE+' '+m1+'\n'+ws+m2+'...')                                                                                                                                                                                                                     
+            self.line_loc = len(ws) + len(m2) 
+        else:              
+            self.write('\n'+WTYPE+' '+m1+'...')                                                                                                                                                                                                                     
+            self.line_loc =  len(WTYPE) + len(m1)
+        if self.line_loc > 100: self.line_loc = 50
+        return 
+
+    def end_warning(self,m1): 
+        self.write(m1+'\n') 
+        return
+
 
 
 
@@ -298,7 +312,6 @@ class BridgeProgress:
         return 
         
     def finish(self,MSG=None, FIN=False):
-        #self.end(NOTE) 
         if MSG is not None:  self.write(MSG+'\n') 
         if self.status == 'minor': self.write('...Complete\n') 
         if FIN: sys.exit() 
@@ -330,8 +343,11 @@ class BridgeProgress:
 
 
 
-
-
+    def broke(self, msg, extra = []): 
+        self.write('Failed - '+msg+'\n')
+        if len(extra) == 0: self.write('\n')
+        else: self.write(extra[0]+'\n') 
+        sys.exit(2) 
 
 
 
@@ -377,11 +393,6 @@ class BridgeProgress:
         if self.FILE: self.loghandle.write(outformat % outtuple)
 
     
-    def quikout2(self, outstring): 
-        if self.active: 
-            self.out.write(outstring+'\n') 
-            self.out.flush()  
-        if self.FILE: self.loghandle.write(outstring+'\n')
     
 
     def mark(self,dots=1):
@@ -391,6 +402,7 @@ class BridgeProgress:
         elif self.line_loc >  50:    dl = 2*dots 
         else:                        dl = 3*dots 
         mark_string = '.'.join(['' for x in range(dl+1)])  
+        
         self.write(mark_string, DOTS = True)  
 
 
