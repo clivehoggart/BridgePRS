@@ -322,11 +322,16 @@ class BridgeProgress:
 
 
     def warn(self, MSG, WTYPE = 'BridgeWarning:'): 
-        EB = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
-        if type(MSG) not in [list,tuple]: self.write('\n'+WTYPE+' '+MSG) 
+        try: 
+            e1 = self.sub_blank 
+            e2 = self.sub_blank + ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        except: 
+            e1 = '' 
+            e2 = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        if type(MSG) not in [list,tuple]: self.write('\n'+e1+WTYPE+' '+MSG) 
         else: 
-            self.write('\n'+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
-            for es in MSG[1::]:   self.write(EB+es+'\n')                                                                                                                                                                                                                        
+            self.write('\n'+e1+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
+            for es in MSG[1::]:   self.write(e2+es+'\n')                                                                                                                                                                                                                        
 
 
 
@@ -343,11 +348,21 @@ class BridgeProgress:
 
 
 
-    def broke(self, msg, extra = []): 
-        self.write('Failed - '+msg+'\n')
-        if len(extra) == 0: self.write('\n')
-        else: self.write(extra[0]+'\n') 
-        sys.exit(2) 
+    def broke(self, MSG, extra = [], WTYPE='BridgePipelineError'): 
+        try: 
+            e1 = self.sub_blank 
+            e2 = self.sub_blank + ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        except: 
+            e1 = '' 
+            e2 = ' '.join(['' for x in range(len(WTYPE))])+'  ' 
+        if type(MSG) not in [list,tuple]: self.write('\n'+e1+WTYPE+' '+MSG) 
+        else: 
+            self.write('\n'+e1+WTYPE+' '+MSG[0]+'\n')                                                                                                                                                                                                                     
+            for es in MSG[1::]:   self.write(e2+es+'\n')                                                                                                                                                                                                                        
+        sys.exit()         
+
+
+
 
 
 

@@ -108,7 +108,7 @@ class BridgePipelines:
 
     def validate_result(self, prefix, path, D): 
         PK, RK = dd(list), dd(list) 
-        if not os.path.isdir(path): self.io.progress.broke('No Working Directory: '+D) 
+        if not os.path.isdir(path): self.io.progress.broke('No Working Directory: '+D,WTYPE=self.eType) 
         for f in os.listdir(path):
             fe = f.split('.')[-1] 
             if prefix in f: PK[fe].append(f) 
@@ -121,7 +121,7 @@ class BridgePipelines:
             fins,logs = [f.split('.')[0] for f in PK['gz']], [f.split('.')[0] for f in PK['log']]
             if len(PK['gz']) < len(PK['log']): 
                 missing = ",".join([str(x) for x in sorted([int(f.split('_')[-1]) for f in logs if f not in fins])])   
-                self.io.progress.broke('no results created for chromosomes: '+missing, ['     Note: Consider running with custom clump_value']) 
+                self.io.progress.broke(['no results created for chromosomes: '+missing,'Note: Consider running with larger clump_value'], WTYPE=self.eType) 
             for f in PK['gz']:
                 cI = f.split('.')[0].split('_')[-1] 
                 with gzip.open(path+'/'+f,'rt') as fh:
@@ -129,7 +129,7 @@ class BridgePipelines:
                     for i,line in enumerate(fh): 
                         line = line.split() 
                         if i > 2 or len(line) == 0: break  
-                if i < 2:  self.io.progress.broke('Insufficient Clumping On Chromosome: '+cI, ['     Note: Consider running with custom clump_value']) 
+                if i < 2:  self.io.progress.broke(['Insufficient Clumping On Chromosome: '+cI,'     Note: Consider running with custom clump_value'], WTYPE=self.eType) 
         return
 
         
@@ -152,10 +152,14 @@ class BridgePipelines:
                 if D == 'CLUMP': 
                     if " ".join(ls[-3::]) == 'see log file.': continue  
                     if len(ls) > 3 and ls[3] == 'ignored,':   continue 
+
                 if len(ls[0].split('/'))>1: ls[0] = ls[0].split('/')[-1] 
                 f_errors.append(' '.join(ls)) 
         if len(f_errors) == 0: return
-        else:                  self.io.progress.warn(['UNKNOWN R-OUTPUT IN STDERR (Program may have failed):']+f_errors, WTYPE=self.wType) 
+        elif self.args.debug_level > 0: self.io.progress.broke(['UNKNOWN R-OUTPUT IN STDERR (Program may have failed):']+f_errors+['To bypass this error, use --debug_level 0'], WTYPE=self.eType) 
+        else:                 self.io.progress.warn(['UNKNOWN R-OUTPUT IN STDERR (Program may have failed):'], WTYPE=self.wType) 
+
+
         return
         
 
