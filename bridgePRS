@@ -16,7 +16,7 @@ bridgeHelp = BridgeHelp()
 HELP_FORMAT="%-30s %29s"
 
 # optimize easyrun web
-# restart 
+# restart INFO  
 
 class MPS(argparse.ArgumentParser):
 
@@ -225,6 +225,7 @@ class MPS(argparse.ArgumentParser):
     def sub_help(self, cmd, module=None):
         if cmd == 'run': HS =   ('Run The Following Module Commands:','') 
         elif cmd == 'go': HS = ('Run BridgePRS Sequentially: prs-single, build-model,prs-port,prs-prior,analyze','') 
+        elif cmd == 'check': HS = ('Check Validity of Input Data','') 
         elif cmd == 'clump': HS = ('Load Sumstats Data, Produce SNP Clumps','') 
         elif cmd == 'beta': HS =  ('Evaluate SNP Clumps, Produce SNP Weights','') 
         elif cmd == 'predict': HS =  ('Apply SNP Weights, Produce Polygenic Predictions','') 
