@@ -43,13 +43,13 @@ binary=0
 #FPATH=$RSCRIPTS"/functions.R"
 
 
-usage()
-{
-  echo "Usage: ridgePRS [ -n | --n_cores n_cores ] [ -b | --bfile bfile ]
-                        [ -o | --outdir outdir ] 
-                        [ -v | --eur_ld_ids eur_ld_ids ] filename(s)"
-  exit 2
-}
+#usage()
+#{
+#  echo "Usage: ridgePRS [ -n | --n_cores n_cores ] [ -b | --bfile bfile ]
+#                        [ -o | --outdir outdir ] 
+#                        [ -v | --eur_ld_ids eur_ld_ids ] filename(s)"
+#  exit 2
+#}
 
 PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,bfile:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_bfile:,pop2_bfile:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,do_predict_pop1:,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_predict_pop2_stage2:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_predict_pop2:,do_combine:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary: -- "$@")
 VALID_ARGUMENTS=$?
@@ -153,6 +153,14 @@ fi
 if [ $by_chr_target = 0 ]
 then
     by_chr_target=$by_chr
+fi
+if [ $binary_pop1 = 0 ]
+then
+    binary_pop1=$binary
+fi
+if [ $binary_pop2 = 0 ]
+then
+    binary_pop2=$binary
 fi
 
 echo "Options in effect:"
@@ -263,9 +271,6 @@ then
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.nID $sumstats_n \
-	    --sumstats.seID $sumstats_se \
-	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \
@@ -311,9 +316,6 @@ then
 	    --sumstats.betaID $sumstats_beta \
  	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.nID $sumstats_n \
-	    --sumstats.seID $sumstats_se \
-	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
@@ -336,10 +338,9 @@ then
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.nID $sumstats_n \
-	    --sumstats.seID $sumstats_se \
-	    --sumstats.frqID $sumstats_frq \
 	    --sumstats.P $sumstats_p \
+	    --N.pop1 $N_pop1 \
+	    --N.pop2 $N_pop2 \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --ranking $ranking \
@@ -413,9 +414,6 @@ then
 	    --sumstats.betaID $sumstats_beta \
 	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.nID $sumstats_n \
-	    --sumstats.seID $sumstats_se \
-	    --sumstats.frqID $sumstats_frq \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats $by_chr_sumstats \

@@ -117,9 +117,6 @@ if( opt$by.chr==0 ){
 }
 
 
-#print(dirname(opt$sumstats))
-
-
 for( chr in 1:22 ){
     if( opt$by.chr.sumstats!=0 ){
         sumfile  <- paste(opt$sumstats,chr,opt$by.chr.sumstats,sep='')
@@ -152,7 +149,6 @@ for( chr in 1:22 ){
 
         sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
 
-        #print(sumstats)
         colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
         sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
         sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
@@ -223,7 +219,6 @@ for( chr in 1:22 ){
 
     ptr.qc <- which(sapply(beta.bar,length)!=0)
     beta.bar <- beta.bar[ptr.qc]
-#    dput( beta.bar, paste(opt$beta.stem,"_beta_bar_chr",chr,".Robj", sep="") )
 
     outfile <- paste(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz", sep="")
     fwrite( beta.bar[[1]], outfile )
