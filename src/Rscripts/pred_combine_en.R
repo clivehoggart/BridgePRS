@@ -8,7 +8,7 @@ calc_ve <- function(prs, myfit) {
     data <- data.frame(target[, opt$pheno.name], prs, covs)
     colnames(data)[1:2] <- c("y", "PRS")
     b <- boot(data, function(x, ptr) var_explained(x, ptr, family),
-              stype = "i", R = 10000, parallel = "multicore",
+              stype = "i", R = 1000, parallel = "multicore",
               ncpus = opt$n.cores)
     ci <- boot.ci(b, type = "norm")
 
@@ -144,7 +144,7 @@ v.target <- var(target[,opt$pheno.name])
 #         grep("_10_", colnames(pred1)) )
 #pred1 <- pred1[,ptr]
 
-nfolds <- ifelse( nrow(target)<500, nrow(target), 500 )
+nfolds <- ifelse( nrow(target)<200, nrow(target), 200 )
 
 write( paste("Test data of", nrow(target), "samples"), file=logfile )
 fit.ridge1 <- cv.glmnet( y=target[,opt$pheno.name], x=as.matrix(pred1),
