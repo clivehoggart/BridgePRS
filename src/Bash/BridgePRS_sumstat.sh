@@ -49,7 +49,7 @@ binary=0
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstats_pop1:,do_block_pop2:,do_sumstats_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -75,18 +75,17 @@ do
     --pop1_qc_snplist) pop1_qc_snplist="$2" ; shift 2 ;;
     --pop2_qc_snplist) pop2_qc_snplist="$2" ; shift 2 ;;
     --do_block_pop1) do_block_pop1="$2" ; shift 2 ;;
-    --do_sumstats_pop1) do_sumstats_pop1="$2" ; shift 2 ;;
-    --do_block_pop2) do_block_pop1="$2" ; shift 2 ;;
-    --do_sumstats_pop2) do_sumstats_pop1="$2" ; shift 2 ;;
+    --do_sumstat_pop1) do_sumstat_pop1="$2" ; shift 2 ;;
+    --do_block_pop2) do_block_pop2="$2" ; shift 2 ;;
+    --do_sumstat_pop2) do_sumstat_pop1="$2" ; shift 2 ;;
     --do_clump_pop1) do_clump_pop1="$2" ; shift 2 ;;
     --do_est_beta_pop1) do_est_beta_pop1="$2" ; shift 2 ;;
-    --do_sumstat_ensembl_pop1) do_predict_pop2_stage2="$2" ; shift 2 ;;
+    --do_sumstat_ensembl_pop1) do_sumstat_ensembl_pop1="$2" ; shift 2 ;;
     --do_est_beta_pop1_precision) do_est_beta_pop1_precision="$2" ; shift 2 ;;
     --do_est_beta_InformPrior) do_est_beta_InformPrior="$2" ; shift 2 ;;
-    --do_sumstat_ensembl_pop2) do_predict_pop2_stage2="$2" ; shift 2 ;;
+    --do_sumstat_ensembl_pop2) do_sumstat_ensembl_pop2="$2" ; shift 2 ;;
     --do_clump_pop2) do_clump_pop2="$2" ; shift 2 ;;
     --do_est_beta_pop2) do_est_beta_pop2="$2" ; shift 2 ;;
-    --do_sumstat_ensembl_pop1) do_predict_pop2_stage2="$2" ; shift 2 ;;
     --by_chr) by_chr=$2 ; shift 2 ;;
     --by_chr_target) by_chr_target=$2 ; shift 2 ;;
     --by_chr_ld) by_chr_ld=$2 ; shift 2 ;;
@@ -241,7 +240,7 @@ then
     done
 fi
 
-if [ $do_sumstats_pop1 -eq 1 ]
+if [ $do_sumstat_pop1 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
@@ -299,7 +298,7 @@ then
     done
 fi
 
-if [ $do_sumstats_pop2 -eq 1 ]
+if [ $do_sumstat_pop2 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
