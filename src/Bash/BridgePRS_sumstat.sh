@@ -259,7 +259,6 @@ then
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
-done
 fi
 
 if [ $do_block_pop2 -eq 1 ]
@@ -318,7 +317,6 @@ then
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
-done
 fi
 
 if [ $do_clump_pop1 -eq 1 ]
