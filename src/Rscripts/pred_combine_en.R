@@ -386,7 +386,7 @@ for( chr in 1:22 ){
 
     tmp <- strsplit( names(w.ridge11), '_' )
 
-    ## NOTE - THIS CAUSES AN ERROR WHEN RAN WITH SINGLE PRIOR RESULT - tmp, getElement4 ##
+    ## NOTE - THIS CAUSES AN ERROR WHEN RUN WITH SINGLE PRIOR RESULT - tmp, getElement4 ##
     w.thresh <- as.numeric(sapply(tmp,getElement,4))
     w.beta.bar <- paste( sapply(tmp,getElement,1),sapply(tmp,getElement,2),sapply(tmp,getElement,3), sep='_' )
     u.w.thresh <- unique(w.thresh)

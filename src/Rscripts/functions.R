@@ -325,6 +325,43 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
     return(ret)
 }
 
+sumstat.subset <- function( block.i, sumstats, ld.ids,
+                            by.chr, X.bed, bim, n.all, n.gwas, strand.check ){
+    block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
+    snps <- intersect( sumstats$SNP, block.snps )
+    k <- length(snps)
+    chr <- block.i$CHR
+    if( by.chr ){
+        X.bed <- X.bed[[chr]]
+        bim <- bim[[chr]]
+    }
+
+    if( length(snps)>0 ){
+        sumstats <- sumstats[match( snps, sumstats$SNP ),]
+        ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
+                                   sumstats$ALLELE1, sumstats$ALLELE0,
+                                   strand.check, n.eff=FALSE )
+        VX <- diag(ref.stats$ld)
+        XtY <- n.all * VX * sumstats$BETA
+        se <- sumstats$BETA / -qnorm(sumstats$P/2)
+        m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
+            matrix( rep(VX,k), ncol=k, nrow=k )
+        m <- ifelse( m1<t(m1), m1, t(m1) )
+        Sigma <- m * ref.stats$LD
+        XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
+                         Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
+        beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
+        se.1 <- se * sqrt( n.all / n.gwas )
+        p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
+        sumstats.1 <- data.frame( sumstats$SNP,
+                                 sumstats$ALLELE1, sumstats$ALLELE0,
+                                 beta.1, p.1, XtY.1 )
+    }
+#        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
+#        beta.hat <- solve(ref.stats$ld) * as.matrix( sumstats$BETA * s2 )
+    return(sumstats.1)
+}
+
 read.fit.clump <- function( clump.i, sumstats, ld.ids,
                            X.bed, bim, l=10, S=1, precision=FALSE,
                            by.chr, beta.stem, strand.check ){

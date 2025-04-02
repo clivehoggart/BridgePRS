@@ -36,7 +36,7 @@ option_list = list(
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character"),
     make_option(c("--bfile"), type="character",
-                help="Plink file with test & train2 genotype data", metavar="character"),
+                help="Plink file to estimate LD", metavar="character"),
     make_option(c("--sumstats.snpID"), type="character", default="SNP",
                 help="SNP column name", metavar="character"),
     make_option(c("--sumstats.betaID"), type="character", default="BETA",
@@ -102,9 +102,9 @@ if( opt$by.chr.sumstats==0 ){
         lambda <- params$lambda.opt
         p <- params$p.opt
         S <- params$S.opt
-        out <- data.frame(S,lambda,p)
-        colnames(out) <- c("S.opt","lambda.opt","p.opt")
-        write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
+#        out <- data.frame(S,lambda,p)
+#        colnames(out) <- c("S.opt","lambda.opt","p.opt")
+#        write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
     }
 }
 
@@ -131,9 +131,9 @@ for( chr in 1:22 ){
                 lambda <- params$lambda.opt
                 p <- params$p.opt
                 S <- params$S.opt
-                out <- data.frame(S,lambda,p)
-                colnames(out) <- c("S.opt","lambda.opt","p.opt")
-                write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
+#                out <- data.frame(S,lambda,p)
+#                colnames(out) <- c("S.opt","lambda.opt","p.opt")
+#                write.table( out, opt$param.file, row.names=FALSE, quote=FALSE )
             }
         }
 
