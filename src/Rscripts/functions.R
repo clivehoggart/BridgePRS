@@ -347,7 +347,7 @@ sumstat.subset <- function( block.i, sumstats, ld.ids,
         m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
             matrix( rep(VX,k), ncol=k, nrow=k )
         m <- ifelse( m1<t(m1), m1, t(m1) )
-        Sigma <- m * ref.stats$LD
+        Sigma <- n.all * m * ref.stats$ld
         XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
                          Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
         beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
