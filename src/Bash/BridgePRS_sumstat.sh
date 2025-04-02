@@ -77,7 +77,7 @@ do
     --do_block_pop1) do_block_pop1="$2" ; shift 2 ;;
     --do_sumstat_pop1) do_sumstat_pop1="$2" ; shift 2 ;;
     --do_block_pop2) do_block_pop2="$2" ; shift 2 ;;
-    --do_sumstat_pop2) do_sumstat_pop1="$2" ; shift 2 ;;
+    --do_sumstat_pop2) do_sumstat_pop2="$2" ; shift 2 ;;
     --do_clump_pop1) do_clump_pop1="$2" ; shift 2 ;;
     --do_est_beta_pop1) do_est_beta_pop1="$2" ; shift 2 ;;
     --do_sumstat_ensembl_pop1) do_sumstat_ensembl_pop1="$2" ; shift 2 ;;
@@ -235,8 +235,8 @@ then
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/blocks/${pop1}_chr${chr}
-	rm $outdir/blocks/$pop1\_$chr.blocks
-	gzip $outdir/blocks/$pop1\_$chr.blocks.det
+	rm $outdir/blocks/$pop1\_chr$chr.blocks
+	gzip $outdir/blocks/$pop1\_chr$chr.blocks.det
     done
 fi
 
@@ -292,8 +292,8 @@ then
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/blocks/${pop2}_chr${chr}
-	rm $outdir/blocks/$pop2\_$chr.blocks
-	gzip $outdir/blocks/$pop2\_$chr.blocks.det
+	rm $outdir/blocks/$pop2\_chr$chr.blocks
+	gzip $outdir/blocks/$pop2\_chr$chr.blocks.det
     done
 fi
 
