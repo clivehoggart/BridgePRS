@@ -225,8 +225,7 @@ then
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
-	      --extract $pop1_qc_snplist \
-	      --keep $outdir/blocks/${pop1}_chr${chr}.snplist \
+	      --extract $outdir/blocks/${pop1}_chr${chr}.snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.00001 \
