@@ -34,14 +34,14 @@ ${src}/Bash/BridgePRS.sh $src/Rscripts \
     --pheno_name y \
     --n_cores 2 \
     --do_block_pop1 1 \
-    --do_sumstats_pop1 0 \
+    --do_sumstat_pop1 0 \
     --do_block_pop2 0 \
-    --do_sumstats_pop2 0 \
+    --do_sumstat_pop2 0 \
     --do_clump_pop1 0 \
     --do_est_beta_pop1 0 \
     --do_sumstat_ensembl_pop1 0 \
-    --do_est_beta_pop1_precision 1 \
+    --do_est_beta_pop1_precision 0 \
     --do_est_beta_InformPrior 0 \
     --do_clump_pop2 0 \
     --do_est_beta_pop2 0 \
-    --do_sumstat_ensembl_pop1 0
+    --do_sumstat_ensembl_pop2 0
