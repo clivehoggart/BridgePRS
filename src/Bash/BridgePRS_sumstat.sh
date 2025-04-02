@@ -284,6 +284,65 @@ then
 done
 fi
 
+if [ $do_block_pop2 -eq 1 ]
+then
+    for chr in {1..22}
+    do
+	bfile1=$pop2_ld_bfile
+	if [ $by_chr -eq 1 ]
+	then
+	    bfile1=$pop2_ld_bfile$chr
+	fi
+	pop2_sumstats1=$pop2_sumstats
+	if [ $by_chr_sumstats != 0 ]
+	then
+	    pop2_sumstats1=$pop2_sumstats$chr$by_chr_sumstats
+	fi
+	rm -f $outdir/blocks/$pop2\_$chr.blocks*
+	col_num=$(zcat $pop2_sumstats1 | 
+		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
+	zcat $pop2_sumstats1 | cut -d " " -f $col_num
+	> $outdir/blocks/${pop2}_chr${chr}.snplist
+	plink --bfile $bfile1 \
+	      --chr $chr \
+	      --keep $pop2_ld_ids \
+	      --extract $pop2_qc_snplist \
+	      --keep $outdir/blocks/${pop2}_chr${chr}.snplist \
+	      --maf 0.001 \
+	      --blocks 'no-pheno-req' 'no-small-max-span' \
+	      --blocks-min-maf 0.00001 \
+	      --blocks-strong-lowci 0.51 \
+	      --blocks-strong-highci 0.831 \
+	      --blocks-recomb-highci 0.55 \
+	      --blocks-max-kb 1000 \
+	      --blocks-inform-frac 0.1 \
+	      --out $outdir/blocks/${pop2}_chr${chr}
+	rm $outdir/blocks/$pop2\_$chr.blocks
+	gzip $outdir/blocks/$pop2\_$chr.blocks.det
+    done
+fi
+
+if [ $do_sumstats_pop2 -eq 1 ]
+then
+    Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
+ 	    --fpath $FPATH \
+	    --block.stem $outdir/blocks/$pop2 \
+	    --sumstats $pop2_sumstats \
+	    --ld.ids $pop2_ld_ids \
+	    --bfile $pop2_ld_bfile \
+	    --sumstats.snpID $sumstats_snpID \
+	    --sumstats.betaID $sumstats_beta \
+ 	    --sumstats.allele1ID $sumstats_allele1 \
+	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.P $sumstats_p \
+	    --N.pop $N_pop2 \
+	    --n.cores $n_cores \
+	    --by.chr.sumstats $by_chr_sumstats \
+	    --strand.check $strand_check \
+	    --by.chr $by_chr_ld
+done
+fi
+
 if [ $do_clump_pop1 -eq 1 ]
 then
     for chr in {1..22}
@@ -310,6 +369,38 @@ then
 	rm -f $outdir/clump/$pop1\_$chr.clumped.gz
 	gzip $outdir/clump/$pop1\_$chr.clumped
     done
+fi
+
+if [ $do_est_beta_pop1 -eq 1  ]
+then
+    rm -f $outdir/models/$pop1*
+    Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
+ 	    --fpath $FPATH \
+	    --clump.stem $indir/clump/$pop1 \
+	    --sumstats $pop1_sumstats \
+	    --thinned.snplist $thinned_snplist \
+	    --n.max.locus $n_max_locus \
+	    --ld.ids $pop1_ld_ids \
+	    --beta.stem $outdir/models/$pop1\_stage1 \
+	    --bfile $pop1_ld_bfile \
+	    --lambda 0.1,0.2,0.5,1,2,5,10,20 \
+	    --S 0,0.25,0.5,0.75,1 \
+	    --sumstats.snpID $sumstats_snpID \
+	    --sumstats.betaID $sumstats_beta \
+	    --sumstats.allele1ID $sumstats_allele1 \
+	    --sumstats.allele0ID $sumstats_allele0 \
+	    --n.cores $n_cores \
+	    --by.chr $by_chr_ld \
+	    --by.chr.sumstats $by_chr_sumstats \
+	    --strand.check $strand_check
+fi
+
+if [ $do_sumstat_ensembl_pop1 -eq 1  ]
+then
+    rm -f $outdir/models/$pop2\_stage1*
+    Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
+	    --stage1  $outdir/models/$pop1\_stage1 \
+	    --out $outdir/models/$pop1\_snp_weights
 fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
@@ -415,8 +506,7 @@ then
 	    --strand.check $strand_check
 fi
 
-
-if [ $do_est_beta_pop2 -eq 1  ]
+if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
     rm -f $outdir/models/$pop2\_stage1*
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
