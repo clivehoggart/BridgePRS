@@ -187,6 +187,7 @@ echo "binary : $binary"
 echo ""
 
 mkdir -p $outdir
+mkdir -p $outdir/blocks
 mkdir -p $outdir/clump
 mkdir -p $outdir/models
 mkdir -p $outdir/models/lambda
@@ -219,8 +220,8 @@ then
 	rm -f $outdir/blocks/$pop1\_$chr.blocks*
 	col_num=$(zcat $pop1_sumstats1 | 
 		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
-	zcat $pop1_sumstats1 | cut -d " " -f $col_num
-	> $outdir/blocks/${pop1}_chr${chr}.snplist
+	zcat $pop1_sumstats1 | cut -d " " -f $col_num \
+				   > $outdir/blocks/${pop1}_chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
@@ -277,8 +278,8 @@ then
 	rm -f $outdir/blocks/$pop2\_$chr.blocks*
 	col_num=$(zcat $pop2_sumstats1 | 
 		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
-	zcat $pop2_sumstats1 | cut -d " " -f $col_num
-	> $outdir/blocks/${pop2}_chr${chr}.snplist
+	zcat $pop2_sumstats1 | cut -d " " -f $col_num \
+				   > $outdir/blocks/${pop2}_chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
