@@ -273,7 +273,7 @@ then
 	then
 	    pop2_sumstats1=$pop2_sumstats$chr$by_chr_sumstats
 	fi
-	rm -f $outdir/blocks/$pop2\_$chr.blocks*
+	rm -f $outdir/$pop2/blocks/chr$chr.blocks*
 	col_num=$(zcat $pop2_sumstats1 | 
 		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
 	zcat $pop2_sumstats1 | cut -d " " -f $col_num \
