@@ -356,7 +356,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         sumstats.1 <- data.frame( sumstats$SNP,
                                  sumstats$ALLELE1, sumstats$ALLELE0,
                                  beta.1, p.1, XtY.1 )
-        colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
+        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
     }
 #        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
 #        beta.hat <- solve(ref.stats$ld) * as.matrix( sumstats$BETA * s2 )
