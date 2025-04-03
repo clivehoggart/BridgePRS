@@ -216,15 +216,15 @@ then
 	then
 	    pop1_sumstats1=$pop1_sumstats$chr$by_chr_sumstats
 	fi
-	rm -f $outdir/blocks/$pop1\_$chr.blocks*
+	rm -f $outdir/$pop1/blocks/chr$chr.blocks*
 	col_num=$(zcat $pop1_sumstats1 | 
 		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
 	zcat $pop1_sumstats1 | cut -d " " -f $col_num \
-				   > $outdir/blocks/${pop1}_chr${chr}.snplist
+				   > $outdir/$pop1/blocks/chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
-	      --extract $outdir/blocks/${pop1}_chr${chr}.snplist \
+	      --extract $outdir/$pop1/blocks/chr${chr}.snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.00001 \
@@ -243,7 +243,7 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --workdir $outdir/$pop1/ \
+	    --workdir $outdir/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
