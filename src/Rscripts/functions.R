@@ -353,7 +353,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
                              Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
             beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
             se.1 <- se * sqrt( n.all / n.gwas )
-            p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
+            p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
                                      beta.1, p.1, XtY.1 )
