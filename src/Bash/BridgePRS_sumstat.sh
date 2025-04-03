@@ -291,8 +291,8 @@ then
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/${pop2}/blocks/chr${chr}
-	rm $outdir/${pop2}blocks/chr$chr.blocks
-	gzip $outdir/${pop2}blocks/chr$chr.blocks.det
+	rm $outdir/${pop2}/blocks/chr$chr.blocks
+	gzip $outdir/${pop2}/blocks/chr$chr.blocks.det
     done
 fi
 
