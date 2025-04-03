@@ -32,7 +32,7 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --sumstats_n OBS_CT \
     --sumstats_se SE \
     --pheno_name y \
-    --n_cores 2 \
+    --n_cores 20 \
     --do_block_pop1 1 \
     --do_sumstat_pop1 0 \
     --do_block_pop2 0 \
