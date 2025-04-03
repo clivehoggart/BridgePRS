@@ -300,7 +300,7 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --workdir $outdir/$pop2/blocks \
+	    --workdir $outdir/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --bfile $pop2_ld_bfile \
