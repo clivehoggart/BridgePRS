@@ -344,7 +344,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         if( ref.stats$af[1]!=0 & ref.stats$af[1]!=1 ){
             VX <- diag(ref.stats$ld)
             XtY <- n.all * VX * sumstats$BETA
-            se <- sumstats$BETA / -qnorm(sumstats$P/2)
+            se <- abs(sumstats$BETA) / -qnorm(sumstats$P/2)
             m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
                 matrix( rep(VX,k), ncol=k, nrow=k )
             m <- ifelse( m1<t(m1), m1, t(m1) )
