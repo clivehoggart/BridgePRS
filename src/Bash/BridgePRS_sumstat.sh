@@ -277,11 +277,11 @@ then
 	col_num=$(zcat $pop2_sumstats1 | 
 		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
 	zcat $pop2_sumstats1 | cut -d " " -f $col_num \
-				   > $outdir/blocks/${pop2}_chr${chr}.snplist
+				   > $outdir/${pop2}/blocks/chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
-	      --extract $outdir/blocks/${pop2}_chr${chr}.snplist \
+	      --extract $outdir/${pop2}/blocks/chr${chr}.snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.00001 \
@@ -290,9 +290,9 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
-	      --out $outdir/blocks/${pop2}_chr${chr}
-	rm $outdir/blocks/$pop2\_chr$chr.blocks
-	gzip $outdir/blocks/$pop2\_chr$chr.blocks.det
+	      --out $outdir/${pop2}/blocks/chr${chr}
+	rm $outdir/${pop2}blocks/chr$chr.blocks
+	gzip $outdir/${pop2}blocks/chr$chr.blocks.det
     done
 fi
 
