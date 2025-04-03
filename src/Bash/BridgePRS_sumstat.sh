@@ -125,7 +125,6 @@ if [ $indir = 0 ]
 then
     indir=$outdir
 fi
-
 if [ $by_chr_ld = 0 ]
 then
     by_chr_ld=$by_chr
@@ -161,13 +160,10 @@ echo "pop1_qc_snplist : $pop1_qc_snplist"
 echo "pop2_qc_snplist : $pop2_qc_snplist"
 echo "do_clump_pop1 : $do_clump_pop1"
 echo "do_est_beta_pop1 : $do_est_beta_pop1"
-echo "do_predict_pop1 : $do_predict_pop1"
 echo "do_est_beta_pop1_precision : $do_est_beta_pop1_precision"
 echo "do_est_beta_InformPrior : $do_est_beta_InformPrior"
-echo "do_predict_pop2_stage2 : $do_predict_pop2_stage2"
 echo "do_clump_pop2 : $do_clump_pop2"
 echo "do_est_beta_pop2 : $do_est_beta_pop2"
-echo "do_predict_pop2 : $do_predict_pop2"
 echo "do_combine : $do_combine"
 echo "by_chr_target : $by_chr_target"
 echo "by_chr_ld : $by_chr_ld"
@@ -187,7 +183,10 @@ echo "binary : $binary"
 echo ""
 
 mkdir -p $outdir
-mkdir -p $outdir/blocks
+mkdir -p $outdir/$pop1/blocks
+mkdir -p $outdir/$pop2/blocks
+mkdir -p $outdir/$pop1/sumstat_subset
+mkdir -p $outdir/$pop2/sumstat_subset
 mkdir -p $outdir/clump
 mkdir -p $outdir/models
 mkdir -p $outdir/models/lambda
@@ -234,9 +233,9 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
-	      --out $outdir/blocks/${pop1}_chr${chr}
-	rm $outdir/blocks/$pop1\_chr$chr.blocks
-	gzip $outdir/blocks/$pop1\_chr$chr.blocks.det
+	      --out $outdir/${pop1}/blocks/chr${chr}
+	rm $outdir/blocks/$pop1/chr$chr.blocks
+	gzip $outdir/blocks/$pop1/chr$chr.blocks.det
     done
 fi
 
@@ -244,7 +243,7 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --block.stem $outdir/blocks/$pop1 \
+	    --workdir $outdir/$pop1/ \
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
@@ -301,7 +300,7 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --block.stem $outdir/blocks/$pop2 \
+	    --workdir $outdir/$pop2/blocks \
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --bfile $pop2_ld_bfile \
