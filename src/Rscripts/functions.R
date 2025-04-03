@@ -360,7 +360,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         }else{
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
-                                     rep(NA,3) )
+                                     t(rep(NA,3)) )
         }
         colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
     }
