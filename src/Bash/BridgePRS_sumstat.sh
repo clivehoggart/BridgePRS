@@ -325,15 +325,15 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
-	pop1_sumstats1=$pop1_sumstats
+	pop1_sumstats1=$outdir/$pop1/sumstat_subset/chr
 	if [ $by_chr_sumstats != 0 ]
 	then
-	    pop1_sumstats1=$pop1_sumstats$chr$by_chr_sumstats
+	    pop1_sumstats1=$pop1_sumstats$chr.dat.gz
 	fi
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop1_sumstats1 \
-	      --clump-field $sumstats_p --clump-snp-field $sumstats_snpID \
+	      --clump-field P --clump-snp-field SNP \
 	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
