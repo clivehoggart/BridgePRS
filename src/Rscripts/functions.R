@@ -341,25 +341,28 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    strand.check, n.eff=FALSE )
-        VX <- diag(ref.stats$ld)
-        XtY <- n.all * VX * sumstats$BETA
-        se <- sumstats$BETA / -qnorm(sumstats$P/2)
-        m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
-            matrix( rep(VX,k), ncol=k, nrow=k )
-        m <- ifelse( m1<t(m1), m1, t(m1) )
-        Sigma <- n.all * m * ref.stats$ld
-        XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
-                         Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
-        if( ref.stats$ld!=0 ){
+        if( ref.stats$af!=0 ){
+            VX <- diag(ref.stats$ld)
+            XtY <- n.all * VX * sumstats$BETA
+            se <- sumstats$BETA / -qnorm(sumstats$P/2)
+            m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
+                matrix( rep(VX,k), ncol=k, nrow=k )
+            m <- ifelse( m1<t(m1), m1, t(m1) )
+            Sigma <- n.all * m * ref.stats$ld
+            XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
+                             Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
             beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
-        }else{
             beta.1 <- beta
+            se.1 <- se * sqrt( n.all / n.gwas )
+            p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
+            sumstats.1 <- data.frame( sumstats$SNP,
+                                     sumstats$ALLELE1, sumstats$ALLELE0,
+                                     beta.1, p.1, XtY.1 )
+        }else{
+            sumstats.1 <- data.frame( sumstats$SNP,
+                                     sumstats$ALLELE1, sumstats$ALLELE0,
+                                     rep(NA,3) )
         }
-        se.1 <- se * sqrt( n.all / n.gwas )
-        p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
-        sumstats.1 <- data.frame( sumstats$SNP,
-                                 sumstats$ALLELE1, sumstats$ALLELE0,
-                                 beta.1, p.1, XtY.1 )
         colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
     }
 #        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
