@@ -364,7 +364,7 @@ then
 	    --sumstats.allele0ID $sumstats_allele0 \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
-	    --by.chr.sumstats $by_chr_sumstats \
+	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check
 fi
 
