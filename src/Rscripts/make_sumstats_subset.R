@@ -157,7 +157,7 @@ for( chr in 1:22 ){
     }
     sumstats.1 <- sumstats.1[!is.na(sumstats.1$BETA),]
     outfile <- paste(opt$workdir,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
-    fwrite( sumstats.1, outfile )
+    fwrite( sumstats.1, outfile, sep=" " )
 }
 if( !is.null(warnings()) ){
     print(warnings())
