@@ -350,7 +350,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $indir/clump/$pop1 \
-	    --sumstats $pop1_sumstats \
+	    --sumstats $outdir/$pop1/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
