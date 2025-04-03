@@ -328,7 +328,7 @@ then
 	pop1_sumstats1=$outdir/$pop1/sumstat_subset/chr
 	if [ $by_chr_sumstats != 0 ]
 	then
-	    pop1_sumstats1=$pop1_sumstats$chr.dat.gz
+	    pop1_sumstats1=$outdir/$pop1/sumstat_subset/chr$chr.dat.gz
 	fi
 	plink --bfile $bfile1 \
 	      --chr $chr \
