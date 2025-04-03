@@ -341,7 +341,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    strand.check, n.eff=FALSE )
-        if( ref.stats$af[1]!=0 ){
+        if( ref.stats$af[1]!=0 & ref.stats$af[1]!=1 ){
             VX <- diag(ref.stats$ld)
             XtY <- n.all * VX * sumstats$BETA
             se <- sumstats$BETA / -qnorm(sumstats$P/2)
