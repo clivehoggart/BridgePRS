@@ -350,7 +350,11 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         Sigma <- n.all * m * ref.stats$ld
         XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
                          Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
-        beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
+        if( ref.stats$ld!=0 ){
+            beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
+        }else{
+            beta.1 <- beta
+        }
         se.1 <- se * sqrt( n.all / n.gwas )
         p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
         sumstats.1 <- data.frame( sumstats$SNP,
