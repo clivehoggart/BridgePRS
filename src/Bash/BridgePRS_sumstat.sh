@@ -383,45 +383,45 @@ then
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $indir/clump/$pop1 \
-	    --sumstats $pop1_sumstats \
+	    --sumstats $outdir/$pop1/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
 	    --beta.stem $outdir/models/stage1 \
-	    --param.file $outdir/$pop1\_stage1_best_model_params.dat \
+	    --param.file $outdir/${pop1}_stage1_best_model_params.dat \
 	    --precision TRUE \
-	    --sumstats.snpID $sumstats_snpID \
-	    --sumstats.betaID $sumstats_beta \
- 	    --sumstats.allele1ID $sumstats_allele1 \
-	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.snpID SNP \
+	    --sumstats.betaID BETA \
+	    --sumstats.allele1ID ALLELE1 \
+	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
-	    --by.chr.sumstats $by_chr_sumstats \
+	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
 fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
 then
-    rm -f $outdir/models/$pop2\_stage2*
+    rm -f $outdir/models/${pop2}_stage2*
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
  	    --fpath $FPATH \
-	    --sumstats  $pop2_sumstats \
+	    --sumstats $outdir/$pop2/sumstat_subset/chr  \
 	    --ld.ids $pop2_ld_ids \
 	    --prior $outdir/models/stage1 \
-	    --param.file $outdir/$pop1\_stage1_best_model_params.dat \
-	    --beta.stem $outdir/models/$pop2\_stage2 \
+	    --param.file $outdir/${pop1}_stage1_best_model_params.dat \
+	    --beta.stem $outdir/models/${pop2}_stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
-	    --sumstats.snpID $sumstats_snpID \
-	    --sumstats.betaID $sumstats_beta \
-	    --sumstats.allele1ID $sumstats_allele1 \
-	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.P $sumstats_p \
+	    --sumstats.snpID SNP \
+	    --sumstats.betaID BETA \
+	    --sumstats.allele1ID ALLELE1 \
+	    --sumstats.allele0ID ALLELE0 \
+	    --sumstats.P P \
 	    --N.pop1 $N_pop1 \
 	    --N.pop2 $N_pop2 \
 	    --n.cores $n_cores \
-	    --by.chr.sumstats $by_chr_sumstats \
+	    --by.chr.sumstats .dat.gz \
 	    --ranking $ranking \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
@@ -436,15 +436,15 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
-	pop2_sumstats1=$pop2_sumstats
+	pop2_sumstats1=$outdir/$pop2/sumstat_subset/chr
 	if [ $by_chr_sumstats != 0 ]
 	then
-	    pop2_sumstats1=$pop2_sumstats$chr$by_chr_sumstats
+	    pop2_sumstats1=$outdir/$pop2/sumstat_subset/chr$chr.dat.gz
 	fi
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop2_sumstats1 \
-	      --clump-field $sumstats_p --clump-snp-field $sumstats_snpID \
+	      --clump-field P --clump-snp-field SNP \
 	      --clump-p1 1e-2 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
@@ -461,7 +461,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $indir/clump/$pop2 \
-	    --sumstats $pop2_sumstats \
+	    --sumstats $outdir/$pop2/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop2_ld_ids \
@@ -469,13 +469,13 @@ then
 	    --bfile $pop2_ld_bfile \
 	    --lambda 0.2,0.5,1,2,5,10,20,50 \
 	    --S 0,0.25,0.5,0.75,1 \
-	    --sumstats.snpID $sumstats_snpID \
-	    --sumstats.betaID $sumstats_beta \
-	    --sumstats.allele1ID $sumstats_allele1 \
-	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.snpID SNP \
+	    --sumstats.betaID BETA \
+	    --sumstats.allele1ID ALLELE1 \
+	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
-	    --by.chr.sumstats $by_chr_sumstats \
+	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check
 fi
 
