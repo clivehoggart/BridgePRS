@@ -341,7 +341,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    strand.check, n.eff=FALSE )
-        if( ref.stats$af!=0 ){
+        if( ref.stats$af[1]!=0 ){
             VX <- diag(ref.stats$ld)
             XtY <- n.all * VX * sumstats$BETA
             se <- sumstats$BETA / -qnorm(sumstats$P/2)
@@ -352,7 +352,6 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
                              Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
             beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
-            beta.1 <- beta
             se.1 <- se * sqrt( n.all / n.gwas )
             p.1 <- 2*pnorm( beta.1 / se.1, lower.tail=FALSE )
             sumstats.1 <- data.frame( sumstats$SNP,
