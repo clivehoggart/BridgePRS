@@ -358,10 +358,10 @@ then
 	    --bfile $pop1_ld_bfile \
 	    --lambda 0.1,0.2,0.5,1,2,5,10,20 \
 	    --S 0,0.25,0.5,0.75,1 \
-	    --sumstats.snpID $sumstats_snpID \
-	    --sumstats.betaID $sumstats_beta \
-	    --sumstats.allele1ID $sumstats_allele1 \
-	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.snpID SNP \
+	    --sumstats.betaID BETA \
+	    --sumstats.allele1ID ALLELE1 \
+	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats .dat.gz \
