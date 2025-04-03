@@ -128,7 +128,7 @@ for( chr in 1:22 ){
     infile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
-    sumstats.b <- mclapply( 1:length(blocks),
+    sumstats.b <- mclapply( 1:nrow(blocks),
                      function(i){
                          sumstat.subset( block.i=blocks[i,],
                                         sumstats=sumstats, ld.ids=ld.ids,
@@ -138,7 +138,7 @@ for( chr in 1:22 ){
                      mc.cores=as.numeric(opt$n.cores) )
     sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=6))
     colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
-    for( i in 1:length(blocks) ){
+    for( i in 1:nrow(blocks) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         sumstats.1[ptr,] <- sumstats.b[[i]]
     }
