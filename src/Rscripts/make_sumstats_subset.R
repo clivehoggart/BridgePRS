@@ -9,8 +9,8 @@ options(stringsAsFactors=FALSE)
 
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,help="Function File Path", metavar="character"),
-    make_option(c("--block.stem"), type="character",
-                help="Block stem", metavar="character"),
+    make_option(c("--workdir"), type="character",
+                help="Top level working dir", metavar="character"),
     make_option(c("--bfile"), type="character",
                 help="Plink file to estimate LD", metavar="character"),
     make_option(c("--by.chr"), type="numeric", default=1,
@@ -48,9 +48,8 @@ print(opt)
 
 source(opt$fpath)
 
-logfile <- paste0(opt$beta.stem,".log")
+logfile <- paste0(opt$workdir,"sumstat_subset.log")
 tmp <- t(data.frame(opt))
-
 rownames(tmp) <- names(opt)
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
@@ -126,27 +125,54 @@ for( chr in 1:22 ){
         bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
         ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
     }
-    infile <- paste(opt$block.stem,'_chr',chr,'.blocks.det.gz',sep='')
-    blocks <- read.table(infile,header=TRUE,stringsAsFactors=FALSE)
+    infile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+    blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
-    tmp <- strsplit( opt$beta.stem, '/' )[[1]]
-    path <- paste(head(tmp,n=-1L),'/',sep='',collapse='')
-    sumstats.b <- mclapply( 1:length(clump.use),
+    sumstats.b <- mclapply( 1:length(blocks),
                      function(i){
                          sumstat.subset( block.i=blocks[i,],
                                         sumstats=sumstats, ld.ids=ld.ids,
-                                        by.chr=0, X.bed=ptr.bed, bim=bim,
+                                        X.bed=ptr.bed, bim=bim,
                                         n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    sumstats.1<- lapply( sumstats.b, getElement, 1 )
-
-    outfile <- paste(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz", sep="")
-    fwrite( beta.bar[[1]], outfile )
-    for( i in 2:length(beta.bar) ){
-        fwrite( beta.bar[[i]], outfile, append=TRUE )
+    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=6))
+    colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
+    for( i in 1:length(blocks) ){
+        ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
+        sumstats.1[ptr,] <- sumstats.b[[i]]
     }
+    ptr.fill <- which(is.na(sumstats.1$BETA))
+    sumstats.b <- mclapply( ptr.fill,
+                     function(i){
+                         sumstat.subset( snp=sumstats$SNP[i],
+                                        sumstats=sumstats, ld.ids=ld.ids,
+                                        X.bed=ptr.bed, bim=bim,
+                                        n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
+                                        strand.check=opt$strand.check )},
+                     mc.cores=as.numeric(opt$n.cores) )
+    for( i in 1:length(ptr.fill) ){
+        ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
+        sumstats.1[ptr,] <- sumstats.b[[i]]
+    }
+    sumstats.1 <- sumstats.1[!is.na(sumstats.1$BETA),]
+    outfile <- paste(opt$workdir,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
+    fwrite( sumstats.1, outfile )
 }
 if( !is.null(warnings()) ){
     print(warnings())
 }
+
+#for( i in ptr.fill ){
+#    tmp <- sumstat.subset( snp=sumstats$SNP[i],
+#                          sumstats=sumstats, ld.ids=ld.ids,
+#                          X.bed=ptr.bed, bim=bim,
+#                          n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
+#                          strand.check=opt$strand.check )
+#}
+#i=i
+#tmp <- sumstat.subset( block.i=blocks[i,],
+#                      sumstats=sumstats, ld.ids=ld.ids,
+#                      X.bed=ptr.bed, bim=bim,
+#                      n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
+#                      strand.check=opt$strand.check )
