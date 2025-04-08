@@ -134,8 +134,8 @@ for( chr in 1:22 ){
                                         n.all=opt$N.pop, n.prop=c(0.7,0.15),
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=6))
-    colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
+    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=7))
+    colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY.2','XtY.3')
     for( i in 1:nrow(blocks) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         sumstats.1[ptr,] <- sumstats.b[[i]]
@@ -146,7 +146,7 @@ for( chr in 1:22 ){
                          sumstat.subset( snp=sumstats$SNP[i],
                                         sumstats=sumstats, ld.ids=ld.ids,
                                         X.bed=ptr.bed, bim=bim,
-                                        n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
+                                        n.all=opt$N.pop, n.prop=c(0.7,0.15),
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
     for( i in 1:length(ptr.fill) ){
