@@ -351,7 +351,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             Sigma <- n.all * m * ref.stats$ld
 
             m <- XtY * n.prop[1]
-            v <- Sigma * n.all * n .prop[1] * (1 - n.prop[1])
+            v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
             XtY.1 <- mvrnorm( n=1, mu=m, Sigma=v )
 
             m <- (XtY-XtY.1) * n.prop[2] / (1-n.prop[1])
