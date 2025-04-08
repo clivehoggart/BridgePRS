@@ -373,7 +373,11 @@ then
     rm -f $outdir/models/$pop2\_stage1*
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
 	    --stage1  $outdir/models/$pop1\_stage1 \
-	    --out $outdir/models/$pop1\_snp_weights
+	    --wordir $outdir/$pop1 \
+	    --bfile $pop1_ld_bfile \
+	    --ld.ids $pop1_ld_ids \
+	    --out $outdir/models/$pop1\_snp_weights \
+	    --n.cores $n_cores
 fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
