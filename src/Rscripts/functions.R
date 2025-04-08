@@ -326,7 +326,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 }
 
 sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
-                            X.bed, bim, n.all, n.gwas, strand.check ){
+                            X.bed, bim, n.all, n.prop, strand.check ){
     if( !is.null(block.i) ){
         block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
         snps <- intersect( sumstats$SNP, block.snps )
@@ -349,20 +349,30 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
                 matrix( rep(VX,k), ncol=k, nrow=k )
             m <- ifelse( m1<t(m1), m1, t(m1) )
             Sigma <- n.all * m * ref.stats$ld
-            XtY.1 <- mvrnorm( n=1, mu=XtY * n.gwas / n.all,
-                             Sigma=Sigma * n.gwas*(n.all - n.gwas) / n.all )
-            beta.1 <- solve(ref.stats$ld) %*% XtY.1 / n.gwas
-            se.1 <- se * sqrt( n.all / n.gwas )
+
+            m <- XtY * n.prop[1]
+            v <- Sigma * n.all * n .prop[1] * (1 - n.prop[1])
+            XtY.1 <- mvrnorm( n=1, mu=m, Sigma=v )
+
+            m <- (XtY-XtY.1) * n.prop[2] / (1-n.prop[1])
+            v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
+            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
+
+            XtY.3 <- XtY - XtY.1 - XtY.2
+
+            beta.1 <- solve(ref.stats$ld) %*% XtY.1 / (n.all*n.prop[1])
+            se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
-                                     beta.1, p.1, XtY.1 )
+                                     beta.1, p.1, XtY.2, XtY.3 )
         }else{
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
-                                     t(rep(NA,3)) )
+                                     t(rep(NA,4)) )
         }
-        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P','XtY')
+        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P',
+                                  'XtY.2','XtY.3')
     }
 #        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
 #        beta.hat <- solve(ref.stats$ld) * as.matrix( sumstats$BETA * s2 )
