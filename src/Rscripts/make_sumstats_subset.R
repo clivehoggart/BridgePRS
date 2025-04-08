@@ -40,10 +40,8 @@ option_list = list(
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character")
 )
-
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
-
 print(opt)
 
 source(opt$fpath)
@@ -133,7 +131,7 @@ for( chr in 1:22 ){
                          sumstat.subset( block.i=blocks[i,],
                                         sumstats=sumstats, ld.ids=ld.ids,
                                         X.bed=ptr.bed, bim=bim,
-                                        n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
+                                        n.all=opt$N.pop, n.prop=c(0.7,0.15),
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
     sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=6))
