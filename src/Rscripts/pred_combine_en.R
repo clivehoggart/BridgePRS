@@ -409,12 +409,17 @@ for( chr in 1:22 ){
             beta.bar11 <- rbind( beta.bar11, beta.bar )
         }
     }
+    colnames(beta.bar11) <- c('snp','effect.allele','ref.allele','effect')
+    colnames(beta.bar22) <- c('snp','effect.allele','ref.allele','effect')
 
     if( !is.null(opt$pred2) ){
-        i.snps <- intersect(beta.bar11$V1,beta.bar22$V1)
-        ptr1 <- match( i.snps, beta.bar11$V1 )
-        ptr2 <- match( i.snps, beta.bar22$V1 )
-        beta.bar11[ ptr1, 4] <- beta.bar11[ ptr1, 4] + beta.bar22[ ptr2, 4]
+        i.snps <- intersect( beta.bar11$snp, beta.bar22$snp)
+        ptr1 <- match( i.snps, beta.bar11$snp )
+        ptr2 <- match( i.snps, beta.bar22$snp )
+        swtch <- allele.check( beta.bar11$effect.allele[ptr1], beta.bar11$ref.allele[ptr1],
+                              beta.bar22$effect.allele[ptr2], beta.bar22$ref.allele[ptr2],
+                              strand.check=FALSE )
+        beta.bar11$effect[ptr1] <- beta.bar11$effect[ptr1] + swtch*beta.bar22$effect[ptr2]
         beta.bar.chr <- rbind( beta.bar11, beta.bar22[-ptr2,] )
         beta.bar.genome <- rbind( beta.bar.genome, beta.bar.chr )
     }else{
@@ -422,7 +427,7 @@ for( chr in 1:22 ){
     }
 }
 colnames(beta.bar.genome) <- c('snp','effect.allele','ref.allele','effect')
-write.table( beta.bar.genome,wtfile,col.names=TRUE, row.names=FALSE, quote=FALSE )
+write.table( beta.bar.genome, wtfile, col.names=TRUE, row.names=FALSE, quote=FALSE )
 
 if( !is.null(warnings()) ){
     print(warnings())
