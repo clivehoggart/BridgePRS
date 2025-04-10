@@ -191,6 +191,9 @@ mkdir -p $outdir/clump
 mkdir -p $outdir/models
 mkdir -p $outdir/models/lambda
 
+prop_train=0.7
+prop_test=0.15
+
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
     echo "Invalid argument, ranking="$ranking
@@ -253,6 +256,8 @@ then
 	    --sumstats.allele0ID $sumstats_allele0 \
 	    --sumstats.P $sumstats_p \
 	    --N.pop $N_pop1 \
+	    --prop.train $prop_train \
+	    --prop.test $prop_test \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
@@ -310,6 +315,8 @@ then
 	    --sumstats.allele0ID $sumstats_allele0 \
 	    --sumstats.P $sumstats_p \
 	    --N.pop $N_pop2 \
+	    --prop.train $prop_train \
+	    --prop.test $prop_test \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
@@ -393,7 +400,7 @@ then
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
 	    --beta.stem $outdir/models/stage1 \
-	    --param.file $outdir/${pop1}_stage1_best_model_params.dat \
+	    --param.file $outdir/$pop1/best_model_params.dat \
 	    --precision TRUE \
 	    --sumstats.snpID SNP \
 	    --sumstats.betaID BETA \
@@ -413,7 +420,7 @@ then
 	    --sumstats $outdir/$pop2/sumstat_subset/chr  \
 	    --ld.ids $pop2_ld_ids \
 	    --prior $outdir/models/stage1 \
-	    --param.file $outdir/${pop1}_stage1_best_model_params.dat \
+	    --param.file $outdir/${pop1}/best_model_params.dat \
 	    --beta.stem $outdir/models/${pop2}_stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
