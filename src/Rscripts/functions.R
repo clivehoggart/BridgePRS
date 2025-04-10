@@ -1,3 +1,25 @@
+allele.check <- function( effect.allele1, ref.allele1,
+                         effect.allele2, ref.allele2, strand.check ){
+    swtch <- ifelse( effect.allele1==effect.allele2 &
+                     ref.allele1==ref.allele2, 1, 0 )
+    swtch <- ifelse( effect.allele1==ref.allele2 &
+                     ref.allele1==effect.allele2, -1, swtch )
+    ptr.miss <- which( swtch==0 )
+    if( strand.check & length(ptr.miss)>0 ){
+        effect.allele22 <- alt.strand( effect.allele2 )
+        ref.allele22 <- alt.strand( ref.allele2 )
+
+        swtch[ptr.miss] <- ifelse( effect.allele1[ptr.miss]==effect.allele22[ptr.miss] &
+                               ref.allele1[ptr.miss]==ref.allele22[ptr.miss],
+                               1, swtch[ptr.miss] )
+
+        swtch[ptr.miss] <- ifelse( effect.allele1[ptr.miss]==ref.allele22[ptr.miss] &
+                                   ref.allele1[ptr.miss]==effect.allele22[ptr.miss],
+                                  -1, swtch[ptr.miss] )
+    }
+    return(swtch)
+}
+
 genos.cor <- function(genos,maf.thresh=0.005){
     m <- apply(genos,2,mean,na.rm=TRUE)
     maf <- ifelse( m<1, m, 2-m ) / 2
@@ -277,22 +299,25 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
     coded.allele <- bim$V5[ptr.bed]
     other.allele <- bim$V6[ptr.bed]
 
-    swtch <- ifelse( coded.allele==effect.allele & other.allele==ref.allele, 1, 0 )
-    swtch <- ifelse( coded.allele==ref.allele & other.allele==effect.allele, -1, swtch )
-    ptr.miss <- which( swtch==0 )
-    if( strand.check & length(ptr.miss)>0 ){
-        coded.allele1 <- alt.strand( coded.allele )
-        other.allele1 <- alt.strand( other.allele )
+    swtch <- allele.check( coded.allele, other.allele,
+                          effect.allele, ref.allele, strand.check )
+#    swtch <- ifelse( coded.allele==effect.allele & other.allele==ref.allele, 1, 0 )
+#    swtch <- ifelse( coded.allele==ref.allele & other.allele==effect.allele, -1, swtch )
+#    ptr.miss <- which( swtch==0 )
+#    if( strand.check & length(ptr.miss)>0 ){
+#        coded.allele1 <- alt.strand( coded.allele )
+#        other.allele1 <- alt.strand( other.allele )
 
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==effect.allele[ptr.miss] &
-                                   other.allele1[ptr.miss]==ref.allele[ptr.miss],
-                                  1, 0 )
+#        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==effect.allele[ptr.miss] &
+#                                   other.allele1[ptr.miss]==ref.allele[ptr.miss],
+#                                  1, 0 )
 
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==ref.allele[ptr.miss] &
-                                   other.allele1[ptr.miss]==effect.allele[ptr.miss],
-                                  -1, swtch[ptr.miss] )
-    }
+#        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==ref.allele[ptr.miss] &
+#                                   other.allele1[ptr.miss]==effect.allele[ptr.miss],
+#                                  -1, swtch[ptr.miss] )
+#    }
 
+    # Map ref stat genotypes to effect.allele & ref.allele
     ptr <- which(swtch == -1)
     if( length(ptr)>0 ){
         X[,ptr] <- 2 - X[,ptr]
@@ -520,29 +545,29 @@ read.NonCentralFit.clump <- function( sumstats, ld.ids, X.bed, bim,
             colnames(beta.bar) <- 1:(length(w.prior))
             kl <- vector(length=length(w.prior))
 
-            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1 &
-                             beta.prior$ref.allele==sumstats$ALLELE0, 1, 0 )
-            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0 &
-                             beta.prior$ref.allele==sumstats$ALLELE1, -1, swtch )
+            swtch <- allele.check( beta.prior$effect.allele, beta.prior$ref.allele,
+                                  sumstats$ALLELE1, sumstats$ALLELE0, strand.check )
+#            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE1 &
+#                             beta.prior$ref.allele==sumstats$ALLELE0, 1, 0 )
+#            swtch <- ifelse( beta.prior$effect.allele==sumstats$ALLELE0 &
+#                             beta.prior$ref.allele==sumstats$ALLELE1, -1, swtch )
+#            ptr.miss <- which( swtch==0 )
+#            if( strand.check & length(ptr.miss)>0 ){
+#                coded.allele1 <- alt.strand( sumstats$ALLELE1 )
+#                other.allele1 <- alt.strand( sumstats$ALLELE0 )
+#                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+#                                           beta.prior$effect.allele[ptr.miss] &
+#                                           other.allele1[ptr.miss]==
+#                                           beta.prior$ref.allele[ptr.miss],
+#                                          1, 0 )
+#                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+#                                           beta.prior$ref.allele[ptr.miss] &
+#                                           other.allele1[ptr.miss]==
+#                                           beta.prior$effect.allele[ptr.miss],
+#                                          -1, swtch[ptr.miss] )
+#            }
 
-            ptr.miss <- which( swtch==0 )
-            if( strand.check & length(ptr.miss)>0 ){
-                coded.allele1 <- alt.strand( sumstats$ALLELE1 )
-                other.allele1 <- alt.strand( sumstats$ALLELE0 )
-
-                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
-                                           beta.prior$effect.allele[ptr.miss] &
-                                           other.allele1[ptr.miss]==
-                                           beta.prior$ref.allele[ptr.miss],
-                                          1, 0 )
-
-                swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
-                                           beta.prior$ref.allele[ptr.miss] &
-                                           other.allele1[ptr.miss]==
-                                           beta.prior$effect.allele[ptr.miss],
-                                          -1, swtch[ptr.miss] )
-            }
-
+            # Map sumstats to prior
             if( precision ){
                 lambda <- list( length=length(w.prior) )
             }
@@ -614,29 +639,29 @@ get.pred.clump <- function( beta.bar, ptr.beta.use, clump.id, X.bed, bim,
     coded.allele <- bim$V5[ptr.bed]
     other.allele <- bim$V6[ptr.bed]
 
-    swtch <- ifelse( coded.allele==beta.bar$effect.allele &
-                     other.allele==beta.bar$ref.allele, 1, 0 )
+    swtch <- allele.check( coded.allele, other.allele,
+                          beta.bar$effect.allele, beta.bar$ref.allele, strand.check )
+#    swtch <- ifelse( coded.allele==beta.bar$effect.allele &
+#                     other.allele==beta.bar$ref.allele, 1, 0 )
+#    swtch <- ifelse( coded.allele==beta.bar$ref.allele &
+#                     other.allele==beta.bar$effect.allele, -1, swtch )
+#    ptr.miss <- which( swtch==0 )
+#    if( strand.check & length(ptr.miss)>0 ){
+#        coded.allele1 <- alt.strand( coded.allele )
+#        other.allele1 <- alt.strand( other.allele )
+#        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss] ==
+#                                   beta.bar$effect.allele[ptr.miss] &
+#                                   other.allele1[ptr.miss] ==
+#                                   beta.bar$ref.allele[ptr.miss],
+#                                  1, 0 )
+#        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
+#                                   beta.bar$ref.allele[ptr.miss] &
+#                                   other.allele1[ptr.miss]==
+#                                   beta.bar$effect.allele[ptr.miss],
+#                                  -1, swtch[ptr.miss] )
+#    }
 
-    swtch <- ifelse( coded.allele==beta.bar$ref.allele &
-                     other.allele==beta.bar$effect.allele, -1, swtch )
-
-    ptr.miss <- which( swtch==0 )
-    if( strand.check & length(ptr.miss)>0 ){
-        coded.allele1 <- alt.strand( coded.allele )
-        other.allele1 <- alt.strand( other.allele )
-
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss] ==
-                                   beta.bar$effect.allele[ptr.miss] &
-                                   other.allele1[ptr.miss] ==
-                                   beta.bar$ref.allele[ptr.miss],
-                                  1, 0 )
-
-        swtch[ptr.miss] <- ifelse( coded.allele1[ptr.miss]==
-                                   beta.bar$ref.allele[ptr.miss] &
-                                   other.allele1[ptr.miss]==
-                                   beta.bar$effect.allele[ptr.miss],
-                                  -1, swtch[ptr.miss] )
-    }
+#    Map target genotypes to estimated SNP effects
     ptr.use <- which( swtch!=0 )
     if( length(ptr.use)>0 ){
         X <- X[,ptr.use,drop=FALSE]
