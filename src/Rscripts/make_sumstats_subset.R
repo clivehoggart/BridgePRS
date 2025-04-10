@@ -35,6 +35,10 @@ option_list = list(
                 help="P-value column name", metavar="character"),
     make_option(c("--N.pop"), type="numeric", default=0,
                 help="GWAS sample size", metavar="numeric"),
+    make_option(c("--prop.train"), type="numeric", default=0,
+                help="GWAS training sample proportion", metavar="numeric"),
+    make_option(c("--prop.test"), type="numeric", default=0,
+                help="Testing sample proportion", metavar="numeric"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
@@ -146,7 +150,8 @@ for( chr in 1:22 ){
                          sumstat.subset( snp=sumstats$SNP[i],
                                         sumstats=sumstats, ld.ids=ld.ids,
                                         X.bed=ptr.bed, bim=bim,
-                                        n.all=opt$N.pop, n.prop=c(0.7,0.15),
+                                        n.all=opt$N.pop,
+                                        n.prop=c( opt$prop.train, opt$prop.test ),
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
     for( i in 1:length(ptr.fill) ){
