@@ -145,11 +145,13 @@ for( chr in 1:22 ){
     n.models <- ncol(all.models)
 #    fwrite( all.models, outfile )
     if( chr==1 ){
+        genome.alleles <- chr.alleles
         genome.all.models <- all.models
         Sigma.prs <- matrix( ncol=n.models, nrow=n.models, data=0 )
         betatXtY.2 <- matrix( ncol=1, nrow=n.models, data=0 )
         betatXtY.3 <- matrix( ncol=1, nrow=n.models, data=0 )
     }else{
+        genome.alleles <- rbind( genome.alleles, chr.alleles )
         genome.all.models <- rbind( genome.all.models, all.models )
     }
 
@@ -195,7 +197,7 @@ for( k in 1:length(lambda) ){
 R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
 s <- order( R2.ensembl, decreasing=TRUE )
 ensembl.model <- genome.all.models %*% prs.weights[,s[1]]
-write.table( ensembl.model,
+write.table( data.frame( genome.alleles, ensembl.model ),
             paste( opt$workdir, 'snp_weights_weighted_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
 
@@ -213,6 +215,6 @@ p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
             paste( opt$workdir, 'best_model_params.dat', sep='' ),
             row.names=FALSE, quote=FALSE )
-write.table( genome.all.models[,s[1]],
+write.table( data.frame( genome.alleles, genome.all.models[,s[1]] ),
             paste( opt$workdir, 'snp_weights_best_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
