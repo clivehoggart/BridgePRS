@@ -384,7 +384,6 @@ then
 	    --workdir $outdir/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
-	    --out $outdir/models/$pop1\_snp_weights \
 	    --strand.check $strand_check \
 	    --n.cores $n_cores
 fi
