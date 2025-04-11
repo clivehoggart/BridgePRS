@@ -381,7 +381,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/models/$pop1\_stage1 \
-	    --wordir $outdir/$pop1 \
+	    --workdir $outdir/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --out $outdir/models/$pop1\_snp_weights \
