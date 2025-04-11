@@ -498,7 +498,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
 	    --stage1  $outdir/models/$pop2\_stage1 \
 	    --stage2 $outdir/models/$pop2\_stage2 \
-	    --wordir $outdir/$pop1 \
+	    --workdir $outdir/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --out $outdir/models/$pop2\_all_snp_weights \
