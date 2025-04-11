@@ -21,6 +21,8 @@ option_list = list(
     make_option(c("--by.chr"), type="numeric", default=1,
                 help="Logical indicating if bed files are split by chr",
                 metavar="character"),
+    make_option(c("--strand.check"), type="numeric", default=0,
+                help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option("--out", type="character",
                 help="Output files", metavar="character")
 )
