@@ -6,6 +6,8 @@ library(BEDMatrix)
 # toupper
 
 option_list = list(
+    make_option(c("--fpath"), type="character", default=NULL,
+                help="Function File Path", metavar="character"),
     make_option("--stage1", type="character",
                 help="Stage 1 betas", metavar="character"),
     make_option("--stage2", type="character", default=NULL,
