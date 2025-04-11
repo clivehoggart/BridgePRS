@@ -34,17 +34,17 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 print(opt)
 
-#opt <- list()
-#opt$fpath <- "~/BridgePRS/src/Rscripts/functions.R"
-#opt$stage2 <- NULL
-#opt$stage1 <- "~/BridgePRS/out/models/EUR_stage1"
-#opt$p.thresh <- "1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8"
-#opt$workdir <- "~/BridgePRS/out/EUR/"
-#opt$bfile <- "~/bridge2/data/HapMap_Variants/chr"
-#opt$ld.ids <- "~/bridge2/data/HapMap_Variants/EUR_IDS.txt"
-#opt$strand.check <- TRUE
-#opt$by.chr <- 1
-#opt$n.cores <- 20
+opt <- list()
+opt$fpath <- "~/BridgePRS/src/Rscripts/functions.R"
+opt$stage2 <- NULL
+opt$stage1 <- "~/BridgePRS/out/models/EUR_stage1"
+opt$p.thresh <- "1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8"
+opt$workdir <- "~/BridgePRS/out/EUR/"
+opt$bfile <- "~/bridge2/data/HapMap_Variants/chr"
+opt$ld.ids <- "~/bridge2/data/HapMap_Variants/EUR_IDS.txt"
+opt$strand.check <- TRUE
+opt$by.chr <- 1
+opt$n.cores <- 20
 
 source(opt$fpath)
 
@@ -190,11 +190,14 @@ lambda <- c((1:9)*1e-6,(1:9)*1e-5,(1:9)*1e-4,(1:9)*1e-3,(1:9)*1e-2,(1:9)*1e-1,1:
 prs.weights <- matrix(ncol=length(lambda), nrow=n.models )
 for( k in 1:length(lambda) ){
     prs.weights[,k] <- solve( diag(lambda[k],n.models) + Sigma.prs ) %*% betatXtY.2
-    prs.weights[,k] <- prs.weights[,k] / sum(prs.weights[,k])
+    prs.weights[,k] <- prs.weights[,k]
 }
 R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
 s <- order( R2.ensembl, decreasing=TRUE )
+
 ensembl.model <- genome.all.models %*% prs.weights[,s[1]]
+ensembl.model[1:5]
+
 write.table( data.frame( genome.alleles, ensembl.model ),
             paste( opt$workdir, '_snp_weights_weighted_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
