@@ -495,12 +495,12 @@ if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
     rm -f $outdir/models/$pop2\_stage1*
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
+ 	    --fpath $FPATH \
 	    --stage1  $outdir/models/$pop2\_stage1 \
 	    --stage2 $outdir/models/$pop2\_stage2 \
 	    --workdir $outdir/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
-	    --out $outdir/models/$pop2\_all_snp_weights \
 	    --strand.check $strand_check \
 	    --n.cores $n_cores
 fi
