@@ -176,10 +176,11 @@ for( chr in 1:22 ){
 
 lambda <- c((1:9)*1e-6,(1:9)*1e-5,(1:9)*1e-4,(1:9)*1e-3,(1:9)*1e-2,(1:9)*1e-1,1:9)
 prs.weights <- matrix( ncol=length(lambda), nrow=n.models )
+R2.ensembl <- vector()
 for( k in 1:length(lambda) ){
     prs.weights[,k] <- solve( diag(lambda[k],n.models) + Sigma.prs ) %*% betatXtY.2
+    R2.ensembl[k] <- (t(prs.weights[,k]) %*% betatXtY.3)^2 / t(prs.weights[,k]) %*% Sigma.prs %*% prs.weights[,k]
 }
-R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
 s1 <- order( R2.ensembl, decreasing=TRUE )
 
 ensembl.model <- genome.all.models %*% prs.weights[,s1[1]]
@@ -195,7 +196,7 @@ R2.indiv <- betatXtY.3^2 / diag(Sigma.prs)
 s2 <- order( R2.indiv, decreasing=TRUE )
 colnames(all.models)[s2[1:10]]
 
-tmp <- strsplit( colnames(all.models)[s2[1]], '_' )
+tmp <- strsplit( colnames(all.models)[s2 [1]], '_' )
 S.opt <- as.numeric(tmp[[1]][3])
 lambda.opt <- as.numeric(tmp[[1]][2])
 p.opt <- as.numeric(tmp[[1]][4])
