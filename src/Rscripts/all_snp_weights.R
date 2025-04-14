@@ -183,14 +183,13 @@ R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.
 s1 <- order( R2.ensembl, decreasing=TRUE )
 
 ensembl.model <- genome.all.models %*% prs.weights[,s1[1]]
-ensembl.model[1:5]
 
 write.table( data.frame( genome.alleles, ensembl.model ),
             paste( opt$workdir, '_snp_weights_weighted_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
 
-cbind(lambda,R2.ensembl/max(R2.ensembl))
-s[1:4]
+#cbind(lambda,R2.ensembl/max(R2.ensembl))
+#s[1:4]
 
 R2.indiv <- betatXtY.3^2 / diag(Sigma.prs)
 s2 <- order( R2.indiv, decreasing=TRUE )
