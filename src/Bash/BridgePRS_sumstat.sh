@@ -493,7 +493,6 @@ fi
 
 if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
-    rm -f $outdir/models/$pop2\_stage1*
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/models/$pop2\_stage1 \
