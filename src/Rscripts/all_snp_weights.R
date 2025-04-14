@@ -195,7 +195,7 @@ R2.indiv <- betatXtY.3^2 / diag(Sigma.prs)
 s2 <- order( R2.indiv, decreasing=TRUE )
 colnames(all.models)[s2[1:10]]
 
-tmp <- strsplit( colnames(all.models)[s[1]], '_' )
+tmp <- strsplit( colnames(all.models)[s2[1]], '_' )
 S.opt <- as.numeric(tmp[[1]][3])
 lambda.opt <- as.numeric(tmp[[1]][2])
 p.opt <- as.numeric(tmp[[1]][4])
