@@ -34,18 +34,6 @@ opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
 print(opt)
 
-opt <- list()
-opt$fpath <- "~/BridgePRS/src/Rscripts/functions.R"
-opt$stage2 <- NULL
-opt$stage1 <- "~/BridgePRS/out/models/EUR_stage1"
-opt$p.thresh <- "1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8"
-opt$workdir <- "~/BridgePRS/out/EUR/"
-opt$bfile <- "~/bridge2/data/HapMap_Variants/chr"
-opt$ld.ids <- "~/bridge2/data/HapMap_Variants/EUR_IDS.txt"
-opt$strand.check <- TRUE
-opt$by.chr <- 1
-opt$n.cores <- 20
-
 source(opt$fpath)
 
 p.thresh <- as.numeric(strsplit( opt$p.thresh, ',' )[[1]])
@@ -187,15 +175,14 @@ for( chr in 1:22 ){
 }
 
 lambda <- c((1:9)*1e-6,(1:9)*1e-5,(1:9)*1e-4,(1:9)*1e-3,(1:9)*1e-2,(1:9)*1e-1,1:9)
-prs.weights <- matrix(ncol=length(lambda), nrow=n.models )
+prs.weights <- matrix( ncol=length(lambda), nrow=n.models )
 for( k in 1:length(lambda) ){
     prs.weights[,k] <- solve( diag(lambda[k],n.models) + Sigma.prs ) %*% betatXtY.2
-    prs.weights[,k] <- prs.weights[,k]
 }
 R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
-s <- order( R2.ensembl, decreasing=TRUE )
+s1 <- order( R2.ensembl, decreasing=TRUE )
 
-ensembl.model <- genome.all.models %*% prs.weights[,s[1]]
+ensembl.model <- genome.all.models %*% prs.weights[,s1[1]]
 ensembl.model[1:5]
 
 write.table( data.frame( genome.alleles, ensembl.model ),
@@ -206,8 +193,8 @@ cbind(lambda,R2.ensembl/max(R2.ensembl))
 s[1:4]
 
 R2.indiv <- betatXtY.3^2 / diag(Sigma.prs)
-s <- order( R2.indiv, decreasing=TRUE )
-colnames(all.models)[s[1:10]]
+s2 <- order( R2.indiv, decreasing=TRUE )
+colnames(all.models)[s2[1:10]]
 
 tmp <- strsplit( colnames(all.models)[s[1]], '_' )
 S.opt <- as.numeric(tmp[[1]][3])
@@ -216,6 +203,6 @@ p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
             paste( opt$workdir, '_best_model_params.dat', sep='' ),
             row.names=FALSE, quote=FALSE )
-write.table( data.frame( genome.alleles, genome.all.models[,s[1]] ),
+write.table( data.frame( genome.alleles, genome.all.models[,s2[1]] ),
             paste( opt$workdir, '_snp_weights_best_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
