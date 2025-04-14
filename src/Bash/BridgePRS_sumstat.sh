@@ -497,7 +497,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/models/$pop2\_stage1 \
 	    --stage2 $outdir/models/$pop2\_stage2 \
-	    --workdir $outdir/$pop1 \
+	    --workdir $outdir/$pop2 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --strand.check $strand_check \
