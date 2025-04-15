@@ -193,7 +193,7 @@ write.table( data.frame( genome.alleles, ensembl.model ),
 #cbind(lambda,R2.ensembl/max(R2.ensembl))
 #s[1:4]
 
-R2.indiv <- betatXtY.3^2 / diag(Sigma.prs)
+R2.indiv <- (betatXtY.2 + betatXtY.3)^2 / diag(Sigma.prs)
 s2 <- order( R2.indiv, decreasing=TRUE )
 colnames(all.models)[s2[1:10]]
 
