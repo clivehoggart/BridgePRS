@@ -140,6 +140,7 @@ for( chr in 1:22 ){
         genome.alleles <- rbind( genome.alleles, chr.alleles )
         genome.all.models <- rbind( genome.all.models, all.models )
     }
+    genome.all.models <- standardise(genome.all.models)
 
     all.block.snps <- vector()
     for( i in 1:nrow(blocks) ){
