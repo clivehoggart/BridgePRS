@@ -181,7 +181,8 @@ for( k in 1:length(lambda) ){
     prs.weights[,k] <- solve( diag(lambda[k],n.models) + Sigma.prs ) %*% betatXtY.2
 #    R2.ensembl[k] <- (t(prs.weights[,k,drop=FALSE]) %*% betatXtY.3)^2 / t(prs.weights[,k,drop=FALSE]) %*% Sigma.prs %*% prs.weights[,k,drop=FALSE]
 }
-R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)s1 <- order( R2.ensembl, decreasing=TRUE )
+R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
+s1 <- order( R2.ensembl, decreasing=TRUE )
 
 ensembl.model <- genome.all.models %*% prs.weights[,s1[1]]
 
