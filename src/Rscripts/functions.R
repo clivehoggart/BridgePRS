@@ -1,3 +1,11 @@
+standardise <- function(X){
+    m <- apply(X,2,mean,na.rm=TRUE)
+    X <- t(t(X)-m)
+    s <- apply(X,2,sd,na.rm=TRUE)
+    X <- t(t(X)/s)
+    return(X)
+}
+
 allele.check <- function( effect.allele1, ref.allele1,
                          effect.allele2, ref.allele2, strand.check ){
     swtch <- ifelse( effect.allele1==effect.allele2 &
