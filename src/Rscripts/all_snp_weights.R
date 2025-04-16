@@ -44,6 +44,7 @@ if( opt$by.chr==0 ){
     ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
 }
 
+af <- vector()
 for( chr in 1:22 ){
     if( opt$by.chr==1 ){
         X.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
@@ -95,22 +96,14 @@ for( chr in 1:22 ){
     }
 
     if( !is.null(opt$stage2) ){
-        if( chr==1 ){
-            clump.id <- unique(stage2$clump.id)
-            p.clump <- stage2$p.value[match( clump.id, stage2$clump.id )]
-            F <- ecdf(p.clump)
-            q <- F(10^(-(1:8)))
-            kl.thresh <- apply( kl.metric, 2, quantile, 1-q, na.rm=TRUE )
-            n.thresh <- nrow(kl.thresh)
-            nme.thresh <- rownames(kl.thresh)
-        }
         ptr.betas <- grep('beta.bar',colnames(stage2))
         tmp <- strsplit(colnames(stage2)[ptr.betas],'beta.bar_')
         betas <- sapply(tmp,getElement,2)
-        stage22 <- as.data.frame(matrix(ncol=length(kl.thresh)*length(betas),nrow=length(snps),data=0))
+        stage22 <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
+                                        nrow=length(snps),data=0))
         cnames <- vector()
         for( i in 1:length(kl.thresh) ){
-            cnames <- c( cnames, paste('beta',betas,kl.thresh[i],sep="_") )
+            cnames <- c( cnames, paste('beta',betas,p.thresh[i],sep="_") )
         }
         colnames(stage22) <- cnames
         ptr.ss <- match( stage2$snp, sumstats$SNP )
@@ -140,7 +133,6 @@ for( chr in 1:22 ){
         genome.alleles <- rbind( genome.alleles, chr.alleles )
         genome.all.models <- rbind( genome.all.models, all.models )
     }
-    genome.all.models <- standardise(genome.all.models)
 
     all.block.snps <- vector()
     for( i in 1:nrow(blocks) ){
