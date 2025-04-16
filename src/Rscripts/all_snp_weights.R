@@ -63,7 +63,7 @@ for( chr in 1:22 ){
         infile <- paste(opt$stage2,"_beta_bar_chr",chr,".txt.gz", sep="")
         stage2 <- fread( infile, data.table=FALSE )
         infile <- paste0(opt$stage2,"_KLdist_chr",chr,".txt.gz")
-        kl.metric <- fread(infile, data.table=FALSE)[,-1]
+#        kl.metric <- fread(infile, data.table=FALSE)[,-1]
         snps <- union( stage1$snp, stage2$snp )
     }else{
         snps <- stage1$snp
@@ -102,7 +102,7 @@ for( chr in 1:22 ){
         stage22 <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
                                         nrow=length(snps),data=0))
         cnames <- vector()
-        for( i in 1:length(kl.thresh) ){
+        for( i in 1:length(p.thresh) ){
             cnames <- c( cnames, paste('beta',betas,p.thresh[i],sep="_") )
         }
         colnames(stage22) <- cnames
@@ -110,8 +110,8 @@ for( chr in 1:22 ){
         swtch <- allele.check( sumstats$ALLELE1[ptr.ss], sumstats$ALLELE0[ptr.ss],
                               stage2$effect.allele, stage2$ref.allele,
                               opt$strand.check )
-        for( i in 1:length(kl.thresh) ){
-            ptr.stage2 <- which( stage2$p.value <  kl.thresh[i] )
+        for( i in 1:length(p.thresh) ){
+            ptr.stage2 <- which( stage2$p.value <  p.thresh[i] )
             ptr.row <- match( stage2$snp[ptr.stage2], snps )
             ptr.col <- (1:length(betas)) + (i-1)*length(betas)
             stage22[ptr.row,ptr.col] <- stage2[ptr.stage2,ptr.betas] * swtch[ptr.stage2]
