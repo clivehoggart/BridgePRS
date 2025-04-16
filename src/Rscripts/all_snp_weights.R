@@ -180,7 +180,7 @@ lambda <- c( (1:9)*1e-3, (1:9)*1e-2, (1:9)*1e-1, (1:9)*1e-0, (1:9)*1e1, (1:9)*1e
 prs.weights <- matrix( ncol=length(lambda), nrow=n.models )
 R2.ensembl <- vector()
 for( k in 1:length(lambda) ){
-    prs.weights[,k] <- solve( diag(lambda[k],n.models) + Sigma.prs ) %*% betatXtY.2
+    prs.weights[,k] <- solve( diag(lambda[k],length(ptr.use)) + Sigma.prs ) %*% betatXtY.2
 #    R2.ensembl[k] <- (t(prs.weights[,k,drop=FALSE]) %*% betatXtY.3)^2 / t(prs.weights[,k,drop=FALSE]) %*% Sigma.prs %*% prs.weights[,k,drop=FALSE]
 }
 R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
