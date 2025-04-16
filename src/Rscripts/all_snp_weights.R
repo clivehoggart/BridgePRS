@@ -176,7 +176,7 @@ Sigma.prs <- diag(k.norm) %*% Sigma.prs %*% diag(k.norm)
 betatXtY.2 <- betatXtY.2 * k.norm
 betatXtY.3 <- betatXtY.3 * k.norm
 
-lambda <- c((1:9)*1e-6,(1:9)*1e-5,(1:9)*1e-4,(1:9)*1e-3,(1:9)*1e-2,(1:9)*1e-1,1:9)
+lambda <- c( (1:9)*1e-3, (1:9)*1e-2, (1:9)*1e-1, (1:9)*1e-0, (1:9)*1e1, (1:9)*1e2)
 prs.weights <- matrix( ncol=length(lambda), nrow=n.models )
 R2.ensembl <- vector()
 for( k in 1:length(lambda) ){
@@ -185,6 +185,7 @@ for( k in 1:length(lambda) ){
 }
 R2.ensembl <- (t(prs.weights) %*% betatXtY.3)^2 / diag(t(prs.weights) %*% Sigma.prs %*% prs.weights)
 s1 <- order( R2.ensembl, decreasing=TRUE )
+cbind( R2.ensembl/max(R2.ensembl), lambda )
 
 ensembl.model <- genome.all.models %*% prs.weights[,s1[1]]
 
