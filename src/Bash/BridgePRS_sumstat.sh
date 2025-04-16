@@ -37,6 +37,9 @@ pop2_ld_bfile=0
 cov_names="000"
 binary=0
 
+prop_train=0.7
+prop_test=0.15
+
 #RSCRIPTS=~/BridgePRS/src/Rscripts
 #FPATH=$RSCRIPTS"/functions.R"
 
@@ -190,9 +193,6 @@ mkdir -p $outdir/$pop2/sumstat_subset
 mkdir -p $outdir/clump
 mkdir -p $outdir/models
 mkdir -p $outdir/models/lambda
-
-prop_train=0.7
-prop_test=0.15
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
@@ -434,7 +434,7 @@ then
 	    --N.pop2 $N_pop2 \
 	    --n.cores $n_cores \
 	    --by.chr.sumstats .dat.gz \
-	    --ranking $ranking \
+	    --ranking pv \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
 fi
