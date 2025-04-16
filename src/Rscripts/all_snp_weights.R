@@ -170,6 +170,7 @@ ptr.use <- which(diag(Sigma.prs)!=0)
 Sigma.prs <- Sigma.prs[ptr.use,ptr.use]
 betatXtY.2 <- betatXtY.2[ptr.use,]
 betatXtY.3 <- betatXtY.3[ptr.use,]
+genome.all.models <- genome.all.models[,ptr.use]
 n.models <- length(ptr.use)
 
 k.norm <- 1/sqrt(diag(Sigma.prs))
