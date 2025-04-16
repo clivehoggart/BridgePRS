@@ -166,6 +166,15 @@ for( chr in 1:22 ){
         betatXtY.3 <- betatXtY.3 + t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
     }
 }
+ptr.use <- which(diag(Sigma.prs)!=0)
+Sigma.prs <- Sigma.prs[ptr.use,ptr.use]
+betatXtY.2 <- betatXtY.2[ptr.use,]
+betatXtY.3 <- betatXtY.3[ptr.use,]
+
+k.norm <- 1/sqrt(diag(Sigma.prs))
+Sigma.prs <- diag(k.norm) %*% Sigma.prs %*% diag(k.norm)
+betatXtY.2 <- betatXtY.2 * k.norm
+betatXtY.3 <- betatXtY.3 * k.norm
 
 lambda <- c((1:9)*1e-6,(1:9)*1e-5,(1:9)*1e-4,(1:9)*1e-3,(1:9)*1e-2,(1:9)*1e-1,1:9)
 prs.weights <- matrix( ncol=length(lambda), nrow=n.models )
