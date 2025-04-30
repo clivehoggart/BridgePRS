@@ -398,13 +398,13 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
-                                     beta.1, p.1, XtY.2, XtY.3 )
+                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
         }else{
             sumstats.1 <- data.frame( sumstats$SNP,
                                      sumstats$ALLELE1, sumstats$ALLELE0,
-                                     t(rep(NA,4)) )
+                                     t(rep(NA,5)) )
         }
-        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','P',
+        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
                                   'XtY.2','XtY.3')
     }
 #        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
