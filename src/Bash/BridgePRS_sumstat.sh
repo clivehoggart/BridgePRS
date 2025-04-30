@@ -205,6 +205,8 @@ then
     indir=$outdir
 fi
 
+n_iter=5
+
 if [ $do_block_pop1 -eq 1 ]
 then
     for chr in {1..22}
@@ -242,29 +244,6 @@ then
     done
 fi
 
-if [ $do_sumstat_pop1 -eq 1 ]
-then
-    rm $outdir/$pop1/sumstat_subset/*
-    Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
- 	    --fpath $FPATH \
-	    --workdir $outdir/$pop1 \
-	    --sumstats $pop1_sumstats \
-	    --ld.ids $pop1_ld_ids \
-	    --bfile $pop1_ld_bfile \
-	    --sumstats.snpID $sumstats_snpID \
-	    --sumstats.betaID $sumstats_beta \
- 	    --sumstats.allele1ID $sumstats_allele1 \
-	    --sumstats.allele0ID $sumstats_allele0 \
-	    --sumstats.P $sumstats_p \
-	    --N.pop $N_pop1 \
-	    --prop.train $prop_train \
-	    --prop.test $prop_test \
-	    --n.cores $n_cores \
-	    --by.chr.sumstats $by_chr_sumstats \
-	    --strand.check $strand_check \
-	    --by.chr $by_chr_ld
-fi
-
 if [ $do_block_pop2 -eq 1 ]
 then
     for chr in {1..22}
@@ -300,6 +279,32 @@ then
 	rm $outdir/${pop2}/blocks/chr$chr.blocks
 	gzip $outdir/${pop2}/blocks/chr$chr.blocks.det
     done
+fi
+
+for iter in {1..$n_iter}
+do
+
+if [ $do_sumstat_pop1 -eq 1 ]
+then
+    rm $outdir/$pop1/sumstat_subset/*
+    Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
+ 	    --fpath $FPATH \
+	    --workdir $outdir/$pop1 \
+	    --sumstats $pop1_sumstats \
+	    --ld.ids $pop1_ld_ids \
+	    --bfile $pop1_ld_bfile \
+	    --sumstats.snpID $sumstats_snpID \
+	    --sumstats.betaID $sumstats_beta \
+ 	    --sumstats.allele1ID $sumstats_allele1 \
+	    --sumstats.allele0ID $sumstats_allele0 \
+	    --sumstats.P $sumstats_p \
+	    --N.pop $N_pop1 \
+	    --prop.train $prop_train \
+	    --prop.test $prop_test \
+	    --n.cores $n_cores \
+	    --by.chr.sumstats $by_chr_sumstats \
+	    --strand.check $strand_check \
+	    --by.chr $by_chr_ld
 fi
 
 if [ $do_sumstat_pop2 -eq 1 ]
@@ -506,8 +511,10 @@ then
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \
 	    --strand.check $strand_check \
-	    --N.pop $N_pop1 \
+	    --N.pop $N_pop2 \
 	    --prop.train $prop_train \
 	    --prop.test $prop_test \
+	    --iter $iter
 	    --n.cores $n_cores
 fi
+done
