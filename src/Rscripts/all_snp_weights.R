@@ -33,6 +33,8 @@ option_list = list(
                 help="GWAS training sample proportion", metavar="numeric"),
     make_option(c("--prop.test"), type="numeric", default=0,
                 help="Testing sample proportion", metavar="numeric"),
+    make_option(c("--iter"), type="numeric", default=0,
+                help="Iteration counter", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character")
 )
@@ -227,7 +229,7 @@ for( k in 1:n.models ){
 }
 s3 <- order( R2.model, decreasing=TRUE )
 write.table( data.frame( genome.alleles, ensembl.model[s3[1]] ),
-            paste( opt$workdir, '_snp_weights_weighted_model.dat', sep='' ),
+            paste( opt$workdir, '_snp_weights_weighted_model_',opt$iter,'.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
 
 #cbind(lambda,R2.ensembl/max(R2.ensembl))
@@ -243,8 +245,8 @@ S.opt <- as.numeric(tmp[[1]][3])
 lambda.opt <- as.numeric(tmp[[1]][2])
 p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
-            paste( opt$workdir, '_best_model_params.dat', sep='' ),
+            paste( opt$workdir, '_best_model_params_',opt$iter,'.dat', sep='' ),
             row.names=FALSE, quote=FALSE )
 write.table( data.frame( genome.alleles, genome.models[[ii]][,s2[1]] ),
-            paste( opt$workdir, '_snp_weights_best_model.dat', sep='' ),
+            paste( opt$workdir, '_snp_weights_best_model_',opt$iter,'.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
