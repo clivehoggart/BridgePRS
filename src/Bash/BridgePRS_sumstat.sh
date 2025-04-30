@@ -244,6 +244,7 @@ fi
 
 if [ $do_sumstat_pop1 -eq 1 ]
 then
+    rm $outdir/$pop1/sumstat_subset/
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --workdir $outdir/$pop1 \
@@ -303,6 +304,7 @@ fi
 
 if [ $do_sumstat_pop2 -eq 1 ]
 then
+    rm $outdir/$pop2/sumstat_subset/
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --workdir $outdir/$pop2 \
