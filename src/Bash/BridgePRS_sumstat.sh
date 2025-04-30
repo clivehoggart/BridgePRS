@@ -514,7 +514,7 @@ then
 	    --N.pop $N_pop2 \
 	    --prop.train $prop_train \
 	    --prop.test $prop_test \
-	    --iter $iter
+	    --iter $iter \
 	    --n.cores $n_cores
 fi
 done
