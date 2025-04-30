@@ -385,6 +385,9 @@ then
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --strand.check $strand_check \
+	    --N.pop $N_pop1 \
+	    --prop.train $prop_train \
+	    --prop.test $prop_test \
 	    --n.cores $n_cores
 fi
 
@@ -501,5 +504,8 @@ then
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \
 	    --strand.check $strand_check \
+	    --N.pop $N_pop1 \
+	    --prop.train $prop_train \
+	    --prop.test $prop_test \
 	    --n.cores $n_cores
 fi
