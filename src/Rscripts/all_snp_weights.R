@@ -132,7 +132,7 @@ for( chr in 1:22 ){
                 stage2[ptr.stage2,ptr.betas] * swtch[ptr.stage2]
         }
         rownames(models[[2]]) <- snps
-        models[[2]] <- as.matrix(models[[1]])
+        models[[2]] <- as.matrix(models[[2]])
         models[[3]] <- as.matrix(cbind(models[[1]],models[[2]]))
     }
     n.models <- length(models)
@@ -177,7 +177,7 @@ for( chr in 1:22 ){
             }
             all.block.snps <- c( all.block.snps, block.snps1 )
         }
-        max.const <- max( max.const, diag(ref.stats$ld) * sumstats$SE[ptr.ss]^2 )
+#        max.const <- max( max.const, diag(ref.stats$ld) * sumstats$SE[ptr.ss]^2 )
     }
     single.snps <- setdiff( snps, all.block.snps )
     for( i in 1:length(single.snps) ){
@@ -194,7 +194,7 @@ for( chr in 1:22 ){
             betatXtY.3[[k]] <- betatXtY.3[[k]] +
                 t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
         }
-        max.const <- max( max.const, ref.stats$ld * sumstats$SE[ptr.ss]^2 )
+#        max.const <- max( max.const, ref.stats$ld * sumstats$SE[ptr.ss]^2 )
     }
 }
 R2.model <- vector()
