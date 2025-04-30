@@ -139,7 +139,7 @@ for( chr in 1:22 ){
                                         n.prop=c(opt$prop.train, opt$prop.test),
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=7))
+    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=8))
     colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P','XtY.2','XtY.3')
     for( i in 1:nrow(blocks) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
