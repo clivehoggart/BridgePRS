@@ -281,7 +281,7 @@ then
     done
 fi
 
-for iter in {1..$n_iter}
+for iter in {1..5}
 do
 
 if [ $do_sumstat_pop1 -eq 1 ]
