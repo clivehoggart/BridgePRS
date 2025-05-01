@@ -220,20 +220,10 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
-	pop1_sumstats1=$pop1_sumstats
-	if [ $by_chr_sumstats != 0 ]
-	then
-	    pop1_sumstats1=$pop1_sumstats$chr$by_chr_sumstats
-	fi
-	rm -f $outdir/$pop1/blocks/chr$chr.blocks*
-	col_num=$(zcat $pop1_sumstats1 | 
-		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
-	zcat $pop1_sumstats1 | cut -d " " -f $col_num \
-				   > $outdir/$pop1/blocks/chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
-	      --extract $outdir/$pop1/blocks/chr${chr}.snplist \
+	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.00001 \
@@ -257,20 +247,10 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
-	pop2_sumstats1=$pop2_sumstats
-	if [ $by_chr_sumstats != 0 ]
-	then
-	    pop2_sumstats1=$pop2_sumstats$chr$by_chr_sumstats
-	fi
-	rm -f $outdir/$pop2/blocks/chr$chr.blocks*
-	col_num=$(zcat $pop2_sumstats1 | 
-		      head -1 | tr ' ' '\n' | cat -n | grep ID | awk '{print $1}')
-	zcat $pop2_sumstats1 | cut -d " " -f $col_num \
-				   > $outdir/${pop2}/blocks/chr${chr}.snplist
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
-	      --extract $outdir/${pop2}/blocks/chr${chr}.snplist \
+	      --extract $pop2_qc_snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.00001 \
