@@ -2,6 +2,8 @@ library(data.table)
 library("optparse")
 
 option_list = list(
+    make_option(c("--n.folds"), type="numeric", default=0,
+                help="cv folds", metavar="numeric"),
     make_option("--workdir", type="character", default=NULL,
                 help="file path", metavar="character")
 )
@@ -16,7 +18,7 @@ model <- c('best','weighted')
 for( i in 1:2 ){
     snps <- vector()
     tmp <- list()
-    for( iter in 1:5 ){
+    for( iter in 1:opt$n.folds ){
         tmp[[iter]] <- fread(paste0(opt$workdir,'_snp_weights_',model[i],'_model_',iter,'.dat'))
         snps <- union( snps, tmp[[iter]]$V1 )
     }
