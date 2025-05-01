@@ -1,9 +1,13 @@
 library(data.table)
+library("optparse")
 
 option_list = list(
     make_option("--workdir", type="character", default=NULL,
                 help="file path", metavar="character")
 )
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser)
+print(opt)
 
 dir <- 'out/preds/'
 pop <- 'EAS'
