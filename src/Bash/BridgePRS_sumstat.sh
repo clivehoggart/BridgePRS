@@ -526,6 +526,6 @@ done
 if [ $do_pool -eq 1  ]
 then
     Rscript --vanilla $RSCRIPTS"/"pool_snp_scores.R \
-	    --n.folds $n_folds
+	    --n.folds $n_folds \
 	    --workdir $outdir/$pop2
 fi
