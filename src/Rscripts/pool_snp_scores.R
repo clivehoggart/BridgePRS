@@ -32,6 +32,6 @@ for( i in 1:2 ){
     ptr.use <- which(ensembl.model[,4]!=0)
     ensembl.model <- ensembl.model[ptr.use,]
     write.table( ensembl.model,
-                paste0(opt$workdir,'_snp_weights_',model[i],'_model_0.dat'),
+                paste0(opt$workdir,'_snp_weights_',model[i],'_model.dat'),
                 row.names=FALSE, col.names=FALSE, quote=FALSE )
 }
