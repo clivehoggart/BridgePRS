@@ -38,6 +38,7 @@ pop2_ld_bfile=0
 cov_names="000"
 binary=0
 
+n_folds=5
 prop_train=0.7
 prop_test=0.15
 
@@ -53,7 +54,7 @@ prop_test=0.15
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -115,6 +116,7 @@ do
     --sumstats_se) sumstats_se=$2 ; shift 2 ;;
     --sumstats_frq) sumstats_frq=$2 ; shift 2 ;;
     --strand_check) strand_check=$2 ; shift 2 ;;
+    --n_folds) n_folds=$2 ; shift 2 ;;
     --fst) fst=$2 ; shift 2 ;;
     --binary) binary=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
@@ -283,7 +285,7 @@ then
     done
 fi
 
-for iter in {1..5}
+for ((iter = 1; iter <= ${n_folds}; i++))
 do
 
 if [ $do_sumstat_pop1 -eq 1 ]
@@ -524,5 +526,6 @@ done
 if [ $do_pool -eq 1  ]
 then
     Rscript --vanilla $RSCRIPTS"/"pool_snp_scores.R \
+	    --n.folds $n_folds
 	    --workdir $outdir/$pop2
 fi
