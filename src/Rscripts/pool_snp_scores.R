@@ -24,7 +24,7 @@ for( i in 1:2 ){
     }
     ensembl.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
     ensembl.model[,1] <- snps
-    for( iter in 1:5 ){
+    for( iter in 1:opt$n.folds ){
         ptr <- match( tmp[[iter]]$V1, snps )
         ensembl.model[ptr,2:3] <- c( tmp[[iter]]$V2, tmp[[iter]]$V3 )
         ensembl.model[ptr,4] <- ensembl.model[ptr,4] + tmp[[iter]]$V4
