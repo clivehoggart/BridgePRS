@@ -285,7 +285,7 @@ then
     done
 fi
 
-for ((iter = 1; iter <= ${n_folds}; i++))
+for ((iter = 1; iter <= ${n_folds}; iter++))
 do
 
 if [ $do_sumstat_pop1 -eq 1 ]
