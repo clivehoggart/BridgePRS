@@ -359,7 +359,8 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 }
 
 sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
-                            X.bed, bim, n.all, n.prop, strand.check ){
+                           X.bed, bim, n.all, n.prop, strand.check ){
+    ld.shrink <- 1e-9
     if( !is.null(block.i) ){
         block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
         snps <- intersect( sumstats$SNP, block.snps )
@@ -367,21 +368,27 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
     if( !is.null(snp) ){
         snps <- intersect( sumstats$SNP, snp )
     }
-    k <- length(snps)
 
     if( length(snps)>0 ){
         sumstats <- sumstats[match( snps, sumstats$SNP ),]
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    strand.check, n.eff=FALSE )
-        if( ref.stats$af[1]!=0 & ref.stats$af[1]!=1 ){
-            VX <- diag(ref.stats$ld)
+        ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 )
+        k <- length(ptr.use)
+        if( k>0 ){
+            sumstats <- sumstats[ptr.use,]
+            ref.stats$af <- ref.stats$af[ptr.use]
+            ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
+            ld.mat <- ld.mat + diag(ld.shrink,k)
+
+            VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
             se <- abs(sumstats$BETA) / -qnorm(sumstats$P/2)
             m1 <- matrix( rep(se^2,k), ncol=k, nrow=k ) *
                 matrix( rep(VX,k), ncol=k, nrow=k )
             m <- ifelse( m1<t(m1), m1, t(m1) )
-            Sigma <- n.all * m * ref.stats$ld
+            Sigma <- n.all * m * ld.mat
 
             m <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
@@ -393,7 +400,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             XtY.3 <- XtY - XtY.1 - XtY.2
 
-            beta.1 <- solve(ref.stats$ld) %*% XtY.1 / (n.all*n.prop[1])
+            beta.1 <- solve(ld.mat) %*% XtY.1 / (n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
             sumstats.1 <- data.frame( sumstats$SNP,
@@ -408,7 +415,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
                                   'XtY.2','XtY.3')
     }
 #        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
-#        beta.hat <- solve(ref.stats$ld) * as.matrix( sumstats$BETA * s2 )
+#        beta.hat <- solve(ld.mat) * as.matrix( sumstats$BETA * s2 )
     return(sumstats.1)
 }
 
