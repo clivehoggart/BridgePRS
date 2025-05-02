@@ -360,7 +360,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 
 sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
                            X.bed, bim, n.all, n.prop, strand.check ){
-    ld.shrink <- 1e-3
+    ld.shrink <- 1e-2
     if( !is.null(block.i) ){
         block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
         snps <- intersect( sumstats$SNP, block.snps )
