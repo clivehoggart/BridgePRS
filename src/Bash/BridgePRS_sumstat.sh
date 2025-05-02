@@ -148,20 +148,21 @@ echo "pop1_ld_bfile : $pop1_ld_bfile"
 echo "pop2_ld_bfile : $pop2_ld_bfile"
 echo "pop1_sumstats : $pop1_sumstats"
 echo "pop2_sumstats : $pop2_sumstats"
-echo "pop1_valid_data : $pop1_valid_data"
-echo "pop2_valid_data : $pop2_valid_data"
-echo "pop1_test_data : $pop1_test_data"
-echo "pop2_test_data : $pop2_test_data"
 echo "outdir : $outdir"
 echo "pop1_qc_snplist : $pop1_qc_snplist"
 echo "pop2_qc_snplist : $pop2_qc_snplist"
+echo "do_block_pop1 : $do_block_pop1"
+echo "do_block_pop2 : $do_block_pop2"
+echo "do_sumstat_pop1 : $do_sumstat_pop1"
+echo "do_sumstat_pop2 : $do_sumstat_pop2"
 echo "do_clump_pop1 : $do_clump_pop1"
 echo "do_est_beta_pop1 : $do_est_beta_pop1"
+echo "do_sumstat_ensembl_pop1 : $do_sumstat_ensembl_pop1"
 echo "do_est_beta_pop1_precision : $do_est_beta_pop1_precision"
 echo "do_est_beta_InformPrior : $do_est_beta_InformPrior"
 echo "do_clump_pop2 : $do_clump_pop2"
 echo "do_est_beta_pop2 : $do_est_beta_pop2"
-echo "do_combine : $do_combine"
+echo "do_sumstat_ensembl_pop2 : $do_sumstat_ensembl_pop2"
 echo "by_chr_target : $by_chr_target"
 echo "by_chr_ld : $by_chr_ld"
 echo "by_chr_sumstats : $by_chr_sumstats"
@@ -200,7 +201,7 @@ fi
 
 n_iter=5
 
-if [ $do_block_pop1 -eq 1 ]
+if [ $ -eq 1 ]
 then
     for chr in {1..22}
     do
