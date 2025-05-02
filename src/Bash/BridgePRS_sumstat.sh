@@ -201,7 +201,7 @@ fi
 
 n_iter=5
 
-if [ $ -eq 1 ]
+if [ $do_block_pop1 -eq 1 ]
 then
     for chr in {1..22}
     do
