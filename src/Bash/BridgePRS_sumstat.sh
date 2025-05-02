@@ -179,6 +179,7 @@ echo "ranking : $ranking"
 echo "ids_col : $ids_col"
 echo "strand_check : $strand_check"
 echo "fst : $fst"
+echo "n_folds : $n_folds"
 echo ""
 
 mkdir -p $outdir
