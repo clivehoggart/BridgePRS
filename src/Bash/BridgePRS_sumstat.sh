@@ -36,7 +36,6 @@ strand_check=0
 pop1_ld_bfile=0
 pop2_ld_bfile=0
 cov_names="000"
-binary=0
 
 n_folds=5
 prop_train=0.7
@@ -118,7 +117,6 @@ do
     --strand_check) strand_check=$2 ; shift 2 ;;
     --n_folds) n_folds=$2 ; shift 2 ;;
     --fst) fst=$2 ; shift 2 ;;
-    --binary) binary=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     # If invalid options were passed, then getopt should have reported an error,
@@ -139,14 +137,6 @@ fi
 if [ $by_chr_target = 0 ]
 then
     by_chr_target=$by_chr
-fi
-if [ $binary_pop1 = 0 ]
-then
-    binary_pop1=$binary
-fi
-if [ $binary_pop2 = 0 ]
-then
-    binary_pop2=$binary
 fi
 
 echo "Options in effect:"
@@ -186,7 +176,6 @@ echo "ranking : $ranking"
 echo "ids_col : $ids_col"
 echo "strand_check : $strand_check"
 echo "fst : $fst"
-echo "binary : $binary"
 echo ""
 
 mkdir -p $outdir
