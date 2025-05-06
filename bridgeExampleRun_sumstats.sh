@@ -33,8 +33,8 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --n_cores 20 \
     --prop_train 0.6 \
     --prop_test 0.3 \
-    --do_block_pop1 0 \
-    --do_block_pop2 0 \
+    --do_block_pop1 1 \
+    --do_block_pop2 1 \
     --do_sumstat_pop1 1 \
     --do_sumstat_pop2 1 \
     --do_clump_pop1 1 \
@@ -45,4 +45,5 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --do_clump_pop2 1 \
     --do_est_beta_pop2 1 \
     --do_sumstat_ensembl_pop2 1 \
-    --n_folds 10
+    --do_pool 1 \
+    --n_folds 2
