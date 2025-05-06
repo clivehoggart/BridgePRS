@@ -213,6 +213,7 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
+	rm $outdir/$pop1/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
@@ -226,7 +227,6 @@ then
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/${pop1}/blocks/chr${chr}
-	rm $outdir/$pop1/blocks/chr$chr.blocks
 	gzip $outdir/$pop1/blocks/chr$chr.blocks.det
     done
 fi
@@ -240,6 +240,7 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
+	rm $outdir/${pop2}/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
@@ -253,7 +254,6 @@ then
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/${pop2}/blocks/chr${chr}
-	rm $outdir/${pop2}/blocks/chr$chr.blocks
 	gzip $outdir/${pop2}/blocks/chr$chr.blocks.det
     done
 fi
