@@ -380,7 +380,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             sumstats <- sumstats[ptr.use,]
             ref.stats$af <- ref.stats$af[ptr.use]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
-            ld.mat <- ref.stats$ld + diag(ld.shrink,k)
+            ld.mat <- ref.stats$ld #+ diag(ld.shrink,k)
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
