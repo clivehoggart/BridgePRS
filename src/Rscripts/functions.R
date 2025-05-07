@@ -377,9 +377,9 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 & ref.stats$af!=1 )
         k <- length(ptr.use)
         if( k>0 ){
-            sumstats <- sumstats[ptr.use,]
-            ref.stats$af <- ref.stats$af[ptr.use]
-            ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use]
+            sumstats <- sumstats[ptr.use,,drop=FALSE]
+            ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
+            ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
             ld.mat <- ref.stats$ld #+ diag(ld.shrink,k)
 
             VX <- diag(ld.mat)
