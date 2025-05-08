@@ -360,7 +360,7 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 
 sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
                            X.bed, bim, n.all, n.prop, strand.check ){
-    ld.shrink <- 1e-1
+    ld.shrink <- 1e-3
     if( !is.null(block.i) ){
         block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
         snps <- intersect( sumstats$SNP, block.snps )
@@ -380,7 +380,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             sumstats <- sumstats[ptr.use,,drop=FALSE]
             ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
-            ld.mat <- ref.stats$ld #+ diag(ld.shrink,k)
+            ld.mat <- ref.stats$ld + diag(ld.shrink,k)
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
