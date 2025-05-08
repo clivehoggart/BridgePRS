@@ -220,7 +220,7 @@ then
 	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
-	      --blocks-min-maf 0.00001 \
+	      --blocks-min-maf 0.001 \
 	      --blocks-strong-lowci 0.51 \
 	      --blocks-strong-highci 0.831 \
 	      --blocks-recomb-highci 0.55 \
@@ -247,7 +247,7 @@ then
 	      --extract $pop2_qc_snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
-	      --blocks-min-maf 0.00001 \
+	      --blocks-min-maf 0.001 \
 	      --blocks-strong-lowci 0.51 \
 	      --blocks-strong-highci 0.831 \
 	      --blocks-recomb-highci 0.55 \
