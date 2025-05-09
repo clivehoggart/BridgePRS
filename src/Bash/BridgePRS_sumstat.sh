@@ -361,10 +361,10 @@ fi
 
 if [ $do_sumstat_ensembl_pop1 -eq 1  ]
 then
-    rm -f $outdir/models/$pop2\_stage1*
+    rm -f $outdir/${pop1}*_0.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
-	    --stage1  $outdir/models/$pop1\_stage1 \
+	    --stage1  $outdir/models/${pop1}_stage1 \
 	    --workdir $outdir/$pop1 \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
@@ -480,6 +480,7 @@ fi
 
 if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
+    rm -f $outdir/${pop1}*_${iter}.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/models/$pop2\_stage1 \
@@ -498,6 +499,7 @@ done
 
 if [ $do_pool -eq 1  ]
 then
+    rm $outdir/${pop2}_snp_weights_*_model.dat
     Rscript --vanilla $RSCRIPTS"/"pool_snp_scores.R \
 	    --n.folds $n_folds \
 	    --workdir $outdir/$pop2
