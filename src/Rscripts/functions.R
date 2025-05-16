@@ -402,12 +402,12 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             m <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
-            XtY.1 <- mvrnorm( n=nfolds, mu=m, Sigma=v, tol=tol )
+            XtY.1 <- mvrnorm( n=n.folds, mu=m, Sigma=v, tol=tol )
 
             m <- (XtY-t(XtY.1)) * n.prop[2] / (1-n.prop[1])
             v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
 #            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
-            XtY.2 <- mvrnorm( n=nfolds, mu=rep(0,k), Sigma=v, tol=tol )
+            XtY.2 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
             XtY.2 <- t(t(XtY.2) - m)
 
             XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
@@ -429,9 +429,9 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 #        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
 #                                  'XtY.2','XtY.3')
     }else{
-        sumstats.1 <- list( NULL, matrix(nrow=0,ncol=nfolds), NULL,
-                           matrix(nrow=0,ncol=nfolds), matrix(nrow=0,ncol=nfolds),
-                           matrix(nrow=0,ncol=nfolds) )
+        sumstats.1 <- list( NULL, matrix(nrow=0,ncol=n.folds), NULL,
+                           matrix(nrow=0,ncol=n.folds), matrix(nrow=0,ncol=n.folds),
+                           matrix(nrow=0,ncol=n.folds) )
     }
     names(sumstats.1) <- c('SNP','BETA','SE','P','XtY.2','XtY.3')
 
