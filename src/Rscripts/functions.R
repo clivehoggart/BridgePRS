@@ -420,9 +420,11 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 #                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
             sumstats.1 <- list( sumstats$SNP,
                                      beta.1, se.1, p.1, XtY.2, XtY.3 )
-        }
+        }else{
 #        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
 #                                  'XtY.2','XtY.3')
+            sumstats.1 <- list( NULL,NULL,NULL,NULL,NULL,NULL )
+        }
     }else{
         sumstats.1 <- list( NULL,NULL,NULL,NULL,NULL,NULL )
     }
