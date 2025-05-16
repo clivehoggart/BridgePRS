@@ -142,6 +142,7 @@ for( chr in 1:22 ){
                                         n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
+    sumstats.1 <- list()
     for( k in 1:opt$n.folds ){
         sumstats.1[[k]] <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=8))
         colnames(sumstats.1[[k]]) <- c('SNP','ALLELE1','ALLELE0',
