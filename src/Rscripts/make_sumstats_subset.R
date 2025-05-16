@@ -41,8 +41,10 @@ option_list = list(
                 help="Testing sample proportion", metavar="numeric"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
+    make_option(c("--n.folds"), type="numeric", default=1,
+                help="Number of processors for mclapply to use", metavar="numeric")
     make_option(c("--n.cores"), type="numeric", default=1,
-                help="Number of processors for mclapply to use", metavar="character")
+                help="Number of processors for mclapply to use", metavar="numeric")
 )
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser)
@@ -137,46 +139,57 @@ for( chr in 1:22 ){
                                         X.bed=ptr.bed, bim=bim,
                                         n.all=opt$N.pop,
                                         n.prop=c(opt$prop.train, opt$prop.test),
+                                        n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    sumstats.1 <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=8))
-    colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P','XtY.2','XtY.3')
-    for( i in 1:nrow(blocks) ){
-        ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
-        sumstats.1[ptr,] <- sumstats.b[[i]]
+    for( k in 1:opt$n.folds ){
+        sumstats.1[[k]] <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=8))
+        colnames(sumstats.1[[k]]) <- c('SNP','ALLELE1','ALLELE0',
+                                       'BETA','SE','P','XtY.2','XtY.3')
     }
-    ptr.fill <- which(is.na(sumstats.1$BETA))
-    sumstats.b <- mclapply( ptr.fill,
+    all.block.snps <- vector()
+    for( i in 1:nrow(blocks) ){
+        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$block.snps )
+        ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
+        for( k in 1:opt$n.folds ){
+            sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
+                                                sumstats$ALLELE0[ptr], sumstats$ALLELE1[ptr],
+                                                sumstats.b[[i]]$beta.1[k,],
+                                                sumstats.b[[i]]$se.1[k,],
+                                                sumstats.b[[i]]$p.1[k,],
+                                                sumstats.b[[i]]$XtY.2[k,],
+                                                sumstats.b[[i]]$XtY.3[k,] )
+        }
+    }
+    snp.fill <- setdiff( sumstats$SNP, all.block.snps )
+    sumstats.b <- mclapply( length(snp.fill),
                      function(i){
-                         sumstat.subset( snp=sumstats$SNP[i],
+                         sumstat.subset( snp=snp.fill[i],
                                         sumstats=sumstats, ld.ids=ld.ids,
                                         X.bed=ptr.bed, bim=bim,
                                         n.all=opt$N.pop,
                                         n.prop=c( opt$prop.train, opt$prop.test ),
+                                        n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
     for( i in 1:length(ptr.fill) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
-        sumstats.1[ptr,] <- sumstats.b[[i]]
+        for( k in 1:opt$n.folds ){
+            sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
+                                                sumstats$ALLELE0[ptr], sumstats$ALLELE1[ptr],
+                                                sumstats.b[[i]]$beta.1[k,],
+                                                sumstats.b[[i]]$se.1[k,],
+                                                sumstats.b[[i]]$p.1[k,],
+                                                sumstats.b[[i]]$XtY.2[k,],
+                                                sumstats.b[[i]]$XtY.3[k,] )
+        }
     }
-    sumstats.1 <- sumstats.1[!is.na(sumstats.1$BETA),]
-    outfile <- paste(opt$workdir,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
-    fwrite( sumstats.1, outfile, sep=" " )
+    for( k in 1:opt$n.folds ){
+        sumstats.1[[k]] <- sumstats.1[[k]][!is.na(sumstats.1[[k]]$BETA),]
+        outfile <- paste(opt$workdir,'/fold',k,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
+        fwrite( sumstats.1[[k]], outfile, sep=" " )
+    }
 }
 if( !is.null(warnings()) ){
     print(warnings())
 }
-
-#for( i in ptr.fill ){
-#    tmp <- sumstat.subset( snp=sumstats$SNP[i],
-#                          sumstats=sumstats, ld.ids=ld.ids,
-#                          X.bed=ptr.bed, bim=bim,
-#                          n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
-#                          strand.check=opt$strand.check )
-#}
-#i=i
-#tmp <- sumstat.subset( block.i=blocks[i,],
-#                      sumstats=sumstats, ld.ids=ld.ids,
-#                      X.bed=ptr.bed, bim=bim,
-#                      n.all=opt$N.pop, n.gwas=0.7*opt$N.pop,
-#                      strand.check=opt$strand.check )

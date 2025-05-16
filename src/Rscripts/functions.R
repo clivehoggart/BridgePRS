@@ -359,8 +359,8 @@ est.ref.stats <- function( snps, ids, X.bed, bim,
 }
 
 sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
-                           X.bed, bim, n.all, n.prop, strand.check ){
-    ld.shrink <- 1e-3
+                           X.bed, bim, n.all, n.prop, strand.check, n.folds=1, tol=1e-6 ){
+    ld.shrink <- c(1e-3, 5e-3, 1e-2, 5e-2, 1e-1)
     if( !is.null(block.i) ){
         block.snps <-  unlist(strsplit( block.i$SNPS, '\\|' ))
         snps <- intersect( sumstats$SNP, block.snps )
@@ -380,7 +380,18 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             sumstats <- sumstats[ptr.use,,drop=FALSE]
             ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
-            ld.mat <- ref.stats$ld + diag(ld.shrink,k)
+
+            ld.mat <- ref.stats$ld
+            ev <- eigen(ld.mat, only.values = TRUE)$values
+            positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
+            i <- 0
+            while( !positive.definite & k>1 ){
+                i <- i+1
+                ld.mat <- ref.stats$ld + ld.shrink[i]*diag(diag(ref.stats$ld))
+                ev <- eigen(ld.mat, only.values = TRUE)$values
+                positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
+            }
+            print(i)
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
@@ -392,30 +403,39 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             m <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
-            XtY.1 <- mvrnorm( n=1, mu=m, Sigma=v )
+            XtY.1 <- mvrnorm( n=nfolds, mu=m, Sigma=v )
 
-            m <- (XtY-XtY.1) * n.prop[2] / (1-n.prop[1])
+            m <- (XtY-t(XtY.1)) * n.prop[2] / (1-n.prop[1])
             v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
-            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
+#            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
+            XtY.2 <- mvrnorm( n=nfolds, mu=rep(0,k), Sigma=v )
+            XtY.2 <- t(t(XtY.2) - m)
 
-            XtY.3 <- XtY - XtY.1 - XtY.2
+            XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
 
-            beta.1 <- solve(ld.mat) %*% XtY.1 / (n.all*n.prop[1])
+            beta.1 <- solve(ld.mat) %*% t(XtY.1) / (n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
-            sumstats.1 <- data.frame( sumstats$SNP,
-                                     sumstats$ALLELE1, sumstats$ALLELE0,
+#            sumstats.1 <- data.frame( sumstats$SNP,
+#                                     sumstats$ALLELE1, sumstats$ALLELE0,
+#                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
+            sumstats.1 <- list( sumstats$SNP,
                                      beta.1, se.1, p.1, XtY.2, XtY.3 )
         }else{
-            sumstats.1 <- data.frame( sumstats$SNP,
-                                     sumstats$ALLELE1, sumstats$ALLELE0,
-                                     t(rep(NA,5)) )
+#            sumstats.1 <- data.frame( sumstats$SNP,
+#                                     sumstats$ALLELE1, sumstats$ALLELE0,
+#                                     t(rep(NA,5)) )
+            sumstats.1 <- list( sumstats$SNP, )
         }
-        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
-                                  'XtY.2','XtY.3')
+#        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
+#                                  'XtY.2','XtY.3')
+    }else{
+        sumstats.1 <- list( NULL, matrix(nrow=0,ncol=nfolds), NULL,
+                           matrix(nrow=0,ncol=nfolds), matrix(nrow=0,ncol=nfolds)
+                           matrix(nrow=0,ncol=nfolds) )
     }
-#        s2 <- 2 * ref.stats$af * (1-ref.stats$af)
-#        beta.hat <- solve(ld.mat) * as.matrix( sumstats$BETA * s2 )
+    names(sumstats.1) <- c('SNP','BETA','SE','P','XtY.2','XtY.3')
+
     return(sumstats.1)
 }
 

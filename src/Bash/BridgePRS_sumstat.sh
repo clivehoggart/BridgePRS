@@ -182,14 +182,17 @@ echo "fst : $fst"
 echo "n_folds : $n_folds"
 echo ""
 
-mkdir -p $outdir
+mkdir -p $outdir/$pop1
 mkdir -p $outdir/$pop1/blocks
-mkdir -p $outdir/$pop2/blocks
 mkdir -p $outdir/$pop1/sumstat_subset
+mkdir -p $outdir/$pop1/clump
+mkdir -p $outdir/$pop1/models
+
+mkdir -p $outdir/$pop2
+mkdir -p $outdir/$pop2/blocks
 mkdir -p $outdir/$pop2/sumstat_subset
-mkdir -p $outdir/clump
-mkdir -p $outdir/models
-mkdir -p $outdir/models/lambda
+mkdir -p $outdir/$pop2/clump
+mkdir -p $outdir/$pop2/models
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
@@ -258,12 +261,12 @@ then
     done
 fi
 
-for ((iter = 1; iter <= ${n_folds}; iter++))
-do
-
 if [ $do_sumstat_pop1 -eq 1 ]
 then
-    rm $outdir/$pop1/sumstat_subset/*
+    for ((iter = 1; iter <= ${n_folds}; iter++))
+    do
+	rm -Rf $outdir/$pop1/fold$iter/sumstat_subset/*
+    done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --workdir $outdir/$pop1 \
@@ -281,12 +284,16 @@ then
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
+	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
 fi
 
 if [ $do_sumstat_pop2 -eq 1 ]
 then
-    rm $outdir/$pop2/sumstat_subset/*
+    for ((iter = 1; iter <= ${n_folds}; iter++))
+    do
+	rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
+    done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --workdir $outdir/$pop2 \
@@ -304,23 +311,28 @@ then
 	    --n.cores $n_cores \
 	    --by.chr.sumstats $by_chr_sumstats \
 	    --strand.check $strand_check \
+	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
 fi
+
+for ((iter = 1; iter <= ${n_folds}; iter++))
+do
+    mkdir -p $outdir/$pop1/fold$iter
+    mkdir -p $outdir/$pop1/fold$iter/clump
+    mkdir -p $outdir/$pop1/fold$iter/models
+    mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
+
+    mkdir -p $outdir/$pop2/fold$iter
+    mkdir -p $outdir/$pop2/fold$iter/clump
+    mkdir -p $outdir/$pop2/fold$iter/models
+    mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
 
 if [ $do_clump_pop1 -eq 1 ]
 then
     for chr in {1..22}
     do
-	bfile1=$pop1_ld_bfile
-	if [ $by_chr -eq 1 ]
-	then
-	    bfile1=$pop1_ld_bfile$chr
-	fi
-	pop1_sumstats1=$outdir/$pop1/sumstat_subset/chr
-	if [ $by_chr_sumstats != 0 ]
-	then
-	    pop1_sumstats1=$outdir/$pop1/sumstat_subset/chr$chr.dat.gz
-	fi
+	bfile1=$pop1_ld_bfile$chr
+	pop1_sumstats1=$outdir/$pop1/fold$iter/sumstat_subset/chr${chr}.dat.gz
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop1_sumstats1 \
@@ -329,23 +341,24 @@ then
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
-	      --out $outdir/clump/$pop1\_$chr
-	rm -f $outdir/clump/$pop1\_$chr.clumped.gz
-	gzip $outdir/clump/$pop1\_$chr.clumped
+	      --out $outdir/${pop1}/fold$iter/clump/_${chr}
+	rm -f $outdir/${pop1}/fold$iter/clump/_${chr}.clumped.gz
+	gzip $outdir/${pop1}/fold$iter/clump/_${chr}.clumped
     done
 fi
 
 if [ $do_est_beta_pop1 -eq 1  ]
 then
-    rm -f $outdir/models/$pop1*
+    rm -f $outdir/$pop1/fold$iter/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $indir/clump/$pop1 \
-	    --sumstats $outdir/$pop1/sumstat_subset/chr \
+	    --clump.stem $outdir/$pop1/fold$iter/clump/ \
+	    --sumstats $outdir/$pop1/fold$iter/sumstat_subset/chr \
+	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
-	    --beta.stem $outdir/models/$pop1\_stage1 \
+	    --beta.stem $outdir/$pop1/fold$iter/models/stage1 \
 	    --bfile $pop1_ld_bfile \
 	    --lambda 0.1,0.2,0.5,1,2,5,10,20 \
 	    --S 0,0.25,0.5,0.75,1 \
@@ -355,17 +368,16 @@ then
 	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
 	    --by.chr $by_chr_ld \
-	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check
 fi
 
 if [ $do_sumstat_ensembl_pop1 -eq 1  ]
 then
-    rm -f $outdir/${pop1}*_0.dat
+    rm -f $outdir/${pop1}/fold${iter}/*.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
-	    --stage1  $outdir/models/${pop1}_stage1 \
-	    --workdir $outdir/$pop1 \
+	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
+	    --workdir $outdir/${pop1}/fold$iter \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --strand.check $strand_check \
@@ -377,39 +389,39 @@ fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
 then
-    rm -f $outdir/models/stage1*
-    rm -f $outdir/models/lambda/rs*.gz
+    rm -f $outdir/${pop1}/fold${iter}/models/prior*
+    rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $indir/clump/$pop1 \
-	    --sumstats $outdir/$pop1/sumstat_subset/chr \
+	    --clump.stem $indir/${pop1}/fold$iter/clump \
+	    --sumstats $outdir/$pop1/fold$iter/sumstat_subset/chr \
+	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
-	    --beta.stem $outdir/models/stage1 \
-	    --param.file $outdir/$pop1/best_model_params.dat \
+	    --beta.stem $outdir/${pop1}/fold${iter}/models/prior \
+	    --param.file $outdir/${pop1}/fold$iter/best_model_params.dat \
 	    --precision TRUE \
 	    --sumstats.snpID SNP \
 	    --sumstats.betaID BETA \
 	    --sumstats.allele1ID ALLELE1 \
 	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
-	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
 fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
 then
-    rm -f $outdir/models/${pop2}_stage2*
+    rm -f $outdir/${pop2}/fold$iter/models/stage2*
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
  	    --fpath $FPATH \
-	    --sumstats $outdir/$pop2/sumstat_subset/chr  \
+	    --sumstats $outdir/$pop2/sumstat_subset/fold$iter/chr  \
 	    --ld.ids $pop2_ld_ids \
-	    --prior $outdir/models/stage1 \
-	    --param.file $outdir/${pop1}/best_model_params.dat \
-	    --beta.stem $outdir/models/${pop2}_stage2 \
+	    --prior $outdir/${pop1}/models/fold${iter}/prior \
+	    --param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
+	    --beta.stem $outdir/${pop2}/models/fold$iter/stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
 	    --sumstats.snpID SNP \
@@ -426,45 +438,37 @@ then
 	    --by.chr $by_chr_ld
 fi
 
-if [ $do_clump_pop2 -eq 1  ]
+if [ $do_clump_pop2 -eq 1 ]
 then
     for chr in {1..22}
     do
-	bfile1=$pop2_ld_bfile
-	if [ $by_chr -eq 1 ]
-	then
-	    bfile1=$pop2_ld_bfile$chr
-	fi
-	pop2_sumstats1=$outdir/$pop2/sumstat_subset/chr
-	if [ $by_chr_sumstats != 0 ]
-	then
-	    pop2_sumstats1=$outdir/$pop2/sumstat_subset/chr$chr.dat.gz
-	fi
+	bfile1=$pop2_ld_bfile$chr
+	pop2_sumstats1=$outdir/$pop2/fold$iter/sumstat_subset/chr${chr}.dat.gz
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop2_sumstats1 \
 	      --clump-field P --clump-snp-field SNP \
-	      --clump-p1 1e-2 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
+	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
 	      --maf 0.001 \
-	      --out $outdir/clump/$pop2\_$chr
-	rm -f $outdir/clump/$pop2\_$chr.clumped.gz
-	gzip $outdir/clump/$pop2\_$chr.clumped
+	      --out $outdir/${pop2}/fold$iter/clump/_${chr}
+	rm -f $outdir/${pop2}/fold$iter/clump/_${chr}.clumped.gz
+	gzip $outdir/${pop2}/fold$iter/clump/_${chr}.clumped
     done
 fi
 
 if [ $do_est_beta_pop2 -eq 1  ]
 then
-    rm -f $outdir/models/$pop2\_stage1*
+    rm -f $outdir/$pop2/fold$iter/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $indir/clump/$pop2 \
-	    --sumstats $outdir/$pop2/sumstat_subset/chr \
+	    --clump.stem $outdir/$pop2/fold$iter/clump \
+	    --sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop2_ld_ids \
-	    --beta.stem $outdir/models/$pop2\_stage1 \
+	    --beta.stem $outdir/$pop2/fold$iter/models/stage1 \
 	    --bfile $pop2_ld_bfile \
 	    --lambda 0.2,0.5,1,2,5,10,20,50 \
 	    --S 0,0.25,0.5,0.75,1 \
@@ -480,12 +484,12 @@ fi
 
 if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
-    rm -f $outdir/${pop1}*_${iter}.dat
+    rm -f $outdir/$pop2/fold$iter/*.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
-	    --stage1  $outdir/models/$pop2\_stage1 \
-	    --stage2 $outdir/models/$pop2\_stage2 \
-	    --workdir $outdir/$pop2 \
+	    --stage1  $outdir/$pop2/fold$iter/models/stage1 \
+	    --stage2 $outdir/$pop2/fold$iter/models/stage2 \
+	    --workdir $outdir/$pop2/fold$iter \
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \
 	    --strand.check $strand_check \
@@ -499,7 +503,7 @@ done
 
 if [ $do_pool -eq 1  ]
 then
-    rm $outdir/${pop2}_snp_weights_*_model.dat
+    rm $outdir/${pop2}/snp_weights_*_model.dat
     Rscript --vanilla $RSCRIPTS"/"pool_snp_scores.R \
 	    --n.folds $n_folds \
 	    --workdir $outdir/$pop2
