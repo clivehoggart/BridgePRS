@@ -42,7 +42,7 @@ option_list = list(
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--n.folds"), type="numeric", default=1,
-                help="Number of processors for mclapply to use", metavar="numeric")
+                help="Number of processors for mclapply to use", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="numeric")
 )
