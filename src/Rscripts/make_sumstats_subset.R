@@ -152,18 +152,21 @@ for( chr in 1:22 ){
     for( i in 1:nrow(blocks) ){
         all.block.snps <- c( all.block.snps, sumstats.b[[i]]$block.snps )
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
-        for( k in 1:opt$n.folds ){
-            sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
-                                                sumstats$ALLELE0[ptr], sumstats$ALLELE1[ptr],
-                                                sumstats.b[[i]]$beta.1[k,],
-                                                sumstats.b[[i]]$se.1[k,],
-                                                sumstats.b[[i]]$p.1[k,],
-                                                sumstats.b[[i]]$XtY.2[k,],
-                                                sumstats.b[[i]]$XtY.3[k,] )
+        if( length(ptr)>0 ){
+            for( k in 1:opt$n.folds ){
+                sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
+                                                    sumstats$ALLELE0[ptr],
+                                                    sumstats$ALLELE1[ptr],
+                                                    sumstats.b[[i]]$BETA[,k],
+                                                    sumstats.b[[i]]$SE,
+                                                    sumstats.b[[i]]$P[,k],
+                                                    sumstats.b[[i]]$XtY.2[k,],
+                                                    sumstats.b[[i]]$XtY.3[k,] )
+            }
         }
     }
     snp.fill <- setdiff( sumstats$SNP, all.block.snps )
-    sumstats.b <- mclapply( length(snp.fill),
+    sumstats.b <- mclapply( 1:length(snp.fill),
                      function(i){
                          sumstat.subset( snp=snp.fill[i],
                                         sumstats=sumstats, ld.ids=ld.ids,
@@ -173,16 +176,19 @@ for( chr in 1:22 ){
                                         n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    for( i in 1:length(ptr.fill) ){
+    for( i in 1:length(snp.fill) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
-        for( k in 1:opt$n.folds ){
-            sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
-                                                sumstats$ALLELE0[ptr], sumstats$ALLELE1[ptr],
-                                                sumstats.b[[i]]$beta.1[k,],
-                                                sumstats.b[[i]]$se.1[k,],
-                                                sumstats.b[[i]]$p.1[k,],
-                                                sumstats.b[[i]]$XtY.2[k,],
-                                                sumstats.b[[i]]$XtY.3[k,] )
+        if( length(ptr)>0 ){
+            for( k in 1:opt$n.folds ){
+                sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
+                                                    sumstats$ALLELE0[ptr],
+                                                    sumstats$ALLELE1[ptr],
+                                                    sumstats.b[[i]]$BETA[,k],
+                                                    sumstats.b[[i]]$SE,
+                                                    sumstats.b[[i]]$P[,k],
+                                                    sumstats.b[[i]]$XtY.2[k,],
+                                                    sumstats.b[[i]]$XtY.3[k,] )
+            }
         }
     }
     for( k in 1:opt$n.folds ){

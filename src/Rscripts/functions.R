@@ -420,18 +420,11 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 #                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
             sumstats.1 <- list( sumstats$SNP,
                                      beta.1, se.1, p.1, XtY.2, XtY.3 )
-        }else{
-#            sumstats.1 <- data.frame( sumstats$SNP,
-#                                     sumstats$ALLELE1, sumstats$ALLELE0,
-#                                     t(rep(NA,5)) )
-            sumstats.1 <- list( sumstats$SNP, )
         }
 #        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
 #                                  'XtY.2','XtY.3')
     }else{
-        sumstats.1 <- list( NULL, matrix(nrow=0,ncol=n.folds), NULL,
-                           matrix(nrow=0,ncol=n.folds), matrix(nrow=0,ncol=n.folds),
-                           matrix(nrow=0,ncol=n.folds) )
+        sumstats.1 <- list( NULL,NULL,NULL,NULL,NULL,NULL )
     }
     names(sumstats.1) <- c('SNP','BETA','SE','P','XtY.2','XtY.3')
 
