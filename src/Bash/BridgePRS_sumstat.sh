@@ -184,15 +184,9 @@ echo ""
 
 mkdir -p $outdir/$pop1
 mkdir -p $outdir/$pop1/blocks
-mkdir -p $outdir/$pop1/sumstat_subset
-mkdir -p $outdir/$pop1/clump
-mkdir -p $outdir/$pop1/models
 
 mkdir -p $outdir/$pop2
 mkdir -p $outdir/$pop2/blocks
-mkdir -p $outdir/$pop2/sumstat_subset
-mkdir -p $outdir/$pop2/clump
-mkdir -p $outdir/$pop2/models
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
@@ -265,6 +259,11 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
+	mkdir -p $outdir/$pop1/fold$iter
+	mkdir -p $outdir/$pop1/fold$iter/clump
+	mkdir -p $outdir/$pop1/fold$iter/models
+	mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
+
 	rm -Rf $outdir/$pop1/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
@@ -292,6 +291,11 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
+	mkdir -p $outdir/$pop2/fold$iter
+	mkdir -p $outdir/$pop2/fold$iter/clump
+	mkdir -p $outdir/$pop2/fold$iter/models
+	mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
+
 	rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
@@ -317,15 +321,6 @@ fi
 
 for ((iter = 1; iter <= ${n_folds}; iter++))
 do
-    mkdir -p $outdir/$pop1/fold$iter
-    mkdir -p $outdir/$pop1/fold$iter/clump
-    mkdir -p $outdir/$pop1/fold$iter/models
-    mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
-
-    mkdir -p $outdir/$pop2/fold$iter
-    mkdir -p $outdir/$pop2/fold$iter/clump
-    mkdir -p $outdir/$pop2/fold$iter/models
-    mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
 
 if [ $do_clump_pop1 -eq 1 ]
 then
