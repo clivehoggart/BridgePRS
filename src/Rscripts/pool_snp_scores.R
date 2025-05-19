@@ -17,7 +17,7 @@ for( i in 1:2 ){
     snps <- vector()
     tmp <- list()
     for( iter in 1:opt$n.folds ){
-        tmp[[iter]] <- fread(paste0(opt$workdir,'/folds',iter,'/snp_weights_',model[i],'_model.dat'))
+        tmp[[iter]] <- fread(paste0(opt$workdir,'/fold',iter,'/snp_weights_',model[i],'_model.dat'))
         snps <- union( snps, tmp[[iter]]$V1 )
     }
     ensembl.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
