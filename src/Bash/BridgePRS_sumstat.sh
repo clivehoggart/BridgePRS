@@ -389,23 +389,23 @@ then
     rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $indir/${pop1}/fold$iter/clump/ \
+	    --clump.stem $outdir/$pop1/fold$iter/clump/ \
 	    --sumstats $outdir/$pop1/fold$iter/sumstat_subset/chr \
 	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
-	    --beta.stem $outdir/${pop1}/fold${iter}/models/prior \
-	    --param.file $outdir/${pop1}/fold$iter/best_model_params.dat \
-	    --precision TRUE \
 	    --sumstats.snpID SNP \
 	    --sumstats.betaID BETA \
 	    --sumstats.allele1ID ALLELE1 \
 	    --sumstats.allele0ID ALLELE0 \
 	    --n.cores $n_cores \
+	    --by.chr $by_chr_ld \
 	    --strand.check $strand_check \
-	    --by.chr $by_chr_ld
+	    --beta.stem $outdir/${pop1}/fold${iter}/models/prior \
+	    --param.file $outdir/${pop1}/fold$iter/best_model_params.dat \
+	    --precision TRUE
 fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
