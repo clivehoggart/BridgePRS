@@ -418,11 +418,11 @@ then
     rm -f $outdir/${pop2}/fold$iter/models/stage2*
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
  	    --fpath $FPATH \
-	    --sumstats $outdir/$pop2/sumstat_subset/fold$iter/chr  \
+	    --sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr  \
 	    --ld.ids $pop2_ld_ids \
-	    --prior $outdir/${pop1}/models/fold${iter}/prior \
+	    --prior $outdir/${pop1}/fold${iter}/models/prior \
 	    --param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
-	    --beta.stem $outdir/${pop2}/models/fold$iter/stage2 \
+	    --beta.stem $outdir/${pop2}/fold$iter/models/stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
 	    --sumstats.snpID SNP \
