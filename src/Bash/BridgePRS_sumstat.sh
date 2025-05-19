@@ -490,7 +490,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/$pop2/fold$iter/models/stage1 \
 	    --stage2 $outdir/$pop2/fold$iter/models/stage2 \
-	    --workdir $outdir/$pop2/fold$iter \
+	    --workdir $outdir/$pop2 \
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \
 	    --strand.check $strand_check \
