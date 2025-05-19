@@ -372,7 +372,8 @@ then
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
-	    --workdir $outdir/${pop1}/fold$iter \
+	    --fold $iter \
+	    --workdir $outdir/${pop1} \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
 	    --strand.check $strand_check \

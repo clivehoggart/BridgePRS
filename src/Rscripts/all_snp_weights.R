@@ -33,8 +33,8 @@ option_list = list(
                 help="GWAS training sample proportion", metavar="numeric"),
     make_option(c("--prop.test"), type="numeric", default=0,
                 help="Testing sample proportion", metavar="numeric"),
-    make_option(c("--iter"), type="numeric", default=0,
-                help="Iteration counter", metavar="numeric"),
+    make_option(c("--fold"), type="numeric", default=0,
+                help="Fold", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="character")
 )
@@ -68,7 +68,8 @@ for( chr in 1:22 ){
 
     blockfile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread( blockfile, data.table=FALSE )
-    sumstatfile <- paste(opt$workdir,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
+    sumstatfile <- paste(opt$workdir,'/fold',opt$fold,
+                         '/sumstat_subset/chr',chr,'.dat.gz',sep='')
     sumstats <- fread( sumstatfile, data.table=FALSE )
 
     infile <- paste( opt$stage1,"_beta_bar_chr",chr,".txt.gz", sep="")
@@ -229,7 +230,7 @@ for( k in 1:n.models ){
 }
 s3 <- order( R2.model, decreasing=TRUE )
 write.table( data.frame( genome.alleles, ensembl.model[s3[1]] ),
-            paste( opt$workdir, 'snp_weights_weighted_model_',opt$iter,'.dat', sep='' ),
+            paste( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
 
 #cbind(lambda,R2.ensembl/max(R2.ensembl))
@@ -245,8 +246,8 @@ S.opt <- as.numeric(tmp[[1]][3])
 lambda.opt <- as.numeric(tmp[[1]][2])
 p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
-            paste( opt$workdir, 'best_model_params_',opt$iter,'.dat', sep='' ),
+            paste( opt$workdir,'/fold',opt$fold,'/best_model_params.dat', sep='' ),
             row.names=FALSE, quote=FALSE )
 write.table( data.frame( genome.alleles, genome.models[[ii]][,s2[1]] ),
-            paste( opt$workdir, 'snp_weights_best_model_',opt$iter,'.dat', sep='' ),
+            paste( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat', sep='' ),
             col.names=FALSE, quote=FALSE )
