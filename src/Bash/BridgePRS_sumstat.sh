@@ -294,6 +294,7 @@ then
 	mkdir -p $outdir/$pop2/fold$iter
 	mkdir -p $outdir/$pop2/fold$iter/clump
 	mkdir -p $outdir/$pop2/fold$iter/models
+	mkdir -p $outdir/$pop2/fold$iter/models/lambda
 	mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
 
 	rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
