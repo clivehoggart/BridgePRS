@@ -372,7 +372,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
-	    --fold $iter \
+	    --fold $iter
 	    --workdir $outdir/${pop1} \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
@@ -389,7 +389,7 @@ then
     rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $indir/${pop1}/fold$iter/clump \
+	    --clump.stem $indir/${pop1}/fold$iter/clump/ \
 	    --sumstats $outdir/$pop1/fold$iter/sumstat_subset/chr \
 	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
@@ -459,7 +459,7 @@ then
     rm -f $outdir/$pop2/fold$iter/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $outdir/$pop2/fold$iter/clump \
+	    --clump.stem $outdir/$pop2/fold$iter/clump/ \
 	    --sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
