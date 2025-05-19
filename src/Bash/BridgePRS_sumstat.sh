@@ -201,6 +201,21 @@ fi
 
 n_iter=5
 
+for ((iter = 1; iter <= ${n_folds}; iter++))
+do
+    mkdir -p $outdir/$pop1/fold$iter
+    mkdir -p $outdir/$pop1/fold$iter/clump
+    mkdir -p $outdir/$pop1/fold$iter/models
+    mkdir -p $outdir/$pop1/fold$iter/models/lambda
+    mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
+    
+    mkdir -p $outdir/$pop2/fold$iter
+    mkdir -p $outdir/$pop2/fold$iter/clump
+    mkdir -p $outdir/$pop2/fold$iter/models
+    mkdir -p $outdir/$pop2/fold$iter/models/lambda
+    mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
+done
+
 if [ $do_block_pop1 -eq 1 ]
 then
     for chr in {1..22}
@@ -259,12 +274,6 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
-	mkdir -p $outdir/$pop1/fold$iter
-	mkdir -p $outdir/$pop1/fold$iter/clump
-	mkdir -p $outdir/$pop1/fold$iter/models
-	mkdir -p $outdir/$pop1/fold$iter/models/lambda
-	mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
-
 	rm -Rf $outdir/$pop1/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
@@ -292,12 +301,6 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
-	mkdir -p $outdir/$pop2/fold$iter
-	mkdir -p $outdir/$pop2/fold$iter/clump
-	mkdir -p $outdir/$pop2/fold$iter/models
-	mkdir -p $outdir/$pop2/fold$iter/models/lambda
-	mkdir -p $outdir/$pop2/fold$iter/sumstat_subset
-
 	rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
