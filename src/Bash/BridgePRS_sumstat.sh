@@ -298,11 +298,6 @@ then
 	    --strand.check $strand_check \
 	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
-
-    if [ $clean -eq 1 ]
-    then
-	rm $outdir/$pop1/blocks/*
-    fi
 fi
 
 if [ $do_sumstat_pop2 -eq 1 ]
@@ -330,11 +325,6 @@ then
 	    --strand.check $strand_check \
 	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
-
-    if [ $clean -eq 1 ]
-    then
-	rm $outdir/$pop2/blocks/*
-    fi
 fi
 
 for ((iter = 1; iter <= ${n_folds}; iter++))
@@ -541,6 +531,11 @@ then
     fi
 fi
 done
+
+if [ $clean -eq 1 ]
+then
+    rm $outdir/$pop1/blocks/*
+fi
 
 if [ $do_pool -eq 1  ]
 then
