@@ -301,7 +301,7 @@ then
 
     if [ $clean -eq 1 ]
     then
-	gzip $outdir/$pop1/blocks/*
+	rm $outdir/$pop1/blocks/*
     fi
 fi
 
