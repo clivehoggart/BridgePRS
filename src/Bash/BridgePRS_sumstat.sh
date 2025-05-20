@@ -503,7 +503,6 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/$pop2/fold$iter/sumstat_subset/chr*
 	rm $outdir/$pop2/fold$iter/clump/_*
     fi
 fi
@@ -527,7 +526,8 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/${pop2}/fold${iter}/models/stage*
+	rm $outdir/$pop2/fold$iter/sumstat_subset/chr*
+	rm $outdir/$pop2/fold${iter}/models/stage*
     fi
 fi
 done
