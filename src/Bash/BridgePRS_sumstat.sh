@@ -41,6 +41,8 @@ n_folds=5
 prop_train=0.7
 prop_test=0.15
 
+clean=1
+
 #RSCRIPTS=~/BridgePRS/src/Rscripts
 #FPATH=$RSCRIPTS"/functions.R"
 
@@ -53,7 +55,7 @@ prop_test=0.15
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test:,clean: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -118,6 +120,7 @@ do
     --sumstats_frq) sumstats_frq=$2 ; shift 2 ;;
     --strand_check) strand_check=$2 ; shift 2 ;;
     --n_folds) n_folds=$2 ; shift 2 ;;
+    --clean) clean=$2 ; shift 2 ;;
     --fst) fst=$2 ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
@@ -295,6 +298,11 @@ then
 	    --strand.check $strand_check \
 	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
+
+    if [ $clean -eq 1 ]
+    then
+	gzip $outdir/$pop1/blocks/*
+    fi
 fi
 
 if [ $do_sumstat_pop2 -eq 1 ]
@@ -322,6 +330,11 @@ then
 	    --strand.check $strand_check \
 	    --n.folds $n_folds \
 	    --by.chr $by_chr_ld
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/$pop2/blocks/*
+    fi
 fi
 
 for ((iter = 1; iter <= ${n_folds}; iter++))
@@ -386,6 +399,11 @@ then
 	    --prop.train $prop_train \
 	    --prop.test $prop_test \
 	    --n.cores $n_cores
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/$pop1/fold${iter}/models/stage1*
+    fi
 fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
@@ -411,6 +429,12 @@ then
 	    --beta.stem $outdir/${pop1}/fold${iter}/models/prior \
 	    --param.file $outdir/${pop1}/fold$iter/best_model_params.dat \
 	    --precision TRUE
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/$pop1/fold$iter/sumstat_subset/chr*
+	rm $outdir/$pop1/fold$iter/clump/_*
+    fi
 fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
@@ -437,6 +461,11 @@ then
 	    --ranking pv \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/$pop1/fold${iter}/models/prior*
+    fi
 fi
 
 if [ $do_clump_pop2 -eq 1 ]
@@ -481,6 +510,12 @@ then
 	    --by.chr $by_chr_ld \
 	    --by.chr.sumstats .dat.gz \
 	    --strand.check $strand_check
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/$pop2/fold$iter/sumstat_subset/chr*
+	rm $outdir/$pop2/fold$iter/clump/_*
+    fi
 fi
 
 if [ $do_sumstat_ensembl_pop2 -eq 1  ]
@@ -499,6 +534,11 @@ then
 	    --prop.test $prop_test \
 	    --fold $iter \
 	    --n.cores $n_cores
+
+    if [ $clean -eq 1 ]
+    then
+	rm $outdir/${pop2}/fold${iter}/models/stage*
+    fi
 fi
 done
 
