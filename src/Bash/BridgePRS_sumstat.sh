@@ -454,6 +454,7 @@ then
 
     if [ $clean -eq 1 ]
     then
+	rm -Rf $outdir/$pop1/fold${iter}/models/lambda
 	rm $outdir/$pop1/fold${iter}/models/prior*
     fi
 fi
