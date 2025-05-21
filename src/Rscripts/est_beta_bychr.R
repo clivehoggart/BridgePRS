@@ -221,10 +221,11 @@ for( chr in 1:22 ){
     beta.bar <- beta.bar[ptr.qc]
 
     outfile <- paste(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz", sep="")
-    fwrite( beta.bar[[1]], outfile )
-    for( i in 2:length(beta.bar) ){
-        fwrite( beta.bar[[i]], outfile, append=TRUE )
-    }
+    fwrite(rbindlist(beta.bar), outfile)
+ #   fwrite( beta.bar[[1]], outfile )
+ #   for( i in 2:length(beta.bar) ){
+ #       fwrite( beta.bar[[i]], outfile, append=TRUE )
+ #   }
 
 #    kl.out <- t(simplify2array(lapply( fits, getElement, 2 )))
 #    if( !is.na(kl.out[1]) ){

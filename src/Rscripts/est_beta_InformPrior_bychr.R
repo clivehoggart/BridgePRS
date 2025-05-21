@@ -176,16 +176,12 @@ for( chr in 1:22 ){
     fits.use <- which( !sapply( fits, is.null ) )
     fits <- fits[fits.use]
     beta.bar <- lapply( fits, getElement, 1 )
-#    dput( beta.bar, paste(opt$beta.stem,"_beta_bar_chr",chr,".Robj", sep="") )
 
     outfile <- paste0(opt$beta.stem,"_beta_bar_chr",chr,".txt.gz")
-    fwrite( beta.bar[[1]], outfile )
-    for( i in 2:length(beta.bar) ){
-        fwrite( beta.bar[[i]], outfile, append=TRUE )
-    }
-#    if( opt$precision==1 ){
-#        lambda.fit <- lapply( fits, getElement, 2 )
-#        dput( lambda.fit, paste(opt$beta.stem,"_lambda_chr",chr,".Robj", sep="" ) )
+    fwrite(rbindlist(beta.bar), outfile)
+#    fwrite( beta.bar[[1]], outfile )
+#    for( i in 2:length(beta.bar) ){
+#        fwrite( beta.bar[[i]], outfile, append=TRUE )
 #    }
     if( opt$ranking=="f.stat" | opt$ranking=="thinned.f.stat" ){
         kl.out <- t(simplify2array(lapply( fits, getElement, 2 )))
