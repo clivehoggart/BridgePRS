@@ -22,7 +22,7 @@ fst=(0.15 0.11)
 i=1
 ${src}/Bash/BridgePRS_sumstat_parallel.sh $src/Rscripts \
     --strand_check 1 \
-    --outdir out \
+    --outdir ~/BridgePRS/out \
     --by_chr 1 \
     --by_chr_sumstats .glm.linear.gz \
     --pop1 EUR \
