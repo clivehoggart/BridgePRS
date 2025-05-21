@@ -459,4 +459,3 @@ then
 	rm $outdir/$pop2/fold$iter/models/stage*
     fi
 fi
-done
