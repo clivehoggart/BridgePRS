@@ -2,7 +2,7 @@
 # update key
 # Set some default values:
 
-RSCRIPTS=~/BridgePRS/src/Rscripts
+RSCRIPTS=${1}
 FPATH=$RSCRIPTS"/functions.R"
 
 pheno_name="y"
