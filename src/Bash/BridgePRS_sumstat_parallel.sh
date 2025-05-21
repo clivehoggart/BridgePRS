@@ -263,10 +263,10 @@ if [ $do_clump_pop1 -eq 1 ]
 then
     for chr in {1..22}
     do
-	bfile1=$pop1_ld_bfile$chr
+	bfile1=$pop1_ld_bfile${chr}
 	pop1_sumstats1=$outdir/$pop1/fold${iter}/sumstat_subset/chr${chr}.dat.gz
 	~/plink1.9/plink --bfile $bfile1 \
-	      --chr $chr \
+	      --chr ${chr} \
 	      --clump $pop1_sumstats1 \
 	      --clump-field P --clump-snp-field SNP \
 	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
@@ -391,10 +391,10 @@ if [ $do_clump_pop2 -eq 1 ]
 then
     for chr in {1..22}
     do
-	bfile1=$pop2_ld_bfile$chr
+	bfile1=$pop2_ld_bfile${chr}
 	pop2_sumstats1=$outdir/$pop2/fold${iter}/sumstat_subset/chr${chr}.dat.gz
 	~/plink1.9/plink --bfile $bfile1 \
-	      --chr $chr \
+	      --chr ${chr} \
 	      --clump $pop2_sumstats1 \
 	      --clump-field P --clump-snp-field SNP \
 	      --clump-p1 1e-1 --clump-p2 1e-1 --clump-kb 1000 --clump-r2 0.01 \
