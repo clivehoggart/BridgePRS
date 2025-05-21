@@ -46,4 +46,6 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --do_est_beta_pop2 1 \
     --do_sumstat_ensembl_pop2 1 \
     --do_pool 1 \
-    --n_folds 2
+    --n_folds 10 \
+    --clean 1
+
