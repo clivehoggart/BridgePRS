@@ -265,7 +265,7 @@ then
     do
 	bfile1=$pop1_ld_bfile$chr
 	pop1_sumstats1=$outdir/$pop1/fold$iter/sumstat_subset/chr${chr}.dat.gz
-	plink --bfile $bfile1 \
+	~/plink1.9/plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop1_sumstats1 \
 	      --clump-field P --clump-snp-field SNP \
@@ -393,7 +393,7 @@ then
     do
 	bfile1=$pop2_ld_bfile$chr
 	pop2_sumstats1=$outdir/$pop2/fold$iter/sumstat_subset/chr${chr}.dat.gz
-	plink --bfile $bfile1 \
+	~/plink1.9/plink --bfile $bfile1 \
 	      --chr $chr \
 	      --clump $pop2_sumstats1 \
 	      --clump-field P --clump-snp-field SNP \
