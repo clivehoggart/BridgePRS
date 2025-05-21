@@ -57,4 +57,5 @@ ${src}/Bash/BridgePRS_sumstat_parallel.sh $src/Rscripts \
     --do_clump_pop2 1 \
     --do_est_beta_pop2 1 \
     --do_sumstat_ensembl_pop2 1 \
+    --clean 0 \
     --fold $iter
