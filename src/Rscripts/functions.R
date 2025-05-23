@@ -406,8 +406,8 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
 
-#            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
-            beta.1 <- solve(ld.mat) %*% t(XtY.1) / (n.all*n.prop[1])
+            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
+#            beta.1 <- solve(ld.mat) %*% t(XtY.1) / (n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
 #            sumstats.1 <- data.frame( sumstats$SNP,
