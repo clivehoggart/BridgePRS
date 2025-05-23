@@ -196,7 +196,7 @@ for( chr in 1:22 ){
         }
     }
     for( k in 1:opt$n.folds ){
-        fold.out <- ifelse( is.null(fold), k, fold )
+        fold.out <- ifelse( is.null(fold), k, opt$fold )
         sumstats.1[[k]] <- sumstats.1[[k]][!is.na(sumstats.1[[k]]$BETA),]
         outfile <- paste(opt$workdir,'/fold',fold.out,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
         fwrite( sumstats.1[[fold.out]], outfile, sep=" " )
