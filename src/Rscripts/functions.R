@@ -1,4 +1,4 @@
-regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = TRUE) {
+regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = FALSE) {
   stopifnot(is.matrix(ld.mat), isSymmetric(ld.mat))
 
   # Compute eigenvalues once
