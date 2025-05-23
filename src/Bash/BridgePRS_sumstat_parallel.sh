@@ -218,7 +218,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --blockdir $blockdir/$pop1 \
-	    --workdir $outdir/$pop1
+	    --workdir $outdir/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
@@ -242,7 +242,7 @@ then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
 	    --blockdir $blockdir/$pop2 \
-	    --workdir $outdir/$pop2
+	    --workdir $outdir/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --bfile $pop2_ld_bfile \
