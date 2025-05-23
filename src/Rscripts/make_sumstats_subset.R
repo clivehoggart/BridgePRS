@@ -9,8 +9,10 @@ options(stringsAsFactors=FALSE)
 
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,help="Function File Path", metavar="character"),
+    make_option(c("--blockdir"), type="character",
+                help="Block dir", metavar="character"),
     make_option(c("--workdir"), type="character",
-                help="Top level working dir", metavar="character"),
+                help="Output dir for sumstats", metavar="character"),
     make_option(c("--bfile"), type="character",
                 help="Plink file to estimate LD", metavar="character"),
     make_option(c("--by.chr"), type="numeric", default=1,
@@ -43,6 +45,8 @@ option_list = list(
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--n.folds"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="numeric"),
+    make_option(c("--fold"), type="numeric", default=NULL,
+                help="Fold number when running in parallel", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="numeric")
 )
@@ -129,7 +133,7 @@ for( chr in 1:22 ){
         bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
         ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
     }
-    infile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+    infile <- paste(opt$blockdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
     sumstats.b <- mclapply( 1:nrow(blocks),
@@ -192,9 +196,10 @@ for( chr in 1:22 ){
         }
     }
     for( k in 1:opt$n.folds ){
+        fold.out <- ifelse( is.null(fold), k, fold )
         sumstats.1[[k]] <- sumstats.1[[k]][!is.na(sumstats.1[[k]]$BETA),]
-        outfile <- paste(opt$workdir,'/fold',k,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
-        fwrite( sumstats.1[[k]], outfile, sep=" " )
+        outfile <- paste(opt$workdir,'/fold',fold.out,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
+        fwrite( sumstats.1[[fold.out]], outfile, sep=" " )
     }
 }
 if( !is.null(warnings()) ){

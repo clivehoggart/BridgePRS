@@ -10,15 +10,10 @@ ext=""
 n_cores=1
 do_clump_pop1=1
 do_est_beta_pop1=1
-do_predict_pop1=1
 do_est_beta_pop1_precision=1
 do_est_beta_InformPrior=1
-do_predict_pop2_stage2=1
 do_clump_pop2=1
 do_est_beta_pop2=1
-do_predict_pop2=1
-do_combine=1
-do_pool=1
 by_chr=0
 by_chr_ld=0
 by_chr_target=0
@@ -54,7 +49,7 @@ clean=1
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,prop_train:,prop_test:,clean:,iter: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,blockdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,prop_train:,prop_test:,clean:,iter: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -66,6 +61,7 @@ while :
 do
   case "$1" in
     --outdir) outdir="$2" ; shift 2 ;;
+    --blockdir) blockdir="$2" ; shift 2 ;;
     --n_cores) n_cores="$2" ; shift 2 ;;
     --pop1_ld_ids) pop1_ld_ids="$2" ; shift 2 ;;
     --pop2_ld_ids) pop2_ld_ids="$2" ; shift 2 ;;
@@ -142,7 +138,11 @@ if [ $by_chr_target = 0 ]
 then
     by_chr_target=$by_chr
 fi
-
+if [ $blockdir = 0 ]
+then
+   blockdir=$outdir
+fi
+   
 echo "Options in effect:"
 echo "outdir  : $outdir"
 echo "n_cores : $n_cores"
@@ -217,7 +217,8 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --workdir $outdir/$pop1 \
+	    --blockdir $blockdir/$pop1 \
+	    --workdir $outdir/$pop1
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
 	    --bfile $pop1_ld_bfile \
@@ -240,7 +241,8 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --workdir $outdir/$pop2 \
+	    --blockdir $blockdir/$pop2 \
+	    --workdir $outdir/$pop2
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
 	    --bfile $pop2_ld_bfile \
@@ -310,6 +312,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
 	    --fold ${iter} \
+	    --blockdir $blockdir/$pop2 \
 	    --workdir $outdir/${pop1} \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
@@ -443,6 +446,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/$pop2/fold${iter}/models/stage1 \
 	    --stage2 $outdir/$pop2/fold${iter}/models/stage2 \
+	    --blockdir $blockdir/$pop2 \
 	    --workdir $outdir/$pop2 \
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \

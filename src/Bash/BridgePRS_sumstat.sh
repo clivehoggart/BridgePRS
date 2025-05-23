@@ -239,7 +239,7 @@ then
 	      --blocks-strong-lowci 0.51 \
 	      --blocks-strong-highci 0.831 \
 	      --blocks-recomb-highci 0.55 \
-	      --blocks-max-kb 1000 \
+	      --blocks-max-kb 500 \
 	      --blocks-inform-frac 0.1 \
 	      --out $outdir/${pop1}/blocks/chr${chr}
 	gzip $outdir/$pop1/blocks/chr$chr.blocks.det
@@ -532,11 +532,6 @@ then
     fi
 fi
 done
-
-if [ $clean -eq 1 ]
-then
-    rm $outdir/$pop1/blocks/*
-fi
 
 if [ $do_pool -eq 1  ]
 then

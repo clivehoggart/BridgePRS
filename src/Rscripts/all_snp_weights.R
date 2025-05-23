@@ -18,6 +18,8 @@ option_list = list(
                 metavar="character"),
     make_option(c("--workdir"), type="character",
                 help="Top level working dir", metavar="character"),
+    make_option(c("--blockdir"), type="character",
+                help="Block dir", metavar="character"),
     make_option(c("--bfile"), type="character",
                 help="Plink file to estimate LD", metavar="character"),
     make_option(c("--ld.ids"), type="character",
@@ -66,7 +68,7 @@ for( chr in 1:22 ){
         ld.ids <- intersect( ld.ids, attributes(X.bed)[[3]][[1]] )
     }
 
-    blockfile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+    blockfile <- paste(opt$blockdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread( blockfile, data.table=FALSE )
     sumstatfile <- paste(opt$workdir,'/fold',opt$fold,
                          '/sumstat_subset/chr',chr,'.dat.gz',sep='')
