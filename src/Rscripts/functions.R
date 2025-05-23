@@ -382,15 +382,9 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
 
             ld.mat <- ref.stats$ld
-            ev <- eigen(ld.mat, only.values = TRUE)$values
-            positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
-            i <- 0
-            while( !positive.definite & k>1 ){
-                i <- i+1
-                ld.mat <- ref.stats$ld + ld.shrink[i]*diag(diag(ref.stats$ld))
-                ev <- eigen(ld.mat, only.values = TRUE)$values
-                positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
-            }
+            ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
+            lambda <- ifelse( min(ev) < 1e-6, abs(min(ev)) + 1e-6, 0 )
+            ld.mat <- ld.mat + lambda * diag(diag(ld.mat))
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
@@ -412,6 +406,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
 
+#            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
             beta.1 <- solve(ld.mat) %*% t(XtY.1) / (n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
