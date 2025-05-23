@@ -133,7 +133,7 @@ for( chr in 1:22 ){
         bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
         ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
     }
-    infile <- paste(opt$blockdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+    infile <- paste(opt$blockdir,'/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
     sumstats.b <- mclapply( 1:nrow(blocks),

@@ -68,7 +68,7 @@ for( chr in 1:22 ){
         ld.ids <- intersect( ld.ids, attributes(X.bed)[[3]][[1]] )
     }
 
-    blockfile <- paste(opt$blockdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+    blockfile <- paste(opt$blockdir,'/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread( blockfile, data.table=FALSE )
     sumstatfile <- paste(opt$workdir,'/fold',opt$fold,
                          '/sumstat_subset/chr',chr,'.dat.gz',sep='')
