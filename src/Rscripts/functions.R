@@ -1,3 +1,52 @@
+regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = TRUE) {
+  stopifnot(is.matrix(ld.mat), isSymmetric(ld.mat))
+
+  # Compute eigenvalues once
+  ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
+  min_ev <- min(ev)
+
+  # Default threshold based on matrix scale
+  if (is.null(target_min_ev)) {
+    target_min_ev <- max(1e-4, 0.01 * mean(ev))
+  }
+
+  if (min_ev > target_min_ev) {
+    if (verbose) cat("Matrix already positive definite. No regularization needed.\n")
+    return(ld.mat)
+  }
+
+  # Compute required lambda
+  lambda <- target_min_ev - min_ev
+  ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
+
+  # Check positive definiteness via Cholesky
+  success <- tryCatch({
+    chol(ld.mat.reg)
+    TRUE
+  }, error = function(e) FALSE)
+
+  if (!success) {
+    if (verbose) cat("Increasing lambda to ensure Cholesky success...\n")
+    factor <- 10
+    count <- 0
+    while (!success && count < 5) {
+      lambda <- lambda * factor
+      ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
+      success <- tryCatch({
+        chol(ld.mat.reg)
+        TRUE
+      }, error = function(e) FALSE)
+      count <- count + 1
+    }
+
+    if (!success) stop("Failed to regularize LD matrix to positive definiteness.")
+  }
+
+  if (verbose) cat("Final lambda used:", format(lambda, scientific = TRUE), "\n")
+
+  return(ld.mat.reg)
+}
+
 standardise <- function(X){
     m <- apply(X,2,mean,na.rm=TRUE)
     X <- t(t(X)-m)
@@ -381,10 +430,12 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
 
-            ld.mat <- ref.stats$ld
-            ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
-            lambda <- ifelse( min(ev) < 1e-6, abs(min(ev)) + 1e-6, 0 )
-            ld.mat <- ld.mat + lambda * diag(diag(ld.mat))
+            ld.mat <- regularize_ld_matrix( ref.stats$ld )
+
+#            ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
+#            lambda1 <- ifelse( min(ev) < 1e-6, abs(min(ev)) + 1e-6, 0 )
+#            lambda2 <- ifelse( min(ev) < 1e-6,  1e-6 - min(ev), 0 )
+#            ld.mat <- ld.mat + lambda * diag(diag(ld.mat))
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
