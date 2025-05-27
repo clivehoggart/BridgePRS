@@ -229,6 +229,7 @@ then
 	    --sumstats.betaID $sumstats_beta \
  	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
+	    --qc.snplist $pop1_qc_snplist \
 	    --sumstats.P $sumstats_p \
 	    --N.pop $N_pop1 \
 	    --prop.train $prop_train \
@@ -254,6 +255,7 @@ then
  	    --sumstats.allele1ID $sumstats_allele1 \
 	    --sumstats.allele0ID $sumstats_allele0 \
 	    --sumstats.P $sumstats_p \
+	    --qc.snplist $pop2_qc_snplist \
 	    --N.pop $N_pop2 \
 	    --prop.train $prop_train \
 	    --prop.test $prop_test \

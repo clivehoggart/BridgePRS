@@ -35,6 +35,8 @@ option_list = list(
                 help="Allele 1 column name", metavar="character"),
     make_option(c("--sumstats.P"), type="character", default="ALLELE1",
                 help="P-value column name", metavar="character"),
+    make_option(c("--qc.snplist"), type="character", default=NULL,
+                help="QC snplist", metavar="character"),
     make_option(c("--N.pop"), type="numeric", default=0,
                 help="GWAS sample size", metavar="numeric"),
     make_option(c("--prop.train"), type="numeric", default=0,
@@ -61,15 +63,17 @@ tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
+qc.snplist <- fread(opt$qc.snplist,header=FALSE)
 if( opt$by.chr.sumstats==0 ){
     sumstats <- fread( opt$sumstats, data.table=FALSE )
     snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
     allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
     allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
     beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+    p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
 
-    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
+    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr )]
+    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
     sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
     sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
     if( opt$strand.check ){
@@ -85,6 +89,8 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats$BETA <- as.numeric(sumstats$BETA)
     sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+    qc.snplist <- intersect( qc.snplist$V1, sumstats$SNP )
+    sumstats <- sumstats[match(qc.snplist, sumstats$SNP),]
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
@@ -127,6 +133,8 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+        qc.snplist <- intersect( qc.snplist$V1, sumstats$SNP )
+        sumstats <- sumstats[match(qc.snplist, sumstats$SNP),]
     }
     if( opt$by.chr==1 ){
         ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
@@ -169,7 +177,7 @@ for( chr in 1:22 ){
             }
         }
     }
-    snp.fill <- setdiff( sumstats$SNP, all.block.snps )
+    snp.fill <- intersect( setdiff( sumstats$SNP, all.block.snps ), bim$V1==chr )
     sumstats.b <- mclapply( 1:length(snp.fill),
                      function(i){
                          sumstat.subset( snp=snp.fill[i],
