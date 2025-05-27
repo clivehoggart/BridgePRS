@@ -177,7 +177,7 @@ for( chr in 1:22 ){
             }
         }
     }
-    snp.fill <- intersect( setdiff( sumstats$SNP, all.block.snps ), bim$V1==chr )
+    snp.fill <- intersect( setdiff( sumstats$SNP, all.block.snps ), bim$V2[bim$V1==chr] )
     sumstats.b <- mclapply( 1:length(snp.fill),
                      function(i){
                          sumstat.subset( snp=snp.fill[i],
