@@ -1,50 +1,50 @@
 regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = FALSE) {
-  stopifnot(is.matrix(ld.mat), isSymmetric(ld.mat))
+    stopifnot(is.matrix(ld.mat), isSymmetric(ld.mat))
 
   # Compute eigenvalues once
-  ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
-  min_ev <- min(ev)
+    ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
+    min_ev <- min(ev)
 
   # Default threshold based on matrix scale
-  if (is.null(target_min_ev)) {
-    target_min_ev <- max(1e-4, 0.01 * mean(ev))
-  }
-
-  if (min_ev > target_min_ev) {
-    if (verbose) cat("Matrix already positive definite. No regularization needed.\n")
-    return(ld.mat)
-  }
-
-  # Compute required lambda
-  lambda <- target_min_ev - min_ev
-  ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
-
-  # Check positive definiteness via Cholesky
-  success <- tryCatch({
-    chol(ld.mat.reg)
-    TRUE
-  }, error = function(e) FALSE)
-
-  if (!success) {
-    if (verbose) cat("Increasing lambda to ensure Cholesky success...\n")
-    factor <- 10
-    count <- 0
-    while (!success && count < 5) {
-      lambda <- lambda * factor
-      ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
-      success <- tryCatch({
-        chol(ld.mat.reg)
-        TRUE
-      }, error = function(e) FALSE)
-      count <- count + 1
+    if (is.null(target_min_ev)) {
+        target_min_ev <- max(1e-4, 0.01 * mean(ev))
     }
 
-    if (!success) stop("Failed to regularize LD matrix to positive definiteness.")
-  }
+    if (min_ev > target_min_ev) {
+        if (verbose) cat("Matrix already positive definite. No regularization needed.\n")
+        return(ld.mat)
+    }
 
-  if (verbose) cat("Final lambda used:", format(lambda, scientific = TRUE), "\n")
+  # Compute required lambda
+    lambda <- target_min_ev - min_ev
+    ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
 
-  return(ld.mat.reg)
+  # Check positive definiteness via Cholesky
+    success <- tryCatch({
+        chol(ld.mat.reg)
+        TRUE
+    }, error = function(e) FALSE)
+
+    if (!success) {
+        if (verbose) cat("Increasing lambda to ensure Cholesky success...\n")
+        factor <- 10
+        count <- 0
+        while (!success && count < 5) {
+            lambda <- lambda * factor
+            ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
+            success <- tryCatch({
+                chol(ld.mat.reg)
+                TRUE
+            }, error = function(e) FALSE)
+            count <- count + 1
+        }
+
+        if (!success) stop("Failed to regularize LD matrix to positive definiteness.")
+    }
+
+    if (verbose) cat("Final lambda used:", format(lambda, scientific = TRUE), "\n")
+
+    return(ld.mat.reg)
 }
 
 standardise <- function(X){
@@ -447,13 +447,19 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
 
             m <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
-            XtY.1 <- mvrnorm( n=n.folds, mu=m, Sigma=v, tol=tol )
+            XtY.12 <- mvrnorm( n=2*n.folds, mu=rep(0,k), Sigma=v, tol=tol )
+#            XtY.1 <- mvrnorm( n=n.folds, mu=m, Sigma=v, tol=tol )
+            XtY.1 <- t(t(XtY.12[1:n.folds,]) + m)
 
             m <- (XtY-t(XtY.1)) * n.prop[2] / (1-n.prop[1])
             v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
+
 #            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
-            XtY.2 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
-            XtY.2 <- t(t(XtY.2) - m)
+
+#            XtY.2 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
+#            XtY.2 <- t(t(XtY.2) + m)
+
+            XtY.2 <- t(t(XtY.12[(n.folds+1):(2*n.folds),]) + m)
 
             XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
 
