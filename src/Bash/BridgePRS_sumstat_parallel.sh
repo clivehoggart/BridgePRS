@@ -37,6 +37,7 @@ cov_names="000"
 
 prop_train=0.7
 prop_test=0.15
+blockdir=0
 
 clean=1
 
@@ -317,7 +318,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
 	    --fold ${iter} \
-	    --blockdir $blockdir/$pop2 \
+	    --blockdir $blockdir/$pop1 \
 	    --workdir $outdir/${pop1} \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \

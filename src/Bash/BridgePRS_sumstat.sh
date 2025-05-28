@@ -43,6 +43,7 @@ cov_names="000"
 n_folds=5
 prop_train=0.7
 prop_test=0.15
+blockdir=0
 
 clean=1
 
@@ -58,7 +59,7 @@ clean=1
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test:,clean: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,blockdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test:,clean: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -70,6 +71,7 @@ while :
 do
   case "$1" in
     --outdir) outdir="$2" ; shift 2 ;;
+    --blockdir) blockdir="$2" ; shift 2 ;;
     --n_cores) n_cores="$2" ; shift 2 ;;
     --pop1_ld_ids) pop1_ld_ids="$2" ; shift 2 ;;
     --pop2_ld_ids) pop2_ld_ids="$2" ; shift 2 ;;
@@ -145,6 +147,10 @@ fi
 if [ $by_chr_target = 0 ]
 then
     by_chr_target=$by_chr
+fi
+if [ $blockdir = 0 ]
+then
+   blockdir=$outdir
 fi
 
 echo "Options in effect:"
@@ -231,7 +237,7 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
-	rm $outdir/$pop1/blocks/chr$chr.blocks*
+	rm $blockdir/$pop1/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
@@ -244,8 +250,8 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 500 \
 	      --blocks-inform-frac 0.1 \
-	      --out $outdir/${pop1}/blocks/chr${chr}
-	gzip $outdir/$pop1/blocks/chr$chr.blocks.det
+	      --out $blockdir/${pop1}/blocks/chr${chr}
+	gzip $blockdir/$pop1/blocks/chr$chr.blocks.det
     done
 fi
 
@@ -258,7 +264,7 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
-	rm $outdir/${pop2}/blocks/chr$chr.blocks*
+	rm $blockdir/${pop2}/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
@@ -271,8 +277,8 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
-	      --out $outdir/${pop2}/blocks/chr${chr}
-	gzip $outdir/${pop2}/blocks/chr$chr.blocks.det
+	      --out $blockdir/${pop2}/blocks/chr${chr}
+	gzip $blockdir/${pop2}/blocks/chr$chr.blocks.det
     done
 fi
 
@@ -284,6 +290,7 @@ then
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
+	    --blockdir $blockdir/$pop1 \
 	    --workdir $outdir/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
@@ -312,6 +319,7 @@ then
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
+	    --blockdir $blockdir/$pop2 \
 	    --workdir $outdir/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
@@ -386,6 +394,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
 	    --fold $iter \
+	    --blockdir $blockdir/$pop1 \
 	    --workdir $outdir/${pop1} \
 	    --bfile $pop1_ld_bfile \
 	    --ld.ids $pop1_ld_ids \
@@ -520,6 +529,7 @@ then
  	    --fpath $FPATH \
 	    --stage1  $outdir/$pop2/fold$iter/models/stage1 \
 	    --stage2 $outdir/$pop2/fold$iter/models/stage2 \
+	    --blockdir $blockdir/$pop2 \
 	    --workdir $outdir/$pop2 \
 	    --bfile $pop2_ld_bfile \
 	    --ld.ids $pop2_ld_ids \
