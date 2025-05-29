@@ -89,8 +89,8 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats.genome$BETA <- as.numeric(sumstats.genome$BETA)
     sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA), ]
-    qc.snplist <- intersect( qc.snplist$V1, sumstats.genome$SNP )
-    sumstats.genome <- sumstats.genome[match(qc.snplist, sumstats.genome$SNP),]
+    qc.snplist1 <- intersect( qc.snplist$V1, sumstats.genome$SNP )
+    sumstats.genome <- sumstats.genome[match(qc.snplist1, sumstats.genome$SNP),]
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
@@ -138,8 +138,8 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-        qc.snplist <- intersect( qc.snplist$V1, sumstats$SNP )
-        sumstats <- sumstats[match(qc.snplist, sumstats$SNP),]
+        qc.snplist1 <- intersect( qc.snplist$V1, sumstats$SNP )
+        sumstats <- sumstats[match(qc.snplist1, sumstats$SNP),]
     }else{
         ptr.chr <- which(bim$V1==chr)
         snp.chr <- intersect( bim$V2[ptr.chr], sumstats.genome$SNP )
