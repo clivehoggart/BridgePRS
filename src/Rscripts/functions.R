@@ -444,7 +444,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
 
-            ld.mat <- mvnorm.ldmat( ref.stats$ld )
+            ld.mat <- mvrnorm.ldmat( ref.stats$ld )
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
