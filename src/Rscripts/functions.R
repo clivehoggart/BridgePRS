@@ -13,55 +13,6 @@ mvrnorm.ldmat <- function( ld.mat, tol = 1e-06 ){
     return(ld.mat)
 }
 
-regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = FALSE){
-    stopifnot(is.matrix(ld.mat), isSymmetric(ld.mat))
-
-  # Compute eigenvalues once
-    ev <- eigen(ld.mat, symmetric = TRUE, only.values = TRUE)$values
-    min_ev <- min(ev)
-
-  # Default threshold based on matrix scale
-    if (is.null(target_min_ev)) {
-        target_min_ev <- max(1e-4, 0.01 * mean(ev))
-    }
-
-    if (min_ev > target_min_ev) {
-        if (verbose) cat("Matrix already positive definite. No regularization needed.\n")
-        return(ld.mat)
-    }
-
-  # Compute required lambda
-    lambda <- target_min_ev - min_ev
-    ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
-
-  # Check positive definiteness via Cholesky
-    success <- tryCatch({
-        chol(ld.mat.reg)
-        TRUE
-    }, error = function(e) FALSE)
-
-    if (!success) {
-        if (verbose) cat("Increasing lambda to ensure Cholesky success...\n")
-        factor <- 10
-        count <- 0
-        while (!success && count < 5) {
-            lambda <- lambda * factor
-            ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
-            success <- tryCatch({
-                chol(ld.mat.reg)
-                TRUE
-            }, error = function(e) FALSE)
-            count <- count + 1
-        }
-
-        if (!success) stop("Failed to regularize LD matrix to positive definiteness.")
-    }
-
-    if (verbose) cat("Final lambda used:", format(lambda, scientific = TRUE), "\n")
-
-    return(ld.mat.reg)
-}
-
 standardise <- function(X){
     m <- apply(X,2,mean,na.rm=TRUE)
     X <- t(t(X)-m)
@@ -458,16 +409,16 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             mu1 <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
 #            XtY.1 <- mvrnorm( n=n.folds, mu=mu1, Sigma=v, tol=tol )
-            XtY.1 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
-            XtY.1 <- t(t(XtY.1) + mu1)
+            XtY.1 <- matrix( mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol ), nrow=n.folds )
+            XtY.1 <- t(XtY.1) + mu1
 
-            mu2 <- (XtY-t(XtY.1)) * n.prop[2] / (1-n.prop[1])
+            mu2 <- (XtY-XtY.1) * n.prop[2] / (1-n.prop[1])
             v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
 #            XtY.2 <- mvrnorm( n=1, mu=mu2, Sigma=v )
-            XtY.2 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
-            XtY.2 <- t(t(XtY.2) + mu2)
+            XtY.2 <- matrix( mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol ), nrow=n.folds )
+            XtY.2 <- t(XtY.2) + mu2
 
-            XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
+            XtY.3 <- XtY - XtY.1 - XtY.2
 
 #            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
             beta.1 <- t(matrix(XtY.1,nrow=n.folds)) / (diag(ld.mat)*n.all*n.prop[1])
