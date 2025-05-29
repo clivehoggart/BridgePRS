@@ -1,5 +1,5 @@
 mvrnorm.ldmat <- function( ld.mat, tol = 1e-06 ){
-    p <- length(mu)
+    p <- nrow(ld.mat)
     ev <- eigen( ld.mat, symmetric=TRUE, only.values=TRUE )$values
     min_ev <- min(ev)
     target_min_ev <- max(1e-4, 0.01 * mean(ev))
