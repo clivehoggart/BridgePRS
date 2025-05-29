@@ -2,6 +2,16 @@
 # update key
 # Set some default values:
 
+safe_rm() {
+    rm "$@" 2>/dev/null || {
+        err=$?
+        if [ $err -ne 0 ] && [ $err -ne 1 ]; then
+            echo "ERROR: rm failed on $*"
+            exit $err
+        fi
+    }
+}
+
 set -e
 trap 'echo "ERROR on line $LINENO: $BASH_COMMAND"; exit 1' ERR
 
@@ -241,7 +251,7 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
-	rm $blockdir/$pop1/blocks/chr$chr.blocks*
+	safe_rm $blockdir/$pop1/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
@@ -268,7 +278,7 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
-	rm $blockdir/${pop2}/blocks/chr$chr.blocks*
+	safe_rm $blockdir/${pop2}/blocks/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
@@ -290,7 +300,7 @@ if [ $do_sumstat_pop1 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
-	rm -Rf $outdir/$pop1/fold$iter/sumstat_subset/*
+	safe_rm -Rf $outdir/$pop1/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
@@ -319,7 +329,7 @@ if [ $do_sumstat_pop2 -eq 1 ]
 then
     for ((iter = 1; iter <= ${n_folds}; iter++))
     do
-	rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
+	safe_rm -Rf $outdir/$pop2/fold$iter/sumstat_subset/*
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
@@ -362,14 +372,14 @@ then
 	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
 	      --out $outdir/${pop1}/fold$iter/clump/_${chr}
-	rm -f $outdir/${pop1}/fold$iter/clump/_${chr}.clumped.gz
+	safe_rm -f $outdir/${pop1}/fold$iter/clump/_${chr}.clumped.gz
 	gzip $outdir/${pop1}/fold$iter/clump/_${chr}.clumped
     done
 fi
 
 if [ $do_est_beta_pop1 -eq 1  ]
 then
-    rm -f $outdir/$pop1/fold$iter/models/stage1*
+    safe_rm -f $outdir/$pop1/fold$iter/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $outdir/$pop1/fold$iter/clump/ \
@@ -393,7 +403,7 @@ fi
 
 if [ $do_sumstat_ensembl_pop1 -eq 1  ]
 then
-    rm -f $outdir/${pop1}/fold${iter}/*.dat
+    safe_rm -f $outdir/${pop1}/fold${iter}/*.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
@@ -410,14 +420,14 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/$pop1/fold${iter}/models/stage1*
+	safe_rm $outdir/$pop1/fold${iter}/models/stage1*
     fi
 fi
 
 if [ $do_est_beta_pop1_precision -eq 1  ]
 then
-    rm -f $outdir/${pop1}/fold${iter}/models/prior*
-    rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
+    safe_rm -f $outdir/${pop1}/fold${iter}/models/prior*
+    safe_rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $outdir/$pop1/fold$iter/clump/ \
@@ -440,14 +450,14 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/$pop1/fold$iter/sumstat_subset/chr*
-	rm $outdir/$pop1/fold$iter/clump/_*
+	safe_rm $outdir/$pop1/fold$iter/sumstat_subset/chr*
+	safe_rm $outdir/$pop1/fold$iter/clump/_*
     fi
 fi
 
 if [ $do_est_beta_InformPrior -eq 1  ]
 then
-    rm -f $outdir/${pop2}/fold$iter/models/stage2*
+    safe_rm -f $outdir/${pop2}/fold$iter/models/stage2*
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
  	    --fpath $FPATH \
 	    --sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr  \
@@ -472,8 +482,8 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm -Rf $outdir/$pop1/fold${iter}/models/lambda
-	rm $outdir/$pop1/fold${iter}/models/prior*
+	safe_rm -Rf $outdir/$pop1/fold${iter}/models/lambda
+	safe_rm $outdir/$pop1/fold${iter}/models/prior*
     fi
 fi
 
@@ -492,14 +502,14 @@ then
 	      --extract $pop2_qc_snplist \
 	      --maf 0.001 \
 	      --out $outdir/${pop2}/fold$iter/clump/_${chr}
-	rm -f $outdir/${pop2}/fold$iter/clump/_${chr}.clumped.gz
+	safe_rm -f $outdir/${pop2}/fold$iter/clump/_${chr}.clumped.gz
 	gzip $outdir/${pop2}/fold$iter/clump/_${chr}.clumped
     done
 fi
 
 if [ $do_est_beta_pop2 -eq 1  ]
 then
-    rm -f $outdir/$pop2/fold$iter/models/stage1*
+    safe_rm -f $outdir/$pop2/fold$iter/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
 	    --clump.stem $outdir/$pop2/fold$iter/clump/ \
@@ -522,13 +532,13 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/$pop2/fold$iter/clump/_*
+	safe_rm $outdir/$pop2/fold$iter/clump/_*
     fi
 fi
 
 if [ $do_sumstat_ensembl_pop2 -eq 1  ]
 then
-    rm -f $outdir/$pop2/fold$iter/*.dat
+    safe_rm -f $outdir/$pop2/fold$iter/*.dat
     Rscript --vanilla $RSCRIPTS"/"all_snp_weights.R \
  	    --fpath $FPATH \
 	    --stage1  $outdir/$pop2/fold$iter/models/stage1 \
@@ -546,15 +556,15 @@ then
 
     if [ $clean -eq 1 ]
     then
-	rm $outdir/$pop2/fold$iter/sumstat_subset/chr*
-	rm $outdir/$pop2/fold${iter}/models/stage*
+	safe_rm $outdir/$pop2/fold$iter/sumstat_subset/chr*
+	safe_rm $outdir/$pop2/fold${iter}/models/stage*
     fi
 fi
 done
 
 if [ $do_pool -eq 1  ]
 then
-    rm $outdir/${pop2}/snp_weights_*_model.dat
+    safe_rm $outdir/${pop2}/snp_weights_*_model.dat
     Rscript --vanilla $RSCRIPTS"/"pool_snp_scores.R \
 	    --n.folds $n_folds \
 	    --workdir $outdir/$pop2

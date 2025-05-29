@@ -44,7 +44,6 @@ clean=1
 #RSCRIPTS=~/BridgePRS/src/Rscripts
 #FPATH=$RSCRIPTS"/functions.R"
 
-
 #usage()
 #{
 #  echo "Usage: ridgePRS [ -n | --n_cores n_cores ] [ -b | --bfile bfile ]
