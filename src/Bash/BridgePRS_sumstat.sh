@@ -164,7 +164,7 @@ then
 fi
 if [ $blockdir = 0 ]
 then
-   blockdir=$outdir
+   blockdir=$outdir/blocks
 fi
 
 echo "Options in effect:"
