@@ -65,32 +65,32 @@ write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
 qc.snplist <- fread(opt$qc.snplist,header=FALSE)
 if( opt$by.chr.sumstats==0 ){
-    sumstats <- fread( opt$sumstats, data.table=FALSE )
-    snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
-    allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
-    allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
-    beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
-    p.ptr <- which( colnames(sumstats)==opt$sumstats.P )
+    sumstats.genome <- fread( opt$sumstats, data.table=FALSE )
+    snp.ptr <- which( colnames(sumstats.genome)==opt$sumstats.snpID )
+    allele1.ptr <- which( colnames(sumstats.genome)==opt$sumstats.allele1ID )
+    allele0.ptr <- which( colnames(sumstats.genome)==opt$sumstats.allele0ID )
+    beta.ptr <- which( colnames(sumstats.genome)==opt$sumstats.betaID )
+    p.ptr <- which( colnames(sumstats.genome)==opt$sumstats.P )
 
-    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr )]
-    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
-    sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
-    sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
+    sumstats.genome <- sumstats.genome[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr )]
+    colnames(sumstats.genome) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
+    sumstats.genome$ALLELE1 <- toupper(sumstats.genome$ALLELE1)
+    sumstats.genome$ALLELE0 <- toupper(sumstats.genome$ALLELE0)
     if( opt$strand.check ){
-        ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
-                          (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
-                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A") |
-                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T") |
-                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A") |
-                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T") |
-                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C") |
-                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G") )
-        sumstats <- sumstats[ptr.use,]
+        ptr.use <- which( (sumstats.genome$ALLELE1=="A" & sumstats.genome$ALLELE0=="C") |
+                          (sumstats.genome$ALLELE1=="A" & sumstats.genome$ALLELE0=="G") |
+                          (sumstats.genome$ALLELE1=="C" & sumstats.genome$ALLELE0=="A") |
+                          (sumstats.genome$ALLELE1=="C" & sumstats.genome$ALLELE0=="T") |
+                          (sumstats.genome$ALLELE1=="G" & sumstats.genome$ALLELE0=="A") |
+                          (sumstats.genome$ALLELE1=="G" & sumstats.genome$ALLELE0=="T") |
+                          (sumstats.genome$ALLELE1=="T" & sumstats.genome$ALLELE0=="C") |
+                          (sumstats.genome$ALLELE1=="T" & sumstats.genome$ALLELE0=="G") )
+        sumstats.genome <- sumstats.genome[ptr.use,]
     }
-    sumstats$BETA <- as.numeric(sumstats$BETA)
-    sumstats <- sumstats[ !is.na(sumstats$BETA), ]
-    qc.snplist <- intersect( qc.snplist$V1, sumstats$SNP )
-    sumstats <- sumstats[match(qc.snplist, sumstats$SNP),]
+    sumstats.genome$BETA <- as.numeric(sumstats.genome$BETA)
+    sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA), ]
+    qc.snplist <- intersect( qc.snplist$V1, sumstats.genome$SNP )
+    sumstats.genome <- sumstats.genome[match(qc.snplist, sumstats.genome$SNP),]
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
@@ -102,6 +102,11 @@ if( opt$by.chr==0 ){
 }
 
 for( chr in 1:22 ){
+    if( opt$by.chr==1 ){
+        ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
+        bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
+        ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
+    }
     if( opt$by.chr.sumstats!=0 ){
         sumfile  <- paste(opt$sumstats,chr,opt$by.chr.sumstats,sep='')
         if(!file.exists(sumfile)) {
@@ -135,12 +140,12 @@ for( chr in 1:22 ){
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
         qc.snplist <- intersect( qc.snplist$V1, sumstats$SNP )
         sumstats <- sumstats[match(qc.snplist, sumstats$SNP),]
+    }else{
+        ptr.chr <- which(bim$V1==chr)
+        snp.chr <- intersect( bim$V2[ptr.chr], sumstats.genome$SNP )
+        sumstats <- sumstats.genome[match( snp.chr, sumstats.genome$SNP ),]
     }
-    if( opt$by.chr==1 ){
-        ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
-        bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
-        ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
-    }
+
     infile <- paste(opt$blockdir,'/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
@@ -162,7 +167,7 @@ for( chr in 1:22 ){
     }
     all.block.snps <- vector()
     for( i in 1:nrow(blocks) ){
-        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$block.snps )
+        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$SNP )
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         if( length(ptr)>0 ){
             for( k in 1:opt$n.folds ){
@@ -172,12 +177,12 @@ for( chr in 1:22 ){
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],
-                                                    sumstats.b[[i]]$XtY.2[k,],
-                                                    sumstats.b[[i]]$XtY.3[k,] )
+                                                    sumstats.b[[i]]$XtY.2[,k],
+                                                    sumstats.b[[i]]$XtY.3[,k] )
             }
         }
     }
-    snp.fill <- intersect( setdiff( sumstats$SNP, all.block.snps ), bim$V2[bim$V1==chr] )
+    snp.fill <- setdiff( sumstats$SNP, all.block.snps )
     sumstats.b <- mclapply( 1:length(snp.fill),
                      function(i){
                          sumstat.subset( snp=snp.fill[i],
@@ -198,8 +203,8 @@ for( chr in 1:22 ){
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],
-                                                    sumstats.b[[i]]$XtY.2[k,],
-                                                    sumstats.b[[i]]$XtY.3[k,] )
+                                                    sumstats.b[[i]]$XtY.2[,k],
+                                                    sumstats.b[[i]]$XtY.3[,k] )
             }
         }
     }
