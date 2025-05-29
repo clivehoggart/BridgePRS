@@ -4,12 +4,13 @@ mvrnorm.ldmat <- function( ld.mat, tol = 1e-06 ){
     min_ev <- min(ev)
     target_min_ev <- max(1e-4, 0.01 * mean(ev))
     lambda <- target_min_ev - min_ev
+    diag.ld.mat <- diag(diag(ld.mat))
     while( !all(ev >= -tol * abs(ev[1L])) ){
-        ld.mat.reg <- ld.mat + lambda * diag(diag(ld.mat))
-        ev <- eigen( ld.mat.reg, symmetric=TRUE, only.values=TRUE )$values
+        ld.mat <- ld.mat + lambda * diag.ld.mat
+        ev <- eigen( ld.mat, symmetric=TRUE, only.values=TRUE )$values
         lambda <- lambda * 10
     }
-    return(ld.mat.reg)
+    return(ld.mat)
 }
 
 regularize_ld_matrix <- function(ld.mat, target_min_ev = NULL, verbose = FALSE){
