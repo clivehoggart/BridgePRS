@@ -2,6 +2,9 @@
 # update key
 # Set some default values:
 
+set -e
+trap 'echo "ERROR on line $LINENO: $BASH_COMMAND"; exit 1' ERR
+
 RSCRIPTS=~/BridgePRS/src/Rscripts
 FPATH=$RSCRIPTS"/functions.R"
 

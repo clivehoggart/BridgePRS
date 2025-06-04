@@ -9,8 +9,10 @@ options(stringsAsFactors=FALSE)
 
 option_list = list(
     make_option(c("--fpath"), type="character", default=NULL,help="Function File Path", metavar="character"),
+    make_option(c("--blockdir"), type="character",
+                help="Block dir", metavar="character"),
     make_option(c("--workdir"), type="character",
-                help="Top level working dir", metavar="character"),
+                help="Output dir for sumstats", metavar="character"),
     make_option(c("--bfile"), type="character",
                 help="Plink file to estimate LD", metavar="character"),
     make_option(c("--by.chr"), type="numeric", default=1,
@@ -33,6 +35,8 @@ option_list = list(
                 help="Allele 1 column name", metavar="character"),
     make_option(c("--sumstats.P"), type="character", default="ALLELE1",
                 help="P-value column name", metavar="character"),
+    make_option(c("--qc.snplist"), type="character", default=NULL,
+                help="QC snplist", metavar="character"),
     make_option(c("--N.pop"), type="numeric", default=0,
                 help="GWAS sample size", metavar="numeric"),
     make_option(c("--prop.train"), type="numeric", default=0,
@@ -43,6 +47,8 @@ option_list = list(
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
     make_option(c("--n.folds"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="numeric"),
+    make_option(c("--fold"), type="numeric", default=NULL,
+                help="Fold number when running in parallel", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
                 help="Number of processors for mclapply to use", metavar="numeric")
 )
@@ -57,30 +63,34 @@ tmp <- t(data.frame(opt))
 rownames(tmp) <- names(opt)
 write.table(tmp,file=logfile,quote=FALSE,col.names=FALSE)
 
+qc.snplist <- fread(opt$qc.snplist,header=FALSE)
 if( opt$by.chr.sumstats==0 ){
-    sumstats <- fread( opt$sumstats, data.table=FALSE )
-    snp.ptr <- which( colnames(sumstats)==opt$sumstats.snpID )
-    allele1.ptr <- which( colnames(sumstats)==opt$sumstats.allele1ID )
-    allele0.ptr <- which( colnames(sumstats)==opt$sumstats.allele0ID )
-    beta.ptr <- which( colnames(sumstats)==opt$sumstats.betaID )
+    sumstats.genome <- fread( opt$sumstats, data.table=FALSE )
+    snp.ptr <- which( colnames(sumstats.genome)==opt$sumstats.snpID )
+    allele1.ptr <- which( colnames(sumstats.genome)==opt$sumstats.allele1ID )
+    allele0.ptr <- which( colnames(sumstats.genome)==opt$sumstats.allele0ID )
+    beta.ptr <- which( colnames(sumstats.genome)==opt$sumstats.betaID )
+    p.ptr <- which( colnames(sumstats.genome)==opt$sumstats.P )
 
-    sumstats <- sumstats[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr)]
-    colnames(sumstats) <- c('SNP','ALLELE1','ALLELE0','BETA')
-    sumstats$ALLELE1 <- toupper(sumstats$ALLELE1)
-    sumstats$ALLELE0 <- toupper(sumstats$ALLELE0)
+    sumstats.genome <- sumstats.genome[,c( snp.ptr, allele1.ptr, allele0.ptr, beta.ptr, p.ptr )]
+    colnames(sumstats.genome) <- c('SNP','ALLELE1','ALLELE0','BETA','P')
+    sumstats.genome$ALLELE1 <- toupper(sumstats.genome$ALLELE1)
+    sumstats.genome$ALLELE0 <- toupper(sumstats.genome$ALLELE0)
     if( opt$strand.check ){
-        ptr.use <- which( (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="C") |
-                          (sumstats$ALLELE1=="A" & sumstats$ALLELE0=="G") |
-                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="A") |
-                          (sumstats$ALLELE1=="C" & sumstats$ALLELE0=="T") |
-                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="A") |
-                          (sumstats$ALLELE1=="G" & sumstats$ALLELE0=="T") |
-                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="C") |
-                          (sumstats$ALLELE1=="T" & sumstats$ALLELE0=="G") )
-        sumstats <- sumstats[ptr.use,]
+        ptr.use <- which( (sumstats.genome$ALLELE1=="A" & sumstats.genome$ALLELE0=="C") |
+                          (sumstats.genome$ALLELE1=="A" & sumstats.genome$ALLELE0=="G") |
+                          (sumstats.genome$ALLELE1=="C" & sumstats.genome$ALLELE0=="A") |
+                          (sumstats.genome$ALLELE1=="C" & sumstats.genome$ALLELE0=="T") |
+                          (sumstats.genome$ALLELE1=="G" & sumstats.genome$ALLELE0=="A") |
+                          (sumstats.genome$ALLELE1=="G" & sumstats.genome$ALLELE0=="T") |
+                          (sumstats.genome$ALLELE1=="T" & sumstats.genome$ALLELE0=="C") |
+                          (sumstats.genome$ALLELE1=="T" & sumstats.genome$ALLELE0=="G") )
+        sumstats.genome <- sumstats.genome[ptr.use,]
     }
-    sumstats$BETA <- as.numeric(sumstats$BETA)
-    sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+    sumstats.genome$BETA <- as.numeric(sumstats.genome$BETA)
+    sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA), ]
+    qc.snplist1 <- intersect( qc.snplist$V1, sumstats.genome$SNP )
+    sumstats.genome <- sumstats.genome[match(qc.snplist1, sumstats.genome$SNP),]
 }
 
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
@@ -92,6 +102,11 @@ if( opt$by.chr==0 ){
 }
 
 for( chr in 1:22 ){
+    if( opt$by.chr==1 ){
+        ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
+        bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
+        ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
+    }
     if( opt$by.chr.sumstats!=0 ){
         sumfile  <- paste(opt$sumstats,chr,opt$by.chr.sumstats,sep='')
         if(!file.exists(sumfile)) {
@@ -123,13 +138,15 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+        qc.snplist1 <- intersect( qc.snplist$V1, sumstats$SNP )
+        sumstats <- sumstats[match(qc.snplist1, sumstats$SNP),]
+    }else{
+        ptr.chr <- which(bim$V1==chr)
+        snp.chr <- intersect( bim$V2[ptr.chr], sumstats.genome$SNP )
+        sumstats <- sumstats.genome[match( snp.chr, sumstats.genome$SNP ),]
     }
-    if( opt$by.chr==1 ){
-        ptr.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
-        bim <- fread( paste(opt$bfile,chr,'.bim',sep='' ) )
-        ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
-    }
-    infile <- paste(opt$workdir,'/blocks/chr',chr,'.blocks.det.gz',sep='')
+
+    infile <- paste(opt$blockdir,'/chr',chr,'.blocks.det.gz',sep='')
     blocks <- fread(infile,header=TRUE,stringsAsFactors=FALSE)
 
     sumstats.b <- mclapply( 1:nrow(blocks),
@@ -150,7 +167,7 @@ for( chr in 1:22 ){
     }
     all.block.snps <- vector()
     for( i in 1:nrow(blocks) ){
-        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$block.snps )
+        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$SNP )
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         if( length(ptr)>0 ){
             for( k in 1:opt$n.folds ){
@@ -160,8 +177,8 @@ for( chr in 1:22 ){
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],
-                                                    sumstats.b[[i]]$XtY.2[k,],
-                                                    sumstats.b[[i]]$XtY.3[k,] )
+                                                    sumstats.b[[i]]$XtY.2[,k],
+                                                    sumstats.b[[i]]$XtY.3[,k] )
             }
         }
     }
@@ -186,14 +203,15 @@ for( chr in 1:22 ){
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],
-                                                    sumstats.b[[i]]$XtY.2[k,],
-                                                    sumstats.b[[i]]$XtY.3[k,] )
+                                                    sumstats.b[[i]]$XtY.2[,k],
+                                                    sumstats.b[[i]]$XtY.3[,k] )
             }
         }
     }
     for( k in 1:opt$n.folds ){
+        fold.out <- ifelse( is.null(opt$fold), k, opt$fold )
         sumstats.1[[k]] <- sumstats.1[[k]][!is.na(sumstats.1[[k]]$BETA),]
-        outfile <- paste(opt$workdir,'/fold',k,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
+        outfile <- paste(opt$workdir,'/fold',fold.out,'/sumstat_subset/chr',chr,'.dat.gz',sep='')
         fwrite( sumstats.1[[k]], outfile, sep=" " )
     }
 }

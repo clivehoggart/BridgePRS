@@ -1,4 +1,18 @@
-#!/bin/sh
+#BSUB -L /bin/sh
+#BSUB -n 8
+#BSUB -J Bridge[1-10]
+#BSUB -R "span[hosts=1]"
+#BSUB -q premium
+#BSUB -W 1:00
+#BSUB -P acc_psychgen
+#BSUB -o Bridge.o%J.%I
+#BSUB -eo Bridge.e%J.%I
+#BSUB -M 20000
+
+module load R/4.1.0
+module load plink
+
+iter=${LSB_JOBINDEX}
 
 data="$PWD"/data 
 src="$PWD"/src 
@@ -6,9 +20,9 @@ src="$PWD"/src
 pop=(AFR EAS)
 fst=(0.15 0.11)
 i=1
-${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
+${src}/Bash/BridgePRS_sumstat_parallel.sh $src/Rscripts \
     --strand_check 1 \
-    --outdir out \
+    --outdir ~/BridgePRS/out \
     --by_chr 1 \
     --by_chr_sumstats .glm.linear.gz \
     --pop1 EUR \
@@ -30,11 +44,9 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --sumstats_allele1 ALT \
     --sumstats_allele0 REF \
     --pheno_name y \
-    --n_cores 20 \
+    --n_cores 8 \
     --prop_train 0.6 \
     --prop_test 0.3 \
-    --do_block_pop1 1 \
-    --do_block_pop2 1 \
     --do_sumstat_pop1 1 \
     --do_sumstat_pop2 1 \
     --do_clump_pop1 1 \
@@ -45,5 +57,5 @@ ${src}/Bash/BridgePRS_sumstat.sh $src/Rscripts \
     --do_clump_pop2 1 \
     --do_est_beta_pop2 1 \
     --do_sumstat_ensembl_pop2 1 \
-    --do_pool 1 \
-    --n_folds 2
+    --clean 0 \
+    --iter $iter

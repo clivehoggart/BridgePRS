@@ -1,3 +1,18 @@
+mvrnorm.ldmat <- function( ld.mat, tol = 1e-06 ){
+    p <- nrow(ld.mat)
+    ev <- eigen( ld.mat, symmetric=TRUE, only.values=TRUE )$values
+    min_ev <- min(ev)
+    target_min_ev <- max(1e-4, 0.01 * mean(ev))
+    lambda <- target_min_ev - min_ev
+    diag.ld.mat <- diag(diag(ld.mat))
+    while( !all(ev >= -tol * abs(ev[1L])) ){
+        ld.mat <- ld.mat + lambda * diag.ld.mat
+        ev <- eigen( ld.mat, symmetric=TRUE, only.values=TRUE )$values
+        lambda <- lambda * 10
+    }
+    return(ld.mat)
+}
+
 standardise <- function(X){
     m <- apply(X,2,mean,na.rm=TRUE)
     X <- t(t(X)-m)
@@ -381,16 +396,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             ref.stats$af <- ref.stats$af[ptr.use,drop=FALSE]
             ref.stats$ld <- ref.stats$ld[ptr.use,ptr.use,drop=FALSE]
 
-            ld.mat <- ref.stats$ld
-            ev <- eigen(ld.mat, only.values = TRUE)$values
-            positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
-            i <- 0
-            while( !positive.definite & k>1 ){
-                i <- i+1
-                ld.mat <- ref.stats$ld + ld.shrink[i]*diag(diag(ref.stats$ld))
-                ev <- eigen(ld.mat, only.values = TRUE)$values
-                positive.definite <- ifelse( !all(ev >= -tol * abs(ev[1L])), FALSE, TRUE )
-            }
+            ld.mat <- mvrnorm.ldmat( ref.stats$ld )
 
             VX <- diag(ld.mat)
             XtY <- n.all * VX * sumstats$BETA
@@ -400,26 +406,28 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             m <- ifelse( m1<t(m1), m1, t(m1) )
             Sigma <- n.all * m * ld.mat
 
-            m <- XtY * n.prop[1]
+            mu1 <- XtY * n.prop[1]
             v <- Sigma * n.all * n.prop[1] * (1 - n.prop[1])
-            XtY.1 <- mvrnorm( n=n.folds, mu=m, Sigma=v, tol=tol )
+#            XtY.1 <- mvrnorm( n=n.folds, mu=mu1, Sigma=v, tol=tol )
+            XtY.1 <- matrix( mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol ), nrow=n.folds )
+            XtY.1 <- t(XtY.1) + mu1
 
-            m <- (XtY-t(XtY.1)) * n.prop[2] / (1-n.prop[1])
+            mu2 <- (XtY-XtY.1) * n.prop[2] / (1-n.prop[1])
             v <- Sigma * n.all * n.prop[2] * (1 - n.prop[1]-n.prop[2]) / (1-n.prop[1])
-#            XtY.2 <- mvrnorm( n=1, mu=m, Sigma=v )
-            XtY.2 <- mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol )
-            XtY.2 <- t(t(XtY.2) - m)
+#            XtY.2 <- mvrnorm( n=1, mu=mu2, Sigma=v )
+            XtY.2 <- matrix( mvrnorm( n=n.folds, mu=rep(0,k), Sigma=v, tol=tol ), nrow=n.folds )
+            XtY.2 <- t(XtY.2) + mu2
 
-            XtY.3 <- t(XtY - t(XtY.1) - t(XtY.2))
+            XtY.3 <- XtY - XtY.1 - XtY.2
 
-            beta.1 <- solve(ld.mat) %*% t(XtY.1) / (n.all*n.prop[1])
+#            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
+            beta.1 <- t(matrix(XtY.1,nrow=n.folds)) / (diag(ld.mat)*n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
 #            sumstats.1 <- data.frame( sumstats$SNP,
 #                                     sumstats$ALLELE1, sumstats$ALLELE0,
 #                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
-            sumstats.1 <- list( sumstats$SNP,
-                                     beta.1, se.1, p.1, XtY.2, XtY.3 )
+            sumstats.1 <- list( sumstats$SNP, beta.1, se.1, p.1, XtY.2, XtY.3 )
         }else{
 #        colnames(sumstats.1) <- c('SNP','ALLELE1','ALLELE0','BETA','SE','P',
 #                                  'XtY.2','XtY.3')
