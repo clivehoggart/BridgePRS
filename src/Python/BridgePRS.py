@@ -24,9 +24,11 @@ class BridgePRS:
             #    if not self.args.noplots: 
             #        bridge_error(['Matplotlib Not Found','*please install matplotlib or run program with --noPlots']) 
             if   self.args.module == 'tools':     BridgeRun(self).apply() 
-            elif self.args.module == 'pipeline':  self.easyrun() 
             elif self.args.module == 'analyze':   self.analyze(self.args.cmd, self.args.result_files, PATH = self.io.paths['home']) 
-            else:                                 self.execute(self.io.pipeline) 
+            else: 
+                if self.args.phenotype is None: bridge_error('Phenotype field required for this option (see above)') 
+                if self.args.module == 'pipeline':  self.easyrun() 
+                else:                               self.execute(self.io.pipeline) 
          
         def easyrun(self): 
             if self.args.module == 'pipeline' and not self.args.port: modules = ['prs-single','build-model','prs-prior'] 

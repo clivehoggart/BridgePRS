@@ -410,8 +410,10 @@ for( chr in 1:22 ){
         }
     }
     colnames(beta.bar11) <- c('snp','effect.allele','ref.allele','effect')
-    colnames(beta.bar22) <- c('snp','effect.allele','ref.allele','effect')
-
+    #colnames(beta.bar22) <- c('snp','effect.allele','ref.allele','effect')
+    if( !is.null(opt$models2) ){
+        colnames(beta.bar22) <- c('snp','effect.allele','ref.allele','effect')
+        }
     if( !is.null(opt$pred2) ){
         i.snps <- intersect( beta.bar11$snp, beta.bar22$snp)
         ptr1 <- match( i.snps, beta.bar11$snp )

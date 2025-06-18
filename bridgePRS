@@ -319,7 +319,7 @@ if __name__ == '__main__':
     pipeline          = subs.add_parser('pipeline', help=mps.help_str('pipeline')).add_subparsers(help=(sub_help),dest='cmd',title="Commands")
     pipeline.required = True
     go               =  pipeline.add_parser('go',parents=[Pipeline, Global], help=mps.sub_help('go'), formatter_class=mps.formatter_class)
-    go.add_argument('--port',       dest='port',      action='store_true',  default=False,              help=ap.SUPPRESS) 
+    go.add_argument('--port',       dest='port',      action='store_true',  default=False,              help='Include PRS Port') 
     check             =  pipeline.add_parser('check',parents=[Pipeline, Global], help=mps.sub_help('check'), formatter_class=mps.formatter_class)
     
 

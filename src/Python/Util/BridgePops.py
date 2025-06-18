@@ -21,7 +21,8 @@ class BridgePops:
         self.setup_paths(self.args) 
         self.arglen, self.target, self.base, self.names = len(self.argnames), None, None, [None, None] 
         if 'config' in self.argnames and len(vars(self.args)['config']) > 0: self.names = [P['pop'] for P in self.args.config] 
-        else:                                                                self.names = [x for x in self.args.pop if x is not None] 
+        elif 'pop' in self.args:                                             self.names = [x for x in self.args.pop if x is not None] 
+        else:                                                                self.names = [] 
         return self 
 
 

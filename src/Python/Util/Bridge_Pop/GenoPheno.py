@@ -6,6 +6,14 @@ from collections import Counter as cc
 
 
 
+def geno_warn(eString):
+    if type(eString) in [list,tuple]:
+        sys.stderr.write('\nBridgeWarning: '+eString[0]+'\n')
+        for es in eString[1::]: sys.stderr.write('    '+es+'\n')
+    else: sys.stderr.write('\nBridgeWarning: '+eString+'\n')
+
+
+
 
 
 class GenoPheno: 
@@ -91,8 +99,10 @@ class GenoPheno:
                 else:                     pheno_cands.pop(pheno_cands.index(c)) 
 
         self.availible_fields = ','.join(self.header) 
-        #if self.phenotype is None: self.mps.error('Phenotype field required (--phenotype)\n Available Fields: '+','.join(self.header)) 
-        if self.phenotype is not None: 
+        
+
+        if self.phenotype is None: geno_warn('No phenotype supplied (--phenotype)\n               Available Fields: '+','.join(self.header)) 
+        else: 
             self.fields['NAME'] = self.phenotype 
             self.X_fields.extend(['--pheno.name',self.phenotype]) 
             if self.phenotype not in self.header: self.mps.error('Invalid phenotype field name(s) supplied '+self.phenotype+', Available Fields: '+','.join(self.header)) 
