@@ -229,12 +229,14 @@ n_iter=5
 
 for ((iter = 1; iter <= ${n_folds}; iter++))
 do
+    mkdir $blockdir/$pop1
     mkdir -p $outdir/$pop1/fold$iter
     mkdir -p $outdir/$pop1/fold$iter/clump
     mkdir -p $outdir/$pop1/fold$iter/models
     mkdir -p $outdir/$pop1/fold$iter/models/lambda
     mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
     
+    mkdir $blockdir/$pop2
     mkdir -p $outdir/$pop2/fold$iter
     mkdir -p $outdir/$pop2/fold$iter/clump
     mkdir -p $outdir/$pop2/fold$iter/models
@@ -251,7 +253,7 @@ then
 	then
 	    bfile1=$pop1_ld_bfile$chr
 	fi
-	safe_rm $blockdir/$pop1/blocks/chr$chr.blocks*
+	safe_rm $blockdir/$pop1/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop1_ld_ids \
@@ -264,8 +266,8 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 500 \
 	      --blocks-inform-frac 0.1 \
-	      --out $blockdir/${pop1}/blocks/chr${chr}
-	gzip $blockdir/$pop1/blocks/chr$chr.blocks.det
+	      --out $blockdir/${pop1}/chr${chr}
+	gzip $blockdir/$pop1/chr$chr.blocks.det
     done
 fi
 
@@ -278,7 +280,7 @@ then
 	then
 	    bfile1=$pop2_ld_bfile$chr
 	fi
-	safe_rm $blockdir/${pop2}/blocks/chr$chr.blocks*
+	safe_rm $blockdir/${pop2}/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
 	      --keep $pop2_ld_ids \
@@ -291,8 +293,8 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 1000 \
 	      --blocks-inform-frac 0.1 \
-	      --out $blockdir/${pop2}/blocks/chr${chr}
-	gzip $blockdir/${pop2}/blocks/chr$chr.blocks.det
+	      --out $blockdir/${pop2}/chr${chr}
+	gzip $blockdir/${pop2}/chr$chr.blocks.det
     done
 fi
 
