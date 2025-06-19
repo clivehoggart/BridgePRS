@@ -40,7 +40,6 @@ by_chr=0
 by_chr_ld=0
 by_chr_target=0
 by_chr_sumstats=0
-indir=0
 pop1="pop1"
 pop2="pop2"
 thinned_snplist=0
@@ -73,7 +72,7 @@ clean=1
 #  exit 2
 #}
 
-PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,blockdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,indir:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test:,clean: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n ridgePRS -o b:o:n:c:d:e:f:g:h:i:j:k:l:m:p:q:r:s:t:u:v:w:x:y:z:1:2:3:4:5:6:7: --long outdir:,blockdir:,n_cores:,pop1_ld_ids:,pop2_ld_ids:,pop1_ld_bfile:,pop2_ld_bfile:,pop1_sumstats:,pop2_sumstats:,pop1_valid_data:,pop2_valid_data:,pop1_test_data:,pop2_test_data:,pop1_qc_snplist:,pop2_qc_snplist:,do_clump_pop1:,do_est_beta_pop1:,,do_est_beta_pop1_precision:,do_est_beta_InformPrior:,do_clump_pop2:,do_est_beta_pop2:,do_est_beta_pop2:,do_block_pop1:,do_sumstat_pop1:,do_block_pop2:,do_sumstat_pop2:,do_sumstat_ensembl_pop1:,do_sumstat_ensembl_pop2:,by_chr:,by_chr_target:,by_chr_ld:,cov_names:,pheno_name:,by_chr_sumstats:,pop2:,thinned_snplist:,n_max_locus:,ranking:,pop1:,ids_col:,sumstats_snpID:,sumstats_beta:,sumstats_allele1:,sumstats_allele0:,sumstats_p:,sumstats_n:,sumstats_se:,sumstats_frq:,strand_check:,fst:,binary:,N_pop1:,N_pop2:,do_pool:,n_folds:,prop_train:,prop_test:,clean: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -117,7 +116,6 @@ do
     --by_chr_ld) by_chr_ld=$2 ; shift 2 ;;
     --cov_names) cov_names=$2 ; shift 2 ;;
     --pheno_name) pheno_name=$2 ; shift 2 ;;
-    --indir) indir=$2 ; shift 2 ;;
     --by_chr_sumstats) by_chr_sumstats=$2 ; shift 2 ;;
     --pop1) pop1=$2 ; shift 2 ;;
     --pop2) pop2=$2 ; shift 2 ;;
@@ -150,10 +148,6 @@ do
   esac
 done
 
-if [ $indir = 0 ]
-then
-    indir=$outdir
-fi
 if [ $by_chr_ld = 0 ]
 then
     by_chr_ld=$by_chr
@@ -196,7 +190,6 @@ echo "by_chr_ld : $by_chr_ld"
 echo "by_chr_sumstats : $by_chr_sumstats"
 echo "pheno_name : $pheno_name"
 echo "cov_names : $cov_names"
-echo "indir : $indir"
 echo "pop1 : $pop1"
 echo "pop2 : $pop2"
 echo "n_max_locus : $n_max_locus"
@@ -208,11 +201,12 @@ echo "fst : $fst"
 echo "n_folds : $n_folds"
 echo ""
 
+mkdir -p $outdir
 mkdir -p $outdir/$pop1
-mkdir -p $outdir/$pop1/blocks
-
 mkdir -p $outdir/$pop2
-mkdir -p $outdir/$pop2/blocks
+mkdir -p $blockdir
+mkdir -p $blockdir/$pop1
+mkdir -p $blockdir/$pop2
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
@@ -220,23 +214,16 @@ then
     exit
 fi
 
-if [ $indir == "" ]
-then
-    indir=$outdir
-fi
-
 n_iter=5
 
 for ((iter = 1; iter <= ${n_folds}; iter++))
 do
-    mkdir $blockdir/$pop1
     mkdir -p $outdir/$pop1/fold$iter
     mkdir -p $outdir/$pop1/fold$iter/clump
     mkdir -p $outdir/$pop1/fold$iter/models
     mkdir -p $outdir/$pop1/fold$iter/models/lambda
     mkdir -p $outdir/$pop1/fold$iter/sumstat_subset
     
-    mkdir $blockdir/$pop2
     mkdir -p $outdir/$pop2/fold$iter
     mkdir -p $outdir/$pop2/fold$iter/clump
     mkdir -p $outdir/$pop2/fold$iter/models
