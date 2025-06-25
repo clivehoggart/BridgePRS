@@ -250,15 +250,16 @@ S.opt <- as.numeric(tmp[[1]][3])
 lambda.opt <- as.numeric(tmp[[1]][2])
 p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
-            paste( opt$workdir,'/fold',opt$fold,'/best_model_params.dat', sep='' ),
+            paste0( opt$workdir,'/fold',opt$fold,'/best_model_params.dat' ),
             row.names=FALSE, quote=FALSE )
 write.table( data.frame( genome.alleles, genome.models[[ii]][,s2[1]] ),
-            paste( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat', sep='' ),
+            paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat' ),
             col.names=FALSE, quote=FALSE )
 
 n.test <- opt$N.pop * opt$prop.test
 R2.model <- vector()
 ensembl.model <- list()
+prs.norm <- list()
 for( k in 1:n.models ){
     ptr.use <- which(diag(Sigma.prs[[k]])!=0)
     Sigma.prs[[k]] <- Sigma.prs[[k]][ptr.use,ptr.use]
@@ -267,12 +268,12 @@ for( k in 1:n.models ){
     genome.models[[k]] <- genome.models[[k]][,ptr.use]
     n.prs <- length(ptr.use)
 
-    prs.norm <- 1/sqrt(diag(Sigma.prs[[k]]))
-    Sigma.prs[[k]] <- diag(prs.norm) %*% Sigma.prs[[k]] %*% diag(prs.norm)
-    betatXtY.2[[k]] <- betatXtY.2[[k]] * prs.norm
-    betatXtY.3[[k]] <- betatXtY.3[[k]] * prs.norm
+    prs.norm[[k]] <- 1/sqrt(diag(Sigma.prs[[k]]))
+    Sigma.prs[[k]] <- diag(prs.norm[[k]]) %*% Sigma.prs[[k]] %*% diag(prs.norm[[k]])
+    betatXtY.2[[k]] <- betatXtY.2[[k]] * prs.norm[[k]]
+    betatXtY.3[[k]] <- betatXtY.3[[k]] * prs.norm[[k]]
 
-    lambda.range <- c( 1, 10, n.test )
+    lambda.range <- c( 1, 100, n.test )
     R2.ensembl <- vector(length=3)
     for( kk in 1:length(lambda.range) ){
         R2.ensembl[kk] <- enet.R2( lambda.range[kk], n.test*Sigma.prs[[k]],
@@ -288,13 +289,16 @@ for( k in 1:n.models ){
         lambda <- lambda.opt$maximum
     }
     prs.weights <- solve( diag(lambda,n.prs) + n.test*Sigma.prs[[k]] ) %*% betatXtY.2[[k]]
+#    R2.model[k] <- (t(prs.weights) %*% betatXtY.3[[k]])^2 / (diag(t(prs.weights) %*% Sigma.prs[[k]] %*% prs.weights))
     R2.model[k] <- 2*log(abs(t(prs.weights) %*% betatXtY.3[[k]])) - log(diag(t(prs.weights) %*% Sigma.prs[[k]] %*% prs.weights))
-    ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.norm * prs.weights )
+    ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.norm[[k]] * prs.weights )
 }
 s3 <- order( R2.model, decreasing=TRUE )
 write.table( data.frame( genome.alleles, ensembl.model[s3[1]] ),
-            paste( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat', sep='' ),
+            paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat' ),
             col.names=FALSE, quote=FALSE )
+
+save.image(paste0( opt$workdir,'/fold',opt$fold,'debug.RData'))
 
 #cbind(lambda,R2.ensembl/max(R2.ensembl))
 #s[1:4]
