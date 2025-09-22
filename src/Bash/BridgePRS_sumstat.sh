@@ -450,11 +450,12 @@ then
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
  	    --fpath $FPATH \
 	    --sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr  \
+	    --by.chr.sumstats .dat.gz \
 	    --ld.ids $pop2_ld_ids \
+	    --bfile $pop2_ld_bfile \
 	    --prior $outdir/${pop1}/fold${iter}/models/prior \
 	    --param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
 	    --beta.stem $outdir/${pop2}/fold$iter/models/stage2 \
-	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
 	    --sumstats.snpID SNP \
 	    --sumstats.betaID BETA \
@@ -464,7 +465,6 @@ then
 	    --N.pop1 $N_pop1 \
 	    --N.pop2 $N_pop2 \
 	    --n.cores $n_cores \
-	    --by.chr.sumstats .dat.gz \
 	    --ranking pv \
 	    --strand.check $strand_check \
 	    --by.chr $by_chr_ld
