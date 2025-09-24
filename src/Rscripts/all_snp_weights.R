@@ -4,11 +4,10 @@ options(stringsAsFactors=FALSE)
 library(BEDMatrix)
 
 enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
-    n.prs <- length(ptr.use)
-    prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs[ptr.use,ptr.use] ) %*%
-        betatXtY.2[ptr.use]
-    log.R2.ensembl <- 2*log(abs(t(prs.weights) %*% betatXtY.3[ptr.use])) -
-        log(t(prs.weights) %*% Sigma.prs[ptr.use,ptr.use] %*% prs.weights)
+    n.prs <- length(betatXtY.2)
+    prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs ) %*% betatXtY.2
+    log.R2.ensembl <- 2*log(abs(t(prs.weights) %*% betatXtY.3)) -
+        log(t(prs.weights) %*% Sigma.prs %*% prs.weights)
     return(log.R2.ensembl)
 }
 
@@ -265,6 +264,14 @@ R2.model <- vector()
 ensembl.model <- list()
 prs.norm <- list()
 ptr.use <- list()
+load('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold2debug.RData')
+enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
+    n.prs <- length(betatXtY.2)
+    prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs ) %*% betatXtY.2
+    log.R2.ensembl <- 2*log(abs(t(prs.weights) %*% betatXtY.3)) -
+        log(t(prs.weights) %*% Sigma.prs %*% prs.weights)
+    return(log.R2.ensembl)
+}
 for( k in 1:n.models ){
     R2.indiv2 <- 2*log(abs( betatXtY.2[[k]] )) - log(diag(Sigma.prs[[k]]))
     R2.indiv3 <- 2*log(abs( betatXtY.3[[k]] )) - log(diag(Sigma.prs[[k]]))
@@ -272,16 +279,17 @@ for( k in 1:n.models ){
     R2.indiv3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
     if( k<3 ){
         ptr.use[[k]] <- which( diag(Sigma.prs[[k]])!=0 &
-                               R2.indiv2 / max(R2.indiv2,na.rm=TRUE) > 0.1 &
-                               R2.indiv3 / max(R2.indiv3,na.rm=TRUE) > 0.1 )
+                               R2.indiv2 / max(R2.indiv2,na.rm=TRUE) > 0.2 &
+                               R2.indiv3 / max(R2.indiv3,na.rm=TRUE) > 0.2 )
     }else{
-        ptr.use[[3]] <- c( match( names(betatXtY.2[[1]][ptr.use[[1]]]), names(betatXtY.2[[3]]) ),
-                          match( names(betatXtY.2[[2]][ptr.use[[2]]]), names(betatXtY.2[[3]]) ) )
+        ptr.use[[3]] <- c( match( rownames(betatXtY.2[[1]]), rownames(betatXtY.2[[3]]) ),
+                          match( rownames(betatXtY.2[[2]]), rownames(betatXtY.2[[3]]) ) )
     }
-    Sigma.prs[[k]] <- Sigma.prs[[k]][ptr.use,ptr.use]
-    betatXtY.2[[k]] <- betatXtY.2[[k]][ptr.use,]
-    betatXtY.3[[k]] <- betatXtY.3[[k]][ptr.use,]
-    genome.models[[k]] <- genome.models[[k]][,ptr.use]
+    n.prs <- length(ptr.use[[k]])
+    Sigma.prs[[k]] <- Sigma.prs[[k]][ptr.use[[k]],ptr.use[[k]]]
+    betatXtY.2[[k]] <- betatXtY.2[[k]][ptr.use[[k]],,drop=FALSE]
+    betatXtY.3[[k]] <- betatXtY.3[[k]][ptr.use[[k]],,drop=FALSE]
+    genome.models[[k]] <- genome.models[[k]][,ptr.use[[k]]]
 
     prs.norm[[k]] <- 1/sqrt(diag(Sigma.prs[[k]]))
     Sigma.prs[[k]] <- diag(prs.norm[[k]]) %*% Sigma.prs[[k]] %*% diag(prs.norm[[k]])
@@ -291,8 +299,7 @@ for( k in 1:n.models ){
     lambda.range1 <- c( n.test, 10*n.test )
 #    R2.ensembl <- vector(length=3)
 #    for( kk in 1:length(lambda.range) ){
-#        R2.ensembl[kk] <- enet.R2( lambda.range[kk], n.test, Sigma.prs[[k]],
-#                                  betatXtY.2[[k]], betatXtY.3[[k]] )
+#        R2.ensembl[kk] <- enet.R2( n.test, n.test, Sigma.prs[[k]], betatXtY.2[[k]], betatXtY.3[[k]] )
 #    }
 #    max_idx <- which.max(R2.ensembl)
 #    if( max_idx==1 )
