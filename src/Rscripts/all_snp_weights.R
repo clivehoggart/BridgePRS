@@ -240,31 +240,8 @@ for( chr in 1:22 ){
     }
 }
 
-ii <- ifelse( n.models==1, 1, 3 )
-R2.indiv <- 2*log(abs( betatXtY.2[[ii]] + betatXtY.3[[ii]] )) - log(diag(Sigma.prs[[ii]]))
-s2 <- order( R2.indiv, decreasing=TRUE )
-colnames(models[[ii]])[s2[1:10]]
-tmp <- strsplit( colnames(models[[ii]])[s2[1]], '_' )
-S.opt <- as.numeric(tmp[[1]][3])
-lambda.opt <- as.numeric(tmp[[1]][2])
-p.opt <- as.numeric(tmp[[1]][4])
-write.table( data.frame(S.opt,lambda.opt,p.opt),
-            paste0( opt$workdir,'/fold',opt$fold,'/best_model_params.dat' ),
-            row.names=FALSE, quote=FALSE )
-write.table( data.frame( genome.alleles, genome.models[[ii]][,s2[1]] ),
-            paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat' ),
-            col.names=TRUE, quote=FALSE )
-out.data <-  data.frame( rownames(genome.models[[3]]), genome.alleles, genome.models[[3]] )
-colnames(out.data)[1] <- "SNP.id"
-fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_all_models.dat' ),
-       col.names=TRUE, quote=FALSE, sep=" " )
-
-n.test <- opt$N.pop * opt$prop.test
-R2.model <- vector()
-ensembl.model <- list()
-prs.norm <- list()
-ptr.use <- list()
-load('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold2debug.RData')
+for( kk in 1:10 ){
+load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold',kk,'debug.RData'))
 enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
     n.prs <- length(betatXtY.2)
     prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs ) %*% betatXtY.2
@@ -272,15 +249,22 @@ enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
         log(t(prs.weights) %*% Sigma.prs %*% prs.weights)
     return(log.R2.ensembl)
 }
+
+n.test <- opt$N.pop * opt$prop.test
+n.test.all <- opt$N.pop * (1 - opt$prop.train)
+R2.model <- vector()
+ensembl.model <- list()
+prs.norm <- list()
+ptr.use <- list()
 for( k in 1:n.models ){
     R2.indiv2 <- 2*log(abs( betatXtY.2[[k]] )) - log(diag(Sigma.prs[[k]]))
     R2.indiv3 <- 2*log(abs( betatXtY.3[[k]] )) - log(diag(Sigma.prs[[k]]))
-    R2.indiv2 <- exp(R2.indiv2 - max(R2.indiv2,na.rm=TRUE))
-    R2.indiv3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
+    R2.2 <- exp(R2.indiv2 - max(R2.indiv2,na.rm=TRUE))
+    R2.3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
     if( k<3 ){
         ptr.use[[k]] <- which( diag(Sigma.prs[[k]])!=0 &
-                               R2.indiv2 / max(R2.indiv2,na.rm=TRUE) > 0.2 &
-                               R2.indiv3 / max(R2.indiv3,na.rm=TRUE) > 0.2 )
+                               R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
+                               R2.3 / max(R2.3,na.rm=TRUE) > 0.2 )
     }else{
         ptr.use[[3]] <- c( match( rownames(betatXtY.2[[1]]), rownames(betatXtY.2[[3]]) ),
                           match( rownames(betatXtY.2[[2]]), rownames(betatXtY.2[[3]]) ) )
@@ -292,6 +276,7 @@ for( k in 1:n.models ){
     genome.models[[k]] <- genome.models[[k]][,ptr.use[[k]]]
 
     prs.norm[[k]] <- 1/sqrt(diag(Sigma.prs[[k]]))
+    genome.models[[k]] <- genome.models[[k]] %*% diag(prs.norm[[k]])
     Sigma.prs[[k]] <- diag(prs.norm[[k]]) %*% Sigma.prs[[k]] %*% diag(prs.norm[[k]])
     betatXtY.2[[k]] <- betatXtY.2[[k]] * prs.norm[[k]]
     betatXtY.3[[k]] <- betatXtY.3[[k]] * prs.norm[[k]]
@@ -316,26 +301,42 @@ for( k in 1:n.models ){
     prs.weights <- solve( diag(lambda,n.prs) + n.test*Sigma.prs[[k]] ) %*% betatXtY.2[[k]]
     R2.model[k] <- 2*log(abs(t(prs.weights) %*% betatXtY.3[[k]])) -
         log(diag(t(prs.weights) %*% Sigma.prs[[k]] %*% prs.weights))
-    ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.norm[[k]] * prs.weights )
+    prs.weights <- solve( diag(lambda,n.prs) + n.test.all*Sigma.prs[[k]] ) %*%
+        ( betatXtY.2[[k]] + betatXtY.3[[k]] )
+    ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.weights )
 }
+print(max(R2.indiv3,na.rm=TRUE))
+print(R2.model)
+
 s3 <- order( R2.model, decreasing=TRUE )
-write.table( data.frame( genome.alleles, ensembl.model[s3[1]] ),
-            paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat' ),
-            col.names=FALSE, quote=FALSE )
+ptr <- s3[1]
+ptr <- 2
+out.data <-  data.frame( rownames(genome.models[[ptr]]), genome.alleles, ensembl.model[[ptr]] )
+colnames(out.data)[c(1,4)] <- c( "SNP.id", "beta.w" )
+fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat' ),
+       col.names=TRUE, quote=FALSE, sep=" " )
 
-save.image(paste0( opt$workdir,'/fold',opt$fold,'debug.RData'))
 
-#cbind(lambda,R2.ensembl/max(R2.ensembl))
-#s[1:4]
+ii <- ifelse( n.models==1, 1, 3 )
+R2.indiv <- 2*log(abs( betatXtY.2[[ii]] + betatXtY.3[[ii]] ))
+s2 <- order( R2.indiv, decreasing=TRUE )
+colnames(models[[ii]])[s2[1:10]]
+tmp <- strsplit( colnames(models[[ii]])[s2[1]], '_' )
+S.opt <- as.numeric(tmp[[1]][3])
+lambda.opt <- as.numeric(tmp[[1]][2])
+p.opt <- as.numeric(tmp[[1]][4])
+write.table( data.frame(S.opt,lambda.opt,p.opt),
+            paste0( opt$workdir,'/fold',opt$fold,'/best_model_params.dat' ),
+            row.names=FALSE, quote=FALSE )
 
-data.frame(prs.weights,R2.indiv-max(R2.indiv))
+out.data <-  data.frame( rownames(genome.models[[ii]]), genome.alleles, genome.models[[ii]][,s2[1]] )
+colnames(out.data)[c(1,4)] <- c( "SNP.id", colnames(genome.models[[ii]])[s2[1]] )
+fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat' ),
+       col.names=TRUE, quote=FALSE, sep=" " )
 
-#R2.indiv1 <- 2*log(abs( betatXtY.3[[1]] )) - log(diag(Sigma.prs[[1]]))
-#R2.indiv2 <- 2*log(abs( betatXtY.3[[2]] )) - log(diag(Sigma.prs[[2]]))
-#R2.indiv3 <- 2*log(abs( betatXtY.3[[3]] )) - log(diag(Sigma.prs[[3]]))
-#s1 <- order( R2.indiv1, decreasing=TRUE )
-#s2 <- order( R2.indiv2, decreasing=TRUE )
-#s3 <- order( R2.indiv3, decreasing=TRUE )
-#t(t(R2.indiv1[s1[1:5]]))
-#t(t(R2.indiv2[s2[1:5]]))
-#t(t(R2.indiv3[s3[1:5]]))
+out.data <-  data.frame( rownames(genome.models[[ii]]), genome.alleles, genome.models[[ii]] )
+colnames(out.data)[1] <- "SNP.id"
+fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_all_models.dat' ),
+       col.names=TRUE, quote=FALSE, sep=" " )
+
+#save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
