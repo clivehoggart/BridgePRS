@@ -303,6 +303,7 @@ for( k in 1:n.models ){
         log(diag(t(prs.weights) %*% Sigma.prs[[k]] %*% prs.weights))
     prs.weights <- solve( diag(lambda,n.prs) + n.test.all*Sigma.prs[[k]] ) %*%
         ( betatXtY.2[[k]] + betatXtY.3[[k]] )
+    prs.weights <- prs.weights / sum(prs.weights)
     ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.weights )
 }
 print(max(R2.indiv3,na.rm=TRUE))
