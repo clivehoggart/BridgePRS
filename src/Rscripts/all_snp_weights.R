@@ -3,14 +3,6 @@ library("optparse")
 options(stringsAsFactors=FALSE)
 library(BEDMatrix)
 
-enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
-    n.prs <- length(betatXtY.2)
-    prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs ) %*% betatXtY.2
-    log.R2.ensembl <- 2*log(abs(t(prs.weights) %*% betatXtY.3)) -
-        log(t(prs.weights) %*% Sigma.prs %*% prs.weights)
-    return(log.R2.ensembl)
-}
-
 blocks.stats <- function( block.i, sumstats, models ){
     Sigma.prs <- list()
     betatXtY.2 <- list()
@@ -62,12 +54,6 @@ option_list = list(
                 metavar="character"),
     make_option(c("--strand.check"), type="numeric", default=0,
                 help="Keep only non-ambiguous SNPs", metavar="numeric"),
-    make_option(c("--N.pop"), type="numeric", default=0,
-                help="GWAS sample size", metavar="numeric"),
-    make_option(c("--prop.train"), type="numeric", default=0,
-                help="GWAS training sample proportion", metavar="numeric"),
-    make_option(c("--prop.test"), type="numeric", default=0,
-                help="Testing sample proportion", metavar="numeric"),
     make_option(c("--fold"), type="numeric", default=0,
                 help="Fold", metavar="numeric"),
     make_option(c("--n.cores"), type="numeric", default=1,
@@ -189,155 +175,63 @@ for( chr in 1:22 ){
     }
 
     all.block.snps <- vector()
-
-#    tmp <- mclapply( 1:nrow(blocks),
-#                    function(i){
-#                        block.stats( block.i=blocks[i,], sumstats, models )},
-#                    mc.cores=as.numeric(opt$n.cores) )
-
+    k <- n.models
     for( i in 1:nrow(blocks) ){
         block.snps.all <-  unlist(strsplit( blocks$SNPS[i], '\\|' ))
-        block.snps <- list()
-        block.snps1 <- vector()
-        for( k in 1:n.models ){
-            block.snps[[k]] <- intersect( rownames(models[[k]]), block.snps.all )
-            if( length(block.snps[[k]])>0 ){
-                ptr.prs <- match( block.snps[[k]], rownames(models[[k]]) )
-                ptr.ss <- match( block.snps[[k]], sumstats$SNP )
-                ref.stats <- est.ref.stats( block.snps[[k]], ld.ids, X.bed, bim,
-                                           sumstats$ALLELE1[ptr.ss],
-                                           sumstats$ALLELE0[ptr.ss],
-                                           opt$strand.check, n.eff=FALSE )
-                beta <- models[[k]][ptr.prs,,drop=FALSE]
-                Sigma.prs[[k]] <- Sigma.prs[[k]] + t(beta) %*% ref.stats$ld %*% beta
-                betatXtY.2[[k]] <- betatXtY.2[[k]] +
-                    t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
-                betatXtY.3[[k]] <- betatXtY.3[[k]] +
-                    t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
-                block.snps1 <- union( block.snps1, block.snps[[k]] )
-            }
-            all.block.snps <- c( all.block.snps, block.snps1 )
+#        block.snps <- list()
+#        block.snps1 <- vector()
+#        for( k in 1:n.models ){
+        block.snps <- intersect( rownames(models[[k]]), block.snps.all )
+        if( length(block.snps[[k]])>0 ){
+            ptr.prs <- match( block.snps, rownames(models[[k]]) )
+            ptr.ss <- match( block.snps, sumstats$SNP )
+            ref.stats <- est.ref.stats( block.snps, ld.ids, X.bed, bim,
+                                       sumstats$ALLELE1[ptr.ss],
+                                       sumstats$ALLELE0[ptr.ss],
+                                       opt$strand.check, n.eff=FALSE )
+            beta <- models[[k]][ptr.prs,,drop=FALSE]
+            Sigma.prs <- Sigma.prs + t(beta) %*% ref.stats$ld %*% beta
+            betatXtY.2 <- betatXtY.2 + t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
+            betatXtY.3 <- betatXtY.3 + t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
+            all.block.snps <- union( all.block.snps, block.snps )
+#            }
+#            all.block.snps <- c( all.block.snps, block.snps1 )
         }
 #        max.const <- max( max.const, diag(ref.stats$ld) * sumstats$SE[ptr.ss]^2 )
     }
     single.snps <- setdiff( snps, all.block.snps )
     for( i in 1:length(single.snps) ){
         ptr.ss <- match( single.snps[i], sumstats$SNP )
-        for( k in 1:n.models ){
+#        for( k in 1:n.models ){
             ptr.prs <- match( single.snps[i], rownames(models[[k]]) )
             ref.stats <- est.ref.stats( single.snps[i], ld.ids, X.bed, bim,
                                        sumstats$ALLELE1[ptr.ss],
                                        sumstats$ALLELE0[ptr.ss],
                                        opt$strand.check, n.eff=FALSE )
             beta <- models[[k]][ptr.prs,,drop=FALSE]
-            Sigma.prs[[k]] <- Sigma.prs[[k]] +  t(beta) %*% ref.stats$ld %*% beta
-            betatXtY.2[[k]] <- betatXtY.2[[k]] +
-                t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
-            betatXtY.3[[k]] <- betatXtY.3[[k]] +
-                t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
-        }
-#        max.const <- max( max.const, ref.stats$ld * sumstats$SE[ptr.ss]^2 )
+            Sigma.prs <- Sigma.prs +  t(beta) %*% ref.stats$ld %*% beta
+            betatXtY.2 <- betatXtY.2 + t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
+            betatXtY.3 <- betatXtY.3 + t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
+#        }
     }
 }
+
+#    tmp <- mclapply( 1:nrow(blocks),
+#                    function(i){
+#                        block.stats( block.i=blocks[i,], sumstats, models )},
+#                    mc.cores=as.numeric(opt$n.cores) )
 
 for( kk in 1:10 ){
 load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold',kk,'debug.RData'))
-enet.R2 <- function( lambda, n, Sigma.prs, betatXtY.2, betatXtY.3 ){
-    n.prs <- length(betatXtY.2)
-    prs.weights <- solve( diag(lambda,n.prs) + n*Sigma.prs ) %*% betatXtY.2
-    log.R2.ensembl <- 2*log(abs(t(prs.weights) %*% betatXtY.3)) -
-        log(t(prs.weights) %*% Sigma.prs %*% prs.weights)
-    return(log.R2.ensembl)
+write.table( betatXtY.2[[n.models]],
+            paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_2.dat' ),
+            row.names=TRUE, col.names=FALSE, quote=FALSE )
+write.table( betatXtY.3[[n.models]],
+            paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_3.dat' ),
+            row.names=TRUE, col.names=FALSE, quote=FALSE )
+fwrite( data.frame( rownames(genome.models[[n.models]]), genome.alleles, genome.models[[n.models]] ),
+       paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/snp_weights.dat' ) )
+fwrite( as.data.table(Sigma.prs[[n.models]]),
+       paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/Sigma_prs.dat' ) )
 }
-
-n.test <- opt$N.pop * opt$prop.test
-n.test.all <- opt$N.pop * (1 - opt$prop.train)
-R2.model <- vector()
-ensembl.model <- list()
-prs.norm <- list()
-ptr.use <- list()
-for( k in 1:n.models ){
-    R2.indiv2 <- 2*log(abs( betatXtY.2[[k]] )) - log(diag(Sigma.prs[[k]]))
-    R2.indiv3 <- 2*log(abs( betatXtY.3[[k]] )) - log(diag(Sigma.prs[[k]]))
-    R2.2 <- exp(R2.indiv2 - max(R2.indiv2,na.rm=TRUE))
-    R2.3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
-    if( k<3 ){
-        ptr.use[[k]] <- which( diag(Sigma.prs[[k]])!=0 &
-                               R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
-                               R2.3 / max(R2.3,na.rm=TRUE) > 0.2 )
-    }else{
-        ptr.use[[3]] <- c( match( rownames(betatXtY.2[[1]]), rownames(betatXtY.2[[3]]) ),
-                          match( rownames(betatXtY.2[[2]]), rownames(betatXtY.2[[3]]) ) )
-    }
-    n.prs <- length(ptr.use[[k]])
-    Sigma.prs[[k]] <- Sigma.prs[[k]][ptr.use[[k]],ptr.use[[k]]]
-    betatXtY.2[[k]] <- betatXtY.2[[k]][ptr.use[[k]],,drop=FALSE]
-    betatXtY.3[[k]] <- betatXtY.3[[k]][ptr.use[[k]],,drop=FALSE]
-    genome.models[[k]] <- genome.models[[k]][,ptr.use[[k]]]
-
-    prs.norm[[k]] <- 1/sqrt(diag(Sigma.prs[[k]]))
-    genome.models[[k]] <- genome.models[[k]] %*% diag(prs.norm[[k]])
-    Sigma.prs[[k]] <- diag(prs.norm[[k]]) %*% Sigma.prs[[k]] %*% diag(prs.norm[[k]])
-    betatXtY.2[[k]] <- betatXtY.2[[k]] * prs.norm[[k]]
-    betatXtY.3[[k]] <- betatXtY.3[[k]] * prs.norm[[k]]
-
-    lambda.range1 <- c( n.test, 10*n.test )
-#    R2.ensembl <- vector(length=3)
-#    for( kk in 1:length(lambda.range) ){
-#        R2.ensembl[kk] <- enet.R2( n.test, n.test, Sigma.prs[[k]], betatXtY.2[[k]], betatXtY.3[[k]] )
-#    }
-#    max_idx <- which.max(R2.ensembl)
-#    if( max_idx==1 )
-#        lambda.range1 <- c( lambda.range[1], lambda.range[2] )
-#    if( max_idx==2 )
-#        lambda.range1 <- c( lambda.range[1], lambda.range[3] )
-#    if( max_idx==3 )
-#        lambda.range1 <- c( lambda.range[2], lambda.range[3] )
-    lambda.opt <- optimise( enet.R2, interval=lambda.range1,
-                           n=n.test, Sigma.prs=Sigma.prs[[k]],
-                           betatXtY.2=betatXtY.2[[k]], betatXtY.3=betatXtY.3[[k]],
-                           maximum=TRUE )
-    lambda <- lambda.opt$maximum
-    prs.weights <- solve( diag(lambda,n.prs) + n.test*Sigma.prs[[k]] ) %*% betatXtY.2[[k]]
-    R2.model[k] <- 2*log(abs(t(prs.weights) %*% betatXtY.3[[k]])) -
-        log(diag(t(prs.weights) %*% Sigma.prs[[k]] %*% prs.weights))
-    prs.weights <- solve( diag(lambda,n.prs) + n.test.all*Sigma.prs[[k]] ) %*%
-        ( betatXtY.2[[k]] + betatXtY.3[[k]] )
-    prs.weights <- prs.weights / sum(prs.weights)
-    ensembl.model[[k]] <- genome.models[[k]] %*% as.matrix( prs.weights )
-}
-print(max(R2.indiv3,na.rm=TRUE))
-print(R2.model)
-
-s3 <- order( R2.model, decreasing=TRUE )
-ptr <- s3[1]
-ptr <- 2
-out.data <-  data.frame( rownames(genome.models[[ptr]]), genome.alleles, ensembl.model[[ptr]] )
-colnames(out.data)[c(1,4)] <- c( "SNP.id", "beta.w" )
-fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_weighted_model.dat' ),
-       col.names=TRUE, quote=FALSE, sep=" " )
-
-
-ii <- ifelse( n.models==1, 1, 3 )
-R2.indiv <- 2*log(abs( betatXtY.2[[ii]] + betatXtY.3[[ii]] ))
-s2 <- order( R2.indiv, decreasing=TRUE )
-colnames(models[[ii]])[s2[1:10]]
-tmp <- strsplit( colnames(models[[ii]])[s2[1]], '_' )
-S.opt <- as.numeric(tmp[[1]][3])
-lambda.opt <- as.numeric(tmp[[1]][2])
-p.opt <- as.numeric(tmp[[1]][4])
-write.table( data.frame(S.opt,lambda.opt,p.opt),
-            paste0( opt$workdir,'/fold',opt$fold,'/best_model_params.dat' ),
-            row.names=FALSE, quote=FALSE )
-
-out.data <-  data.frame( rownames(genome.models[[ii]]), genome.alleles, genome.models[[ii]][,s2[1]] )
-colnames(out.data)[c(1,4)] <- c( "SNP.id", colnames(genome.models[[ii]])[s2[1]] )
-fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_best_model.dat' ),
-       col.names=TRUE, quote=FALSE, sep=" " )
-
-out.data <-  data.frame( rownames(genome.models[[ii]]), genome.alleles, genome.models[[ii]] )
-colnames(out.data)[1] <- "SNP.id"
-fwrite( out.data, paste0( opt$workdir,'/fold',opt$fold,'/snp_weights_all_models.dat' ),
-       col.names=TRUE, quote=FALSE, sep=" " )
-
 #save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
