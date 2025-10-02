@@ -221,8 +221,8 @@ for( chr in 1:22 ){
 #                        block.stats( block.i=blocks[i,], sumstats, models )},
 #                    mc.cores=as.numeric(opt$n.cores) )
 
-for( kk in 1:10 ){
-load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold',kk,'debug.RData'))
+#for( kk in 1:10 ){
+#    load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold',kk,'debug.RData'))
 write.table( betatXtY.2[[n.models]],
             paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_2.dat' ),
             row.names=TRUE, col.names=FALSE, quote=FALSE )
@@ -233,5 +233,5 @@ fwrite( data.frame( rownames(genome.models[[n.models]]), genome.alleles, genome.
        paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/snp_weights.dat' ) )
 fwrite( as.data.table(Sigma.prs[[n.models]]),
        paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/Sigma_prs.dat' ) )
-}
+#}
 #save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
