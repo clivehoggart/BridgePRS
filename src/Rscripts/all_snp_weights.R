@@ -75,11 +75,6 @@ if( opt$by.chr==0 ){
 
 af <- vector()
 models <- list()
-Sigma.prs <- list()
-betatXtY.2 <- list()
-betatXtY.3 <- list()
-genome.models <- list()
-max.const <- 0
 for( chr in 1:22 ){
     if( opt$by.chr==1 ){
         X.bed <- BEDMatrix( paste(opt$bfile,chr,sep=''), simple_names=TRUE )
@@ -160,18 +155,14 @@ for( chr in 1:22 ){
 #    fwrite( all.models, outfile )
     if( chr==1 ){
         genome.alleles <- chr.alleles
-        for( k in 1:n.models ){
-            genome.models[[k]] <- models[[k]]
-            kk <- ncol(models[[k]])
-            Sigma.prs[[k]] <- matrix( ncol=kk, nrow=kk, data=0 )
-            betatXtY.2[[k]] <- matrix( ncol=1, nrow=kk, data=0 )
-            betatXtY.3[[k]] <- matrix( ncol=1, nrow=kk, data=0 )
-        }
+        genome.models <- models
+        kk <- ncol(models[[n.models]])
+        Sigma.prs <- matrix( ncol=kk, nrow=kk, data=0 )
+        betatXtY.2 <- matrix( ncol=1, nrow=kk, data=0 )
+        betatXtY.3 <- matrix( ncol=1, nrow=kk, data=0 )
     }else{
         genome.alleles <- rbind( genome.alleles, chr.alleles )
-        for( k in 1:n.models ){
-            genome.models[[k]] <- rbind( genome.models[[k]], models[[k]] )
-        }
+        genome.models <- rbind( genome.models, models )
     }
 
     all.block.snps <- vector()
@@ -182,7 +173,7 @@ for( chr in 1:22 ){
 #        block.snps1 <- vector()
 #        for( k in 1:n.models ){
         block.snps <- intersect( rownames(models[[k]]), block.snps.all )
-        if( length(block.snps[[k]])>0 ){
+        if( length(block.snps) > 0 ){
             ptr.prs <- match( block.snps, rownames(models[[k]]) )
             ptr.ss <- match( block.snps, sumstats$SNP )
             ref.stats <- est.ref.stats( block.snps, ld.ids, X.bed, bim,
@@ -197,7 +188,6 @@ for( chr in 1:22 ){
 #            }
 #            all.block.snps <- c( all.block.snps, block.snps1 )
         }
-#        max.const <- max( max.const, diag(ref.stats$ld) * sumstats$SE[ptr.ss]^2 )
     }
     single.snps <- setdiff( snps, all.block.snps )
     for( i in 1:length(single.snps) ){
