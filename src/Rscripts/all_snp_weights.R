@@ -206,6 +206,8 @@ for( chr in 1:22 ){
     }
 }
 
+save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
+
 #    tmp <- mclapply( 1:nrow(blocks),
 #                    function(i){
 #                        block.stats( block.i=blocks[i,], sumstats, models )},
@@ -219,7 +221,7 @@ write.table( betatXtY.2[[n.models]],
 write.table( betatXtY.3[[n.models]],
             paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_3.dat' ),
             row.names=TRUE, col.names=FALSE, quote=FALSE )
-fwrite( data.frame( rownames(genome.models[[n.models]]), genome.alleles, genome.models[[n.models]] ),
+fwrite( data.frame( rownames(genome.models), genome.alleles, genome.models ),
        paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/snp_weights.dat' ) )
 fwrite( as.data.table(Sigma.prs[[n.models]]),
        paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/Sigma_prs.dat' ) )
