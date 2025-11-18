@@ -106,13 +106,13 @@ for( chr in 1:22 ){
     ptr.betas <- grep('beta.bar',colnames(stage1))
     tmp <- strsplit(colnames(stage1)[ptr.betas],'beta.bar_')
     betas <- sapply(tmp,getElement,2)
-    models[[1]] <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
+    models <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
                                     nrow=length(snps),data=0))
     cnames <- vector()
     for( i in 1:length(p.thresh) ){
         cnames <- c( cnames, paste('beta',betas,p.thresh[i],sep="_") )
     }
-    colnames(models[[1]]) <- cnames
+    colnames(models) <- cnames
     ptr.ss <- match( stage1$snp, sumstats$SNP )
     swtch <- allele.check( sumstats$ALLELE1[ptr.ss], sumstats$ALLELE0[ptr.ss],
                           stage1$effect.allele, stage1$ref.allele,
@@ -121,22 +121,22 @@ for( chr in 1:22 ){
         ptr.stage1 <- which( stage1$p.value <  p.thresh[i] )
         ptr.row <- match( stage1$snp[ptr.stage1], snps )
         ptr.col <- (1:length(betas)) + (i-1)*length(betas)
-        models[[1]][ptr.row,ptr.col] <- stage1[ptr.stage1,ptr.betas] * swtch[ptr.stage1]
+        models[ptr.row,ptr.col] <- stage1[ptr.stage1,ptr.betas] * swtch[ptr.stage1]
     }
-    rownames(models[[1]]) <- snps
-    models[[1]] <- as.matrix(models[[1]])
+    rownames(models) <- snps
+    models <- as.matrix(models)
 
     if( !is.null(opt$stage2) ){
         ptr.betas <- grep('beta.bar',colnames(stage2))
         tmp <- strsplit(colnames(stage2)[ptr.betas],'beta.bar_')
         betas <- sapply(tmp,getElement,2)
-        models[[2]] <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
+        models2 <- as.data.frame(matrix(ncol=length(p.thresh)*length(betas),
                                         nrow=length(snps),data=0))
         cnames <- vector()
         for( i in 1:length(p.thresh) ){
             cnames <- c( cnames, paste('beta',betas,p.thresh[i],sep="_") )
         }
-        colnames(models[[2]]) <- cnames
+        colnames(models2) <- cnames
         ptr.ss <- match( stage2$snp, sumstats$SNP )
         swtch <- allele.check( sumstats$ALLELE1[ptr.ss], sumstats$ALLELE0[ptr.ss],
                               stage2$effect.allele, stage2$ref.allele,
@@ -145,18 +145,17 @@ for( chr in 1:22 ){
             ptr.stage2 <- which( stage2$p.value <  p.thresh[i] )
             ptr.row <- match( stage2$snp[ptr.stage2], snps )
             ptr.col <- (1:length(betas)) + (i-1)*length(betas)
-            models[[2]][ptr.row,ptr.col] <- stage2[ptr.stage2,ptr.betas] * swtch[ptr.stage2]
+            models2[ptr.row,ptr.col] <- stage2[ptr.stage2,ptr.betas] * swtch[ptr.stage2]
         }
-        rownames(models[[2]]) <- snps
-        models[[2]] <- as.matrix(models[[2]])
-        models[[3]] <- as.matrix(cbind(models[[1]],models[[2]]))
+        rownames(models2) <- snps
+        models <- as.matrix(cbind(models,models2))
     }
     n.models <- length(models)
 #    fwrite( all.models, outfile )
     if( chr==1 ){
         genome.alleles <- chr.alleles
         genome.models <- models
-        kk <- ncol(models[[n.models]])
+        kk <- ncol(models)
         Sigma.prs <- matrix( ncol=kk, nrow=kk, data=0 )
         betatXtY.2 <- matrix( ncol=1, nrow=kk, data=0 )
         betatXtY.3 <- matrix( ncol=1, nrow=kk, data=0 )
@@ -172,15 +171,15 @@ for( chr in 1:22 ){
 #        block.snps <- list()
 #        block.snps1 <- vector()
 #        for( k in 1:n.models ){
-        block.snps <- intersect( rownames(models[[k]]), block.snps.all )
+        block.snps <- intersect( rownames(models), block.snps.all )
         if( length(block.snps) > 0 ){
-            ptr.prs <- match( block.snps, rownames(models[[k]]) )
+            ptr.prs <- match( block.snps, rownames(models) )
             ptr.ss <- match( block.snps, sumstats$SNP )
             ref.stats <- est.ref.stats( block.snps, ld.ids, X.bed, bim,
                                        sumstats$ALLELE1[ptr.ss],
                                        sumstats$ALLELE0[ptr.ss],
                                        opt$strand.check, n.eff=FALSE )
-            beta <- models[[k]][ptr.prs,,drop=FALSE]
+            beta <- models[ptr.prs,,drop=FALSE]
             Sigma.prs <- Sigma.prs + t(beta) %*% ref.stats$ld %*% beta
             betatXtY.2 <- betatXtY.2 + t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
             betatXtY.3 <- betatXtY.3 + t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
@@ -193,12 +192,12 @@ for( chr in 1:22 ){
     for( i in 1:length(single.snps) ){
         ptr.ss <- match( single.snps[i], sumstats$SNP )
 #        for( k in 1:n.models ){
-            ptr.prs <- match( single.snps[i], rownames(models[[k]]) )
+            ptr.prs <- match( single.snps[i], rownames(models) )
             ref.stats <- est.ref.stats( single.snps[i], ld.ids, X.bed, bim,
                                        sumstats$ALLELE1[ptr.ss],
                                        sumstats$ALLELE0[ptr.ss],
                                        opt$strand.check, n.eff=FALSE )
-            beta <- models[[k]][ptr.prs,,drop=FALSE]
+            beta <- models[ptr.prs,,drop=FALSE]
             Sigma.prs <- Sigma.prs +  t(beta) %*% ref.stats$ld %*% beta
             betatXtY.2 <- betatXtY.2 + t(beta) %*% as.matrix(sumstats$XtY.2[ptr.ss])
             betatXtY.3 <- betatXtY.3 + t(beta) %*% as.matrix(sumstats$XtY.3[ptr.ss])
@@ -215,15 +214,12 @@ save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
 
 #for( kk in 1:10 ){
 #    load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/AFR/fold',kk,'debug.RData'))
-write.table( betatXtY.2[[n.models]],
-            paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_2.dat' ),
+write.table( betatXtY.2, paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_2.dat' ),
             row.names=TRUE, col.names=FALSE, quote=FALSE )
-write.table( betatXtY.3[[n.models]],
-            paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_3.dat' ),
+write.table( betatXtY.3, paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_3.dat' ),
             row.names=TRUE, col.names=FALSE, quote=FALSE )
+fwrite( Sigma.prs, paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/Sigma_prs.dat' ) )
 fwrite( data.frame( rownames(genome.models), genome.alleles, genome.models ),
        paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/snp_weights.dat' ) )
-fwrite( as.data.table(Sigma.prs[[n.models]]),
-       paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/Sigma_prs.dat' ) )
 #}
 #save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
