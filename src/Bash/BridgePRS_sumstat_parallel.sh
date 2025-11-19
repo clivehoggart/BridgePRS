@@ -361,7 +361,7 @@ then
 	    --by.chr $by_chr_ld \
 	    --strand.check $strand_check \
 	    --beta.stem $outdir/${pop1}/fold${iter}/models/prior \
-	    --param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
+	    --param.file $outdir/${pop1}/fold${iter}/prs_sumstats/best_model_params.dat \
 	    --precision TRUE
 
     if [ $clean -eq 1 ]
