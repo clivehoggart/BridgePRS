@@ -122,11 +122,17 @@ for( kk in 1:opt$n.folds ){
         R2.model[kk,k] <- 2*log(abs(t(prs.weights) %*% betatXtY.3[[kk]][[k]])) -
             log( diag(t(prs.weights) %*% Sigma.prs[[kk]][[k]] %*% prs.weights) )
     }
-
-    R2.indiv <- 2*log(abs( betatXtY.2[[kk]][[n.models]] + betatXtY.3[[kk]][[n.models]] ))
-    s2 <- order( R2.indiv, decreasing=TRUE )
-    best[[kk]] <-  data.frame( alleles[[kk]], genome.models[[kk]][[n.models]][,s2[1]] )
+    R2.indiv[[kk]] <- 2*log(abs( betatXtY.2[[kk]][[n.models]] + betatXtY.3[[kk]][[n.models]] ))
+    all.model.names <- union( all.model.names, model.names[[kk]][[n.models]] )
 }
+
+R2.indiv1 <- vector( length=length(all.model.names) )
+names(R2.indiv1) <- all.model.names
+for( kk in 1:opt$n.folds ){
+    ptr <- match( model.names[[kk]][[n.models]], all.model.names )
+    R2.indiv1 <- R2.indiv1 + R2.indiv[[kk]][ptr]
+}
+s2 <- order( R2.indiv1, decreasing=TRUE )
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median(lambda[,k])
@@ -137,8 +143,9 @@ colnames(best.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta' )
 for( kk in 1:opt$n.folds ){
     ptr <- match( alleles[[kk]]$genome.models1.rownames, snps )
     ensembl.model[ptr,1:3] <- alleles[[kk]][,1:3]
-    best.model[ptr,1:3] <- best[[kk]][,1:3]
-    best.model[ptr,4] <- best.model[ptr,4] + best[[kk]][,4]
+    best.model[ptr,1:3] <- alleles[[kk]][,1:3]
+
+    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models][,s2[1]]
 
     n.prs <- nrow(Sigma.prs[[kk]][[k]])
     prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[k]] ) %*%
