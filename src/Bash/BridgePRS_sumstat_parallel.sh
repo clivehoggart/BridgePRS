@@ -379,7 +379,7 @@ then
 	    --sumstats $outdir/$pop2/fold${iter}/sumstat_subset/chr  \
 	    --ld.ids $pop2_ld_ids \
 	    --prior $outdir/${pop1}/fold${iter}/models/prior \
-	    --param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
+	    --param.file $outdir/${pop1}/fold${iter}/prs_sumstats/best_model_params.dat \
 	    --beta.stem $outdir/${pop2}/fold${iter}/models/stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
