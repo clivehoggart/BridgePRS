@@ -211,10 +211,10 @@ save.image(paste0( opt$workdir,'/fold',opt$fold,'/debug.RData'))
 #                        block.stats( block.i=blocks[i,], sumstats, models )},
 #                    mc.cores=as.numeric(opt$n.cores) )
 
-for( kk in 1:10 ){
-    load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/EUR/fold',kk,'/debug.RData'))
+#for( kk in 1:10 ){
+#    load(paste0('/sc/arion/projects/psychgen/projects/prs/cross_population_prs_development/quick_ridge/results/sumstats/hm/50/EUR/fold',kk,'/debug.RData'))
 
-R2.indiv <- 2*log(abs( betatXtY.2 + betatXtY.3 ))
+R2.indiv <- 2*log(abs( betatXtY.2 + betatXtY.3 )) - log(diag(Sigma.prs))
 s2 <- order( R2.indiv, decreasing=TRUE )
 tmp <- strsplit( colnames(models)[s2[1]], '_' )
 S.opt <- as.numeric(tmp[[1]][3])
@@ -223,7 +223,7 @@ p.opt <- as.numeric(tmp[[1]][4])
 write.table( data.frame(S.opt,lambda.opt,p.opt),
             paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/best_model_params.dat' ),
             row.names=FALSE, quote=FALSE )
-}
+#}
 
 write.table( betatXtY.2, paste0( opt$workdir,'/fold',opt$fold,'/prs_sumstats/betatXtY_2.dat' ),
             row.names=TRUE, col.names=FALSE, quote=FALSE )
