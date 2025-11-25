@@ -51,6 +51,7 @@ alleles <- list(length=opt$n.folds)
 model.names <- list(length=opt$n.folds)
 snps <- vector()
 R2.indiv <- list()
+all.model.names <- vector()
 for( kk in 1:opt$n.folds ){
     betatXtY.2[[kk]] <- list(length=3)
     betatXtY.3[[kk]] <- list(length=3)
