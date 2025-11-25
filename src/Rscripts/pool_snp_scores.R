@@ -137,6 +137,7 @@ s2 <- order( R2.indiv1, decreasing=TRUE )
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median(lambda[,k])
+print( c( k, lambda1 ) )
 ensembl.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
 best.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
 colnames(ensembl.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta' )
@@ -146,7 +147,7 @@ for( kk in 1:opt$n.folds ){
     ensembl.model[ptr,1:3] <- alleles[[kk]][,1:3]
     best.model[ptr,1:3] <- alleles[[kk]][,1:3]
 
-    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models][,s2[1]]
+    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,s2[1]]
 
     n.prs <- nrow(Sigma.prs[[kk]][[k]])
     prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[k]] ) %*%
