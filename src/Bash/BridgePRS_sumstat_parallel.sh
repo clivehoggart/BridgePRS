@@ -290,9 +290,9 @@ then
 	      --keep $pop1_ld_ids \
 	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
-	      --out $outdir/${pop1}/fold${iter}/clump/_${chr}
-	safe_rm -f $outdir/${pop1}/fold${iter}/clump/_${chr}.clumped.gz
-	gzip $outdir/${pop1}/fold${iter}/clump/_${chr}.clumped
+	      --out $outdir/${pop1}/fold${iter}/clump/${pop1}_${chr}
+	safe_rm -f  $outdir/${pop1}/fold${iter}/clump/${pop1}_${chr}.clumped.gz
+	gzip        $outdir/${pop1}/fold${iter}/clump/${pop1}_${chr}.clumped
     done
 fi
 
@@ -301,7 +301,7 @@ then
     safe_rm -f $outdir/$pop1/fold${iter}/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $outdir/$pop1/fold${iter}/clump/ \
+	    --clump.stem $outdir/$pop1/fold${iter}/clump/${pop1} \
 	    --sumstats $outdir/$pop1/fold${iter}/sumstat_subset/chr \
 	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
@@ -346,7 +346,7 @@ then
     safe_rm -f $outdir/${pop1}/fold${iter}/models/lambda/rs*.gz
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $outdir/$pop1/fold${iter}/clump/ \
+	    --clump.stem $outdir/$pop1/fold${iter}/clump/${pop1} \
 	    --sumstats $outdir/$pop1/fold${iter}/sumstat_subset/chr \
 	    --by.chr.sumstats .dat.gz \
 	    --thinned.snplist $thinned_snplist \
@@ -367,7 +367,7 @@ then
     if [ $clean -eq 1 ]
     then
 	safe_rm $outdir/$pop1/fold${iter}/sumstat_subset/chr*
-	safe_rm $outdir/$pop1/fold${iter}/clump/_*
+	safe_rm $outdir/$pop1/fold${iter}/clump/${pop1}_*
     fi
 fi
 
@@ -375,12 +375,12 @@ if [ $do_est_beta_InformPrior -eq 1  ]
 then
     safe_rm -f $outdir/${pop2}/fold${iter}/models/stage2*
     Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
- 	    --fpath $FPATH \
-	    --sumstats $outdir/$pop2/fold${iter}/sumstat_subset/chr  \
 	    --ld.ids $pop2_ld_ids \
-	    --prior $outdir/${pop1}/fold${iter}/models/prior \
+ 	    --fpath $FPATH \
+	    --sumstats   $outdir/${pop2}/fold${iter}/sumstat_subset/chr  \
+	    --prior      $outdir/${pop1}/fold${iter}/models/prior \
 	    --param.file $outdir/${pop1}/fold${iter}/prs_sumstats/best_model_params.dat \
-	    --beta.stem $outdir/${pop2}/fold${iter}/models/stage2 \
+	    --beta.stem  $outdir/${pop2}/fold${iter}/models/stage2 \
 	    --bfile $pop2_ld_bfile \
 	    --fst $fst \
 	    --sumstats.snpID SNP \
@@ -416,9 +416,9 @@ then
 	      --keep $pop2_ld_ids \
 	      --extract $pop2_qc_snplist \
 	      --maf 0.001 \
-	      --out $outdir/${pop2}/fold${iter}/clump/_${chr}
-	safe_rm -f $outdir/${pop2}/fold${iter}/clump/_${chr}.clumped.gz
-	gzip $outdir/${pop2}/fold${iter}/clump/_${chr}.clumped
+	      --out $outdir/${pop2}/fold${iter}/clump/${pop2}_${chr}
+	safe_rm -f $outdir/${pop2}/fold${iter}/clump/${pop2}_${chr}.clumped.gz
+	gzip $outdir/${pop2}/fold${iter}/clump/${pop2}_${chr}.clumped
     done
 fi
 
@@ -427,7 +427,7 @@ then
     safe_rm -f $outdir/$pop2/fold${iter}/models/stage1*
     Rscript --vanilla $RSCRIPTS"/"est_beta_bychr.R \
  	    --fpath $FPATH \
-	    --clump.stem $outdir/$pop2/fold${iter}/clump/ \
+	    --clump.stem $outdir/$pop2/fold${iter}/clump/${pop2} \
 	    --sumstats $outdir/$pop2/fold${iter}/sumstat_subset/chr \
 	    --thinned.snplist $thinned_snplist \
 	    --n.max.locus $n_max_locus \
@@ -447,7 +447,7 @@ then
 
     if [ $clean -eq 1 ]
     then
-	safe_rm $outdir/$pop2/fold${iter}/clump/_*
+	safe_rm $outdir/$pop2/fold${iter}/clump/${pop2}_*
     fi
 fi
 
