@@ -88,7 +88,8 @@ if( opt$by.chr.sumstats==0 ){
         sumstats.genome <- sumstats.genome[ptr.use,]
     }
     sumstats.genome$BETA <- as.numeric(sumstats.genome$BETA)
-    sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA), ]
+    sumstats.genome$P <- as.numeric(sumstats.genome$P)
+    sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA) & !is.na(sumstats.genome$P), ]
     qc.snplist1 <- intersect( qc.snplist$V1, sumstats.genome$SNP )
     sumstats.genome <- sumstats.genome[match(qc.snplist1, sumstats.genome$SNP),]
 }
@@ -137,7 +138,8 @@ for( chr in 1:22 ){
             sumstats <- sumstats[ptr.use,]
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
-        sumstats <- sumstats[ !is.na(sumstats$BETA), ]
+        sumstats$P <- as.numeric(sumstats$P)
+        sumstats <- sumstats[ !is.na(sumstats$BETA) & !is.na(sumstats$P), ]
         qc.snplist1 <- intersect( qc.snplist$V1, sumstats$SNP )
         sumstats <- sumstats[match(qc.snplist1, sumstats$SNP),]
     }else{
@@ -159,6 +161,17 @@ for( chr in 1:22 ){
                                         n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
+
+#    for( i in 1:nrow(blocks) ){
+#        tmp <- sumstat.subset( block.i=blocks[i,],
+#                              sumstats=sumstats, ld.ids=ld.ids,
+#                              X.bed=ptr.bed, bim=bim,
+#                              n.all=opt$N.pop,
+#                              n.prop=c(opt$prop.train, opt$prop.test),
+#                              n.folds=opt$n.folds,
+#                              strand.check=opt$strand.check )
+#    }
+
     sumstats.1 <- list()
     for( k in 1:opt$n.folds ){
         sumstats.1[[k]] <- as.data.frame(matrix(nrow=nrow(sumstats),ncol=8))
