@@ -1,3 +1,49 @@
+remove_high_corr <- function(cov_mat, threshold = 0.99) {
+  if (!is.matrix(cov_mat) || nrow(cov_mat) != ncol(cov_mat)) {
+    stop("Input must be a square covariance matrix.")
+  }
+
+  vars <- colnames(cov_mat)
+  if (is.null(vars)) {
+    vars <- seq_len(ncol(cov_mat))
+  }
+
+  # Convert covariance to correlation
+  cor_mat <- cov2cor(cov_mat)
+  diag(cor_mat) <- 0
+
+  keep <- rep(TRUE, ncol(cor_mat))
+
+  while (TRUE) {
+    # Find maximum absolute correlation
+    max_corr <- max(abs(cor_mat), na.rm = TRUE)
+
+    if (max_corr <= threshold) break
+
+    # Identify one highly correlated pair
+    idx <- which(abs(cor_mat) == max_corr, arr.ind = TRUE)[1, ]
+    i <- idx[1]
+    j <- idx[2]
+
+    # Remove one variable (heuristic: larger average absolute correlation)
+    mean_i <- mean(abs(cor_mat[i, ]), na.rm = TRUE)
+    mean_j <- mean(abs(cor_mat[j, ]), na.rm = TRUE)
+
+    remove <- if (mean_i > mean_j) i else j
+
+    keep[remove] <- FALSE
+    cor_mat[remove, ] <- NA
+    cor_mat[, remove] <- NA
+  }
+
+#  list(
+#    kept_variables = vars[keep],
+#    removed_variables = vars[!keep],
+#    reduced_covariance = cov_mat[keep, keep, drop = FALSE]
+#  )
+  return(keep)
+}
+
 mvrnorm.ldmat <- function( ld.mat, tol = 1e-06 ){
     p <- nrow(ld.mat)
     ev <- eigen( ld.mat, symmetric=TRUE, only.values=TRUE )$values
@@ -389,7 +435,8 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
         ref.stats <- est.ref.stats( snps, ld.ids, X.bed, bim,
                                    sumstats$ALLELE1, sumstats$ALLELE0,
                                    strand.check, n.eff=FALSE )
-        ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 & ref.stats$af!=1 )
+        test.cor <- remove_high_corr( ref.stats$ld, 0.995 )
+        ptr.use <- which( !is.na(ref.stats$af) & ref.stats$af!=0 & ref.stats$af!=1 & test.cor )
         k <- length(ptr.use)
         if( k>0 ){
             sumstats <- sumstats[ptr.use,,drop=FALSE]
