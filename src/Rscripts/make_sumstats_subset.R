@@ -180,7 +180,9 @@ for( chr in 1:22 ){
     }
     all.block.snps <- vector()
     for( i in 1:nrow(blocks) ){
-        all.block.snps <- c( all.block.snps, sumstats.b[[i]]$SNP )
+        block.snps <-  unlist(strsplit( blocks$SNPS[i], '\\|' ))
+        snps <- intersect( sumstats$SNP, block.snps )
+        all.block.snps <- c( all.block.snps, snps )
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         if( length(ptr)>0 ){
             for( k in 1:opt$n.folds ){
