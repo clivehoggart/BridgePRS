@@ -89,7 +89,9 @@ if( opt$by.chr.sumstats==0 ){
     }
     sumstats.genome$BETA <- as.numeric(sumstats.genome$BETA)
     sumstats.genome$P <- as.numeric(sumstats.genome$P)
-    sumstats.genome <- sumstats.genome[ !is.na(sumstats.genome$BETA) & !is.na(sumstats.genome$P), ]
+    sumstats.genome$P <- ifelse( sumstats.genome$P==0, min(sumstats.genome$P[sumstats.genome$P!=0]), sumstats.genome$P )
+    ptr.use <- which( !is.na(sumstats.genome$BETA) & !is.na(sumstats.genome$P) & sumstats.genome$P < 1 )
+    sumstats.genome <- sumstats.genome[ ptr.use, ]
     qc.snplist1 <- intersect( qc.snplist$V1, sumstats.genome$SNP )
     sumstats.genome <- sumstats.genome[match(qc.snplist1, sumstats.genome$SNP),]
 }
@@ -139,7 +141,8 @@ for( chr in 1:22 ){
         }
         sumstats$BETA <- as.numeric(sumstats$BETA)
         sumstats$P <- as.numeric(sumstats$P)
-        sumstats <- sumstats[ !is.na(sumstats$BETA) & !is.na(sumstats$P), ]
+        sumstats$P <- ifelse( sumstats$P==0, min(sumstats$P[sumstats$P!=0]), sumstats$P )
+        sumstats <- sumstats[ !is.na(sumstats$BETA) & !is.na(sumstats$P) & sumstats$P < 1, ]
         qc.snplist1 <- intersect( qc.snplist$V1, sumstats$SNP )
         sumstats <- sumstats[match(qc.snplist1, sumstats$SNP),]
     }else{
@@ -162,15 +165,15 @@ for( chr in 1:22 ){
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
-#    for( i in 1:nrow(blocks) ){
-#        tmp <- sumstat.subset( block.i=blocks[i,],
-#                              sumstats=sumstats, ld.ids=ld.ids,
-#                              X.bed=ptr.bed, bim=bim,
-#                              n.all=opt$N.pop,
-#                              n.prop=c(opt$prop.train, opt$prop.test),
-#                              n.folds=opt$n.folds,
-#                              strand.check=opt$strand.check )
-#    }
+    for( i in 1:nrow(blocks) ){
+        tmp <- sumstat.subset( block.i=blocks[i,],
+                              sumstats=sumstats, ld.ids=ld.ids,
+                              X.bed=ptr.bed, bim=bim,
+                              n.all=opt$N.pop,
+                              n.prop=c(opt$prop.train, opt$prop.test),
+                              n.folds=opt$n.folds,
+                              strand.check=opt$strand.check )
+    }
 
     sumstats.1 <- list()
     for( k in 1:opt$n.folds ){
