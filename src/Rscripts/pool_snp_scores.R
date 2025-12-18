@@ -91,10 +91,13 @@ for( kk in 1:opt$n.folds ){
         R2.2 <- exp(R2.indiv2 - max(R2.indiv2,na.rm=TRUE))
         R2.3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
         if( k<3 ){
+#            ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
+#                                   R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
+#                                   R2.3 / max(R2.3,na.rm=TRUE) > 0.2 &
+#                                   betatXtY.2[[kk]][[k]] > 0 & betatXtY.3[[kk]][[k]] > 0 )
             ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
                                    R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
-                                   R2.3 / max(R2.3,na.rm=TRUE) > 0.2 &
-                                   betatXtY.2[[kk]][[k]] > 0 & betatXtY.3[[kk]][[k]] > 0 )
+                                   betatXtY.2[[kk]][[k]] > 0 )
         }else{
             ptr.use[[3]] <- c( match( model.names[[kk]][[1]]$V1, model.names[[kk]][[3]]$V1 ),
                               match( model.names[[kk]][[2]]$V1, model.names[[kk]][[3]]$V1 ) )
@@ -124,16 +127,17 @@ for( kk in 1:opt$n.folds ){
             log( diag(t(prs.weights) %*% Sigma.prs[[kk]][[k]] %*% prs.weights) )
     }
     R2.indiv[[kk]] <- 2*log(abs( betatXtY.2[[kk]][[n.models]] + betatXtY.3[[kk]][[n.models]] ))
-    all.model.names <- union( all.model.names, model.names[[kk]][[n.models]] )
+    all.model.names <- union( all.model.names, model.names[[kk]][[n.models]]$V1 )
 }
 
-R2.indiv1 <- vector( length=length(all.model.names) )
+R2.indiv1 <- rep( 0, length(all.model.names) )
 names(R2.indiv1) <- all.model.names
 for( kk in 1:opt$n.folds ){
-    ptr <- match( model.names[[kk]][[n.models]], all.model.names )
-    R2.indiv1 <- R2.indiv1 + R2.indiv[[kk]][ptr]
+    ptr <- match( model.names[[kk]][[n.models]]$V1, all.model.names )
+    R2.indiv1[ptr] <- R2.indiv1[ptr] + R2.indiv[[kk]]
 }
 s2 <- order( R2.indiv1, decreasing=TRUE )
+best.model.name <- all.model.names[s2[1]]
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median(lambda[,k])
@@ -147,7 +151,8 @@ for( kk in 1:opt$n.folds ){
     ensembl.model[ptr,1:3] <- alleles[[kk]][,1:3]
     best.model[ptr,1:3] <- alleles[[kk]][,1:3]
 
-    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,s2[1]]
+    ptr.model <- match( best.model.name, model.names[[kk]][[n.models]]$V1 )
+    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,ptr.model]
 
     n.prs <- nrow(Sigma.prs[[kk]][[k]])
     prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[k]] ) %*%
