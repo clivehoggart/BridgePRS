@@ -165,15 +165,15 @@ for( chr in 1:22 ){
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
 
-    for( i in 1:nrow(blocks) ){
-        tmp <- sumstat.subset( block.i=blocks[i,],
-                              sumstats=sumstats, ld.ids=ld.ids,
-                              X.bed=ptr.bed, bim=bim,
-                              n.all=opt$N.pop,
-                              n.prop=c(opt$prop.train, opt$prop.test),
-                              n.folds=opt$n.folds,
-                              strand.check=opt$strand.check )
-    }
+#    for( i in 1:nrow(blocks) ){
+#        tmp <- sumstat.subset( block.i=blocks[i,],
+#                              sumstats=sumstats, ld.ids=ld.ids,
+#                              X.bed=ptr.bed, bim=bim,
+#                              n.all=opt$N.pop,
+#                              n.prop=c(opt$prop.train, opt$prop.test),
+#                              n.folds=opt$n.folds,
+#                              strand.check=opt$strand.check )
+#    }
 
     sumstats.1 <- list()
     for( k in 1:opt$n.folds ){
