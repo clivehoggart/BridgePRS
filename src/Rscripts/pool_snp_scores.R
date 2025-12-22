@@ -91,27 +91,27 @@ for( kk in 1:opt$n.folds ){
         R2.2 <- exp(R2.indiv2 - max(R2.indiv2,na.rm=TRUE))
         R2.3 <- exp(R2.indiv3 - max(R2.indiv3,na.rm=TRUE))
         if( k<3 ){
-#            ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
-#                                   R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
-#                                   R2.3 / max(R2.3,na.rm=TRUE) > 0.2 &
-#                                   betatXtY.2[[kk]][[k]] > 0 & betatXtY.3[[kk]][[k]] > 0 )
             ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
-                                   R2.2 / max(R2.2,na.rm=TRUE) > 0.2 &
-                                   betatXtY.2[[kk]][[k]] > 0 )
+                                   R2.2 / max(R2.2[betatXtY.2[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
+                                   R2.3 / max(R2.3[betatXtY.3[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
+                                   betatXtY.2[[kk]][[k]] > 0 & betatXtY.3[[kk]][[k]] > 0 )
+#            ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
+#                                   R2.2 / max( R2.2[betatXtY.2[[kk]][[k]]>0], na.rm=TRUE ) > 0.2 &
+#                                   betatXtY.2[[kk]][[k]] > 0 )
         }else{
             ptr.use[[3]] <- c( match( model.names[[kk]][[1]]$V1, model.names[[kk]][[3]]$V1 ),
                               match( model.names[[kk]][[2]]$V1, model.names[[kk]][[3]]$V1 ) )
         }
         n.prs <- length(ptr.use[[k]])
-        Sigma.prs[[kk]][[k]] <- Sigma.prs[[kk]][[k]][ ptr.use[[k]], ptr.use[[k]] ]
-        genome.models[[kk]][[k]] <- genome.models[[kk]][[k]][,ptr.use[[k]]]
+        Sigma.prs[[kk]][[k]] <- Sigma.prs[[kk]][[k]][ ptr.use[[k]], ptr.use[[k]], drop=FALSE ]
+        genome.models[[kk]][[k]] <- genome.models[[kk]][[k]][,ptr.use[[k]], drop=FALSE ]
         betatXtY.2[[kk]][[k]] <- betatXtY.2[[kk]][[k]][ptr.use[[k]],,drop=FALSE]
         betatXtY.3[[kk]][[k]] <- betatXtY.3[[kk]][[k]][ptr.use[[k]],,drop=FALSE]
         model.names[[kk]][[k]] <- model.names[[kk]][[k]][ptr.use[[k]],1]
 
         prs.norm <- 1 / sqrt(diag(Sigma.prs[[kk]][[k]]))
-        genome.models[[kk]][[k]] <- genome.models[[kk]][[k]] %*% diag(prs.norm)
-        Sigma.prs[[kk]][[k]] <- diag(prs.norm) %*% Sigma.prs[[kk]][[k]] %*% diag(prs.norm)
+        genome.models[[kk]][[k]] <- genome.models[[kk]][[k]] %*% diag(prs.norm,nrow=n.prs)
+        Sigma.prs[[kk]][[k]] <- diag(prs.norm,nrow=n.prs) %*% Sigma.prs[[kk]][[k]] %*% diag(prs.norm,nrow=n.prs)
         betatXtY.2[[kk]][[k]] <- betatXtY.2[[kk]][[k]] * prs.norm
         betatXtY.3[[kk]][[k]] <- betatXtY.3[[kk]][[k]] * prs.norm
 
@@ -145,7 +145,7 @@ print( c( k, lambda1 ) )
 ensembl.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
 best.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
 colnames(ensembl.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta' )
-colnames(best.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta' )
+colnames(best.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', paste0("beta_",best.model.name) )
 for( kk in 1:opt$n.folds ){
     ptr <- match( alleles[[kk]]$genome.models1.rownames, snps )
     ensembl.model[ptr,1:3] <- alleles[[kk]][,1:3]
