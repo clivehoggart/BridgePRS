@@ -45,8 +45,8 @@ pop1_ld_bfile=0
 pop2_ld_bfile=0
 cov_names="000"
 
-prop_train=0.7
-prop_test=0.15
+prop_train=0.6
+prop_test=0.3
 blockdir=0
 
 clean=1
@@ -198,10 +198,7 @@ echo "iter : $iter"
 echo ""
 
 mkdir -p $outdir/$pop1
-mkdir -p $outdir/$pop1/blocks
-
 mkdir -p $outdir/$pop2
-mkdir -p $outdir/$pop2/blocks
 
 if [ $ranking != "pv" ] && [ $ranking != "pv.minP" ] && [ $ranking != "pv.ftest" ] && [ $ranking != "thinned.pv.ftest" ] && [ $ranking != "f.stat" ] && [ $ranking != "thinned.f.stat" ]
 then
@@ -219,12 +216,14 @@ mkdir -p $outdir/$pop1/fold${iter}/clump
 mkdir -p $outdir/$pop1/fold${iter}/models
 mkdir -p $outdir/$pop1/fold${iter}/models/lambda
 mkdir -p $outdir/$pop1/fold${iter}/sumstat_subset
+mkdir -p $outdir/$pop1/fold$iter/prs_sumstats
 
 mkdir -p $outdir/$pop2/fold${iter}
 mkdir -p $outdir/$pop2/fold${iter}/clump
 mkdir -p $outdir/$pop2/fold${iter}/models
 mkdir -p $outdir/$pop2/fold${iter}/models/lambda
 mkdir -p $outdir/$pop2/fold${iter}/sumstat_subset
+mkdir -p $outdir/$pop2/fold$iter/prs_sumstats
 
 if [ $do_sumstat_pop1 -eq 1 ]
 then
