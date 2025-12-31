@@ -141,9 +141,9 @@ k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median( lambda[,k], na.rm=TRUE )
 print( R2.model )
 print( c( k, lambda1 ) )
-ensembl.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
+ensembl.model <- as.data.frame(matrix( ncol=6, nrow=length(snps), data=0 ))
 best.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
-colnames(ensembl.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta' )
+colnames(ensembl.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', 'beta1', 'beta2', 'beta3' )
 colnames(best.model) <- c('SNP.id', 'ALLELE1', 'ALLELE0', paste0("beta_",best.model.name) )
 for( kk in 1:opt$n.folds ){
     ptr <- match( alleles[[kk]]$genome.models1.rownames, snps )
@@ -154,10 +154,12 @@ for( kk in 1:opt$n.folds ){
     if( !is.na(ptr.model) ){
         best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,ptr.model]
     }
-    n.prs <- nrow(Sigma.prs[[kk]][[k]])
-    prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[k]] ) %*%
-        ( betatXtY.2[[kk]][[k]] + betatXtY.3[[kk]][[k]] )
-    ensembl.model[ptr,4] <- ensembl.model[ptr,4] + genome.models[[kk]][[k]] %*% as.matrix( prs.weights )
+    for( i.model in 1:n.models ){
+        n.prs <- nrow(Sigma.prs[[kk]][[ i.model ]])
+        prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[ i.model ]] ) %*%
+            ( betatXtY.2[[kk]][[ i.model ]] + betatXtY.3[[kk]][[ i.model ]] )
+        ensembl.model[ ptr, (3+i.model) ] <- ensembl.model[ptr, (3+i.model) ] +
+            genome.models[[kk]][[i.model]] %*% as.matrix( prs.weights )
 }
 fwrite( ensembl.model,
        paste0(opt$workdir,'/snp_weights_weighted_model.dat'),
