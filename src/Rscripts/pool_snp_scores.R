@@ -127,10 +127,12 @@ for( kk in 1:opt$n.folds ){
 }
 
 R2.indiv1 <- rep( 0, length(all.model.names) )
+count.indiv1 <- rep( 0, length(all.model.names) )
 names(R2.indiv1) <- all.model.names
 for( kk in 1:opt$n.folds ){
     ptr <- match( model.names[[kk]][[n.models]]$V1, all.model.names )
     R2.indiv1[ptr] <- R2.indiv1[ptr] + R2.indiv[[kk]]
+    count.indiv1[ptr] <- count.indiv1[ptr] + 1
 }
 s2 <- order( R2.indiv1, decreasing=TRUE )
 best.model.name <- all.model.names[s2[1]]
@@ -148,8 +150,9 @@ for( kk in 1:opt$n.folds ){
     best.model[ptr,1:3] <- alleles[[kk]][,1:3]
 
     ptr.model <- match( best.model.name, model.names[[kk]][[n.models]]$V1 )
-    best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,ptr.model]
-
+    if( !is.na(ptr.model) ){
+        best.model[ptr,4] <- best.model[ptr,4] + genome.models[[kk]][[n.models]][,ptr.model]
+    }
     n.prs <- nrow(Sigma.prs[[kk]][[k]])
     prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[k]] ) %*%
         ( betatXtY.2[[kk]][[k]] + betatXtY.3[[kk]][[k]] )
