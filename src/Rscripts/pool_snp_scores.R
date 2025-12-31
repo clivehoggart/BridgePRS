@@ -160,6 +160,7 @@ for( kk in 1:opt$n.folds ){
             ( betatXtY.2[[kk]][[ i.model ]] + betatXtY.3[[kk]][[ i.model ]] )
         ensembl.model[ ptr, (3+i.model) ] <- ensembl.model[ptr, (3+i.model) ] +
             genome.models[[kk]][[i.model]] %*% as.matrix( prs.weights )
+    }
 }
 fwrite( ensembl.model,
        paste0(opt$workdir,'/snp_weights_weighted_model.dat'),
