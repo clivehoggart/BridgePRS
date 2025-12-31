@@ -54,8 +54,8 @@ pop2_ld_bfile=0
 cov_names="000"
 
 n_folds=5
-prop_train=0.7
-prop_test=0.15
+prop_train=0.6
+prop_test=0.3
 blockdir=0
 
 clean=1
