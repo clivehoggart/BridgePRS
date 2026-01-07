@@ -139,7 +139,11 @@ best.model.name <- all.model.names[s2[1]]
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median( lambda[,k], na.rm=TRUE )
-print( R2.model )
+
+fwrite( R2.model,
+       paste0(opt$workdir,'/r2_model.dat'),
+       row.names=FALSE, col.names=TRUE, sep=" " )
+
 print( c( k, lambda1 ) )
 ensembl.model <- as.data.frame(matrix( ncol=6, nrow=length(snps), data=0 ))
 best.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
