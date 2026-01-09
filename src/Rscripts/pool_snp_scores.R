@@ -94,9 +94,8 @@ for( kk in 1:opt$n.folds ){
         ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
                                R2.2 / max(R2.2[betatXtY.2[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
 #                               R2.3 / max(R2.3[betatXtY.3[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
-                               betatXtY.2[[kk]][[k]] > 0 
+                               betatXtY.2[[kk]][[k]] > 0 )
 #                               betatXtY.3[[kk]][[k]] > 0
-                             )
         n.prs <- length(ptr.use[[k]])
 
         if( n.prs>0 ){
