@@ -93,8 +93,9 @@ for( kk in 1:opt$n.folds ){
 
         ptr.use[[k]] <- which( diag(Sigma.prs[[kk]][[k]])!=0 &
                                R2.2 / max(R2.2[betatXtY.2[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
-                               R2.3 / max(R2.3[betatXtY.3[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
-                               betatXtY.2[[kk]][[k]] > 0 & betatXtY.3[[kk]][[k]] > 0 )
+#                               R2.3 / max(R2.3[betatXtY.3[[kk]][[k]]>0],na.rm=TRUE) > 0.2 &
+                               betatXtY.2[[kk]][[k]] > 0 )
+#                               betatXtY.3[[kk]][[k]] > 0
         n.prs <- length(ptr.use[[k]])
 
         if( n.prs>0 ){
@@ -139,7 +140,11 @@ best.model.name <- all.model.names[s2[1]]
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
 lambda1 <- median( lambda[,k], na.rm=TRUE )
-print( R2.model )
+
+fwrite( R2.model,
+       paste0(opt$workdir,'/r2_model.dat'),
+       row.names=FALSE, col.names=TRUE, sep=" " )
+
 print( c( k, lambda1 ) )
 ensembl.model <- as.data.frame(matrix( ncol=6, nrow=length(snps), data=0 ))
 best.model <- as.data.frame(matrix( ncol=4, nrow=length(snps), data=0 ))
