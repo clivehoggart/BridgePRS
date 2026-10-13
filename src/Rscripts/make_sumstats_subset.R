@@ -33,7 +33,7 @@ option_list = list(
                 help="Allele 0 column name", metavar="character"),
     make_option(c("--sumstats.allele1ID"), type="character", default="ALLELE1",
                 help="Allele 1 column name", metavar="character"),
-    make_option(c("--sumstats.P"), type="character", default="ALLELE1",
+    make_option(c("--sumstats.P"), type="character", default="P",
                 help="P-value column name", metavar="character"),
     make_option(c("--qc.snplist"), type="character", default=NULL,
                 help="QC snplist", metavar="character"),
@@ -190,8 +190,8 @@ for( chr in 1:22 ){
         if( length(ptr)>0 ){
             for( k in 1:opt$n.folds ){
                 sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
-                                                    sumstats$ALLELE0[ptr],
                                                     sumstats$ALLELE1[ptr],
+                                                    sumstats$ALLELE0[ptr],
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],
@@ -201,7 +201,7 @@ for( chr in 1:22 ){
         }
     }
     snp.fill <- setdiff( sumstats$SNP, all.block.snps )
-    sumstats.b <- mclapply( 1:length(snp.fill),
+    sumstats.b <- mclapply( seq_along(snp.fill),
                      function(i){
                          sumstat.subset( snp=snp.fill[i],
                                         sumstats=sumstats, ld.ids=ld.ids,
@@ -211,13 +211,13 @@ for( chr in 1:22 ){
                                         n.folds=opt$n.folds,
                                         strand.check=opt$strand.check )},
                      mc.cores=as.numeric(opt$n.cores) )
-    for( i in 1:length(snp.fill) ){
+    for( i in seq_along(snp.fill) ){
         ptr <- match( sumstats.b[[i]]$SNP, sumstats$SNP )
         if( length(ptr)>0 ){
             for( k in 1:opt$n.folds ){
                 sumstats.1[[k]][ptr,] <- data.frame( sumstats.b[[i]]$SNP,
-                                                    sumstats$ALLELE0[ptr],
                                                     sumstats$ALLELE1[ptr],
+                                                    sumstats$ALLELE0[ptr],
                                                     sumstats.b[[i]]$BETA[,k],
                                                     sumstats.b[[i]]$SE,
                                                     sumstats.b[[i]]$P[,k],

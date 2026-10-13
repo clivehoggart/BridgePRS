@@ -242,8 +242,8 @@ then
 	safe_rm $blockdir/$pop1/chr$chr.blocks*
 	plink --bfile $bfile1 \
 	      --chr $chr \
-	      --keep $block_ld_ids \
-	      --extract $qc_snplist \
+	      --keep $pop1_ld_ids \
+	      --extract $pop1_qc_snplist \
 	      --maf 0.001 \
 	      --blocks 'no-pheno-req' 'no-small-max-span' \
 	      --blocks-min-maf 0.001 \
@@ -252,7 +252,7 @@ then
 	      --blocks-recomb-highci 0.55 \
 	      --blocks-max-kb 500 \
 	      --blocks-inform-frac 0.1 \
-	      --out $blockdir/chr${chr}
+	      --out $blockdir/$pop1/chr${chr}
 	gzip $blockdir/$pop1/chr$chr.blocks.det
     done
 fi
@@ -265,7 +265,7 @@ then
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --blockdir $blockdir \
+	    --blockdir $blockdir/$pop1 \
 	    --workdir $outdir/$pop1 \
 	    --sumstats $pop1_sumstats \
 	    --ld.ids $pop1_ld_ids \
@@ -294,7 +294,7 @@ then
     done
     Rscript --vanilla $RSCRIPTS"/"make_sumstats_subset.R \
  	    --fpath $FPATH \
-	    --blockdir $blockdir \
+	    --blockdir $blockdir/$pop2 \
 	    --workdir $outdir/$pop2 \
 	    --sumstats $pop2_sumstats \
 	    --ld.ids $pop2_ld_ids \
@@ -369,7 +369,7 @@ do
  		--fpath $FPATH \
 		--stage1  $outdir/${pop1}/fold${iter}/models/stage1 \
 		--fold $iter \
-		--blockdir $blockdir \
+		--blockdir $blockdir/$pop1 \
 		--workdir $outdir/${pop1} \
 		--bfile $pop1_ld_bfile \
 		--ld.ids $pop1_ld_ids \
@@ -403,7 +403,7 @@ do
 		--by.chr $by_chr_ld \
 		--strand.check $strand_check \
 		--beta.stem $outdir/${pop1}/fold${iter}/models/prior \
-		--param.file $outdir/${pop1}/fold$iter/best_model_params.dat \
+		--param.file $outdir/${pop1}/fold$iter/prs_sumstats/best_model_params.dat \
 		--precision TRUE
 	
 	if [ $clean -eq 1 ]
@@ -417,14 +417,14 @@ do
     then
 	safe_rm -f $outdir/${pop2}/fold$iter/models/stage2*
 	Rscript --vanilla $RSCRIPTS"/"est_beta_InformPrior_bychr.R \
+		--ld.ids $pop2_ld_ids \
  		--fpath $FPATH \
 		--sumstats $outdir/$pop2/fold$iter/sumstat_subset/chr  \
-		--by.chr.sumstats .dat.gz \
-		--ld.ids $pop2_ld_ids \
-		--bfile $pop2_ld_bfile \
 		--prior $outdir/${pop1}/fold${iter}/models/prior \
-		--param.file $outdir/${pop1}/fold${iter}/best_model_params.dat \
+		--param.file $outdir/${pop1}/fold${iter}/prs_sumstats/best_model_params.dat \
 		--beta.stem $outdir/${pop2}/fold$iter/models/stage2 \
+		--by.chr.sumstats .dat.gz \
+		--bfile $pop2_ld_bfile \
 		--fst $fst \
 		--sumstats.snpID SNP \
 		--sumstats.betaID BETA \
@@ -501,7 +501,7 @@ do
  		--fpath $FPATH \
 		--stage1  $outdir/$pop2/fold$iter/models/stage1 \
 		--stage2 $outdir/$pop2/fold$iter/models/stage2 \
-		--blockdir $blockdir \
+		--blockdir $blockdir/$pop2 \
 		--workdir $outdir/$pop2 \
 		--bfile $pop2_ld_bfile \
 		--ld.ids $pop2_ld_ids \

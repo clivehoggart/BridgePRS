@@ -70,7 +70,7 @@ for( kk in 1:opt$n.folds ){
     genome.models1 <- as.matrix(genome.models1[,-(1:3)])
 
     model.type <- sapply(strsplit( betatXtY.22$V1, "_" ),length)
-    ptr.models <- list(lengtgh=3)
+    ptr.models <- list(length=3)
     ptr.models[[1]] <- which( model.type==4 )
     ptr.models[[2]] <- which( model.type==3 )
     ptr.models[[3]] <-  1:nrow(betatXtY.22)

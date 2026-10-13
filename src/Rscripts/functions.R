@@ -351,7 +351,7 @@ Pseudo.f.test.diag <- function( beta, lambda, LD, n.eff, sigma2 ){
 est.ref.stats <- function( snps, ids, X.bed, bim,
                           effect.allele, ref.allele, strand.check,
                           n.eff=FALSE ){
-    ids <- intersect( ld.ids, dimnames(X.bed)[[1]] )
+    ids <- intersect( ids, dimnames(X.bed)[[1]] )
     if( length(ids)<10 ){
         print("Fewer than 10 individuals to estimate LD")
         stop()
@@ -467,7 +467,7 @@ sumstat.subset <- function( block.i=NULL, snp=NULL, sumstats, ld.ids,
             XtY.3 <- XtY - XtY.1 - XtY.2
 
 #            beta.1 <- solve(ld.mat) %*% t(matrix(XtY.1,nrow=n.folds)) / (n.all*n.prop[1])
-            beta.1 <- t(matrix(XtY.1,nrow=n.folds)) / (diag(ld.mat)*n.all*n.prop[1])
+            beta.1 <- XtY.1 / (diag(ld.mat)*n.all*n.prop[1])
             se.1 <- se * sqrt( 1 / n.prop[1] )
             p.1 <- 2*pnorm( abs(beta.1) / se.1, lower.tail=FALSE )
 #            sumstats.1 <- data.frame( sumstats$SNP,

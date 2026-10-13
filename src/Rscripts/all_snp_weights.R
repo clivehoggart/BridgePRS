@@ -68,9 +68,9 @@ source(opt$fpath)
 p.thresh <- as.numeric(strsplit( opt$p.thresh, ',' )[[1]])
 ld.ids <- as.character(read.table(opt$ld.ids)[,2])
 if( opt$by.chr==0 ){
-    ptr.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
+    X.bed <- BEDMatrix( opt$bfile, simple_names=TRUE )
     bim <- fread( paste(opt$bfile,'.bim',sep='' ) )
-    ld.ids <- intersect( ld.ids, attributes(ptr.bed)[[3]][[1]] )
+    ld.ids <- intersect( ld.ids, attributes(X.bed)[[3]][[1]] )
 }
 
 af <- vector()
@@ -189,7 +189,7 @@ for( chr in 1:22 ){
         }
     }
     single.snps <- setdiff( snps, all.block.snps )
-    for( i in 1:length(single.snps) ){
+    for( i in seq_along(single.snps) ){
         ptr.ss <- match( single.snps[i], sumstats$SNP )
 #        for( k in 1:n.models ){
             ptr.prs <- match( single.snps[i], rownames(models) )
