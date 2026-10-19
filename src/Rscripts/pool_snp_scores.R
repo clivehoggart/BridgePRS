@@ -139,7 +139,7 @@ s2 <- order( R2.indiv1, decreasing=TRUE )
 best.model.name <- all.model.names[s2[1]]
 
 k <- get_mode( apply( R2.model, 1, order, decreasing=TRUE )[1,] )
-lambda1 <- median( lambda[,k], na.rm=TRUE )
+lambda1 <- apply( lambda, 2, median, na.rm=TRUE ) * n.test.all / n.test
 
 fwrite( R2.model,
        paste0(opt$workdir,'/r2_model.dat'),
@@ -161,7 +161,7 @@ for( kk in 1:opt$n.folds ){
     }
     for( i.model in 1:n.models ){
         n.prs <- nrow(Sigma.prs[[kk]][[ i.model ]])
-        prs.weights <- solve( diag(lambda1,n.prs) + n.test.all*Sigma.prs[[kk]][[ i.model ]] ) %*%
+        prs.weights <- solve( diag(lambda1[i.model],n.prs) + n.test.all*Sigma.prs[[kk]][[ i.model ]] ) %*%
             ( betatXtY.2[[kk]][[ i.model ]] + betatXtY.3[[kk]][[ i.model ]] )
         ensembl.model[ ptr, (3+i.model) ] <- ensembl.model[ptr, (3+i.model) ] +
             genome.models[[kk]][[i.model]] %*% as.matrix( prs.weights )
